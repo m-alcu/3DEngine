@@ -7,6 +7,7 @@
 #include "slib.hpp"
 #include "smath.hpp"
 #include "tri.hpp"
+#include "polygon.hpp"
 
 enum class ClipPlane {
     Left, Right, Bottom, Top, Near, Far
@@ -144,7 +145,8 @@ class Rasterizer {
 
             // Triangulate fan-style and draw
             for (size_t i = 1; i + 1 < polygon.size(); ++i) {
-                Triangle<vertex> tri(polygon[0], polygon[i], polygon[i + 1], t.face, t.faceNormal, t.material);
+                std::vector<vertex> poly = { polygon[0], polygon[i], polygon[i + 1] };
+                Polygon<vertex> tri(poly, t.face, t.faceNormal, t.material);
                 draw(tri);
             }
         }
@@ -237,62 +239,74 @@ class Rasterizer {
             void advance()    { begin += step; }
         };
 
-        void draw(Triangle<vertex>& tri) {
+        void draw(Polygon<vertex>& tri) {
 
             auto* pixels = static_cast<uint32_t*>(scene->sdlSurface->pixels);
-            effect.vs.viewProjection(*scene, tri.p1);
-            effect.vs.viewProjection(*scene, tri.p2);
-            effect.vs.viewProjection(*scene, tri.p3);
-            orderVertices(&tri.p1, &tri.p2, &tri.p3);
-            if(tri.p1.p_y == tri.p3.p_y) return;
+
+            auto begin = std::begin(tri.points), end = std::end(tri.points);
+
+            for(auto& point : tri.points) {
+                effect.vs.viewProjection(*scene, point);
+            }
+
+            bool shortside = (tri.points[1].p_y - tri.points[0].p_y) * (tri.points[2].p_x - tri.points[0].p_x) < (tri.points[1].p_x - tri.points[0].p_x) * (tri.points[2].p_y - tri.points[0].p_y); // false=left side, true=right side
+
+            for(auto& point : tri.points) {
+                point.p_x = point.p_x << 16;
+            }
+
+            // Find the point that is topleft-most. Begin both slopes (left & right) from there.
+            // Also find the bottomright-most vertex; that’s where the rendering ends.
+            auto cmp_top_left = [&](const vertex& a, const vertex& b) {
+                return std::tie(a.p_y, a.p_x) < std::tie(b.p_y, b.p_x); // top-left is "smaller"
+            };
+            auto [first, last] = std::minmax_element(begin, end, cmp_top_left);
+
+            std::array cur { first, first };
+            auto y = [&](int side) -> int { return cur[side]->p_y; };
 
             effect.gs(tri, *scene);
 
-            bool shortside = (tri.p2.p_y - tri.p1.p_y) * (tri.p3.p_x - tri.p1.p_x) < (tri.p2.p_x - tri.p1.p_x) * (tri.p3.p_y - tri.p1.p_y); // false=left side, true=right side
-
-            tri.p1.p_x = tri.p1.p_x << 16; // shift to 16.16 space
-            tri.p2.p_x = tri.p2.p_x << 16; // shift to 16.16 space
-            tri.p3.p_x = tri.p3.p_x << 16; // shift to 16.16 space
-
-            Slope sides[2];
-
-            auto&& MakeSlope = [&](const vertex from, const vertex to, int num_steps)
+            auto&& MakeSlope = [&](const vertex& from, const vertex& to, int num_steps)
             {
                 // Retrieve X coordinates for begin and end.
                 // Number of steps = number of scanlines
                 return Slope( from, to, num_steps );
-            }; 
-
-            sides[!shortside] = MakeSlope(tri.p1,tri.p3, tri.p3.p_y - tri.p1.p_y);
-
-            for(auto y = tri.p1.p_y, endy = tri.p1.p_y, hy = y * scene->screen.width; ; ++y)
+            };
+            
+            int forwards = 0;
+            Slope sides[2] {};
+            for(int side = 0, cury = y(side), next[2] = {cury,cury}; cur[side] != last; )
             {
-                if(y >= endy)
-                {
-                    // If y of p2 is reached, the triangle is complete.
-                    if(y >= tri.p3.p_y) break;
-                    // Recalculate slope for short side. The number of lines cannot be zero.
-                    sides[shortside] = std::apply(MakeSlope, (y < tri.p2.p_y) ? std::tuple(tri.p1, tri.p2, (endy=tri.p2.p_y) - tri.p1.p_y)
-                                                                              : std::tuple(tri.p2, tri.p3, (endy=tri.p3.p_y) - tri.p2.p_y) );
-                }
-                // On a single scanline, we go from the left X coordinate to the right X coordinate.
-                DrawScanline(hy, sides[0], sides[1], tri, pixels);
-                hy += scene->screen.width; 
-            }
+                // We have reached a bend on either side (or both). "side" indicates which side the next bend is.
+                // In the beginning of the loop, both sides have a bend (top-left corner of the polygon).
+                // In that situation, we first process the left side, then without rendering anything, process the right side.
+                // Now check whether to go forwards or backwards in the circular chain of points.
+                auto prev = std::move(cur[side]);
+
+                if(side == forwards) cur[side] = (std::next(prev) == end) ? begin : std::next(prev);
+                else                 cur[side] = std::prev(prev == begin ? end : prev);
+
+                next[side]  = y(side);
+                sides[side] = MakeSlope(*prev, *cur[side], next[side] - cury);
+
+                // Identify which side the next bend is going to be, by choosing the smaller Y coordinate.
+                side = (next[0] <= next[1]) ? 0 : 1;
+                // Process scanlines until the next bend.
+                for(int limit = next[side]; cury < limit; ++cury)
+                    DrawScanline(cury, sides[0], sides[1], tri, pixels);
+
+            }                   
 
         };
 
-        inline void orderVertices(vertex *p1, vertex *p2, vertex *p3) {
-            if (p1->p_y > p2->p_y) std::swap(*p1,*p2);
-            if (p2->p_y > p3->p_y) std::swap(*p2,*p3);
-            if (p1->p_y > p2->p_y) std::swap(*p1,*p2);
-        };
-        
-        inline void DrawScanline(const int& y, Slope& left, Slope& right, Triangle<vertex>& tri, uint32_t* pixels) {
+       
+        inline void DrawScanline(const int& y, Slope& left, Slope& right, Polygon<vertex>& tri, uint32_t* pixels) {
             
             int xStart = left.getx();
             int xEnd = right.getx();
             int dx = xEnd - xStart;
+            const int hy = y * scene->sdlSurface->w;
         
             if (dx != 0) {
                 float invDx = 1.0f / dx;
@@ -300,7 +314,7 @@ class Rasterizer {
                 vertex vStep = (right.get() - vStart) * invDx;
         
                 for (int x = xStart; x < xEnd; ++x) {
-                    int index = y + x;
+                    int index = hy + x;
                     if (scene->zBuffer->TestAndSet(index, vStart.p_z)) {
                         pixels[index] = effect.ps(vStart, *scene, tri);
                     }

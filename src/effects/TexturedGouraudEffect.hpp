@@ -80,18 +80,18 @@ public:
 	{
 	public:
     
-        void operator()(Triangle<Vertex>& tri, const Scene& scene) const
+        void operator()(Polygon<Vertex>& tri, const Scene& scene) const
         {
-            tri.p1.diffuse = std::max(0.0f, smath::dot(tri.p1.normal, scene.lux));
-            tri.p2.diffuse = std::max(0.0f, smath::dot(tri.p2.normal, scene.lux));
-            tri.p3.diffuse = std::max(0.0f, smath::dot(tri.p3.normal, scene.lux));
+            for(auto& point : tri.points) {
+                point.diffuse = std::max(0.0f, smath::dot(point.normal, scene.lux));        
+            }
         }
 	};    
 
 	class PixelShader
 	{
 	public:
-		uint32_t operator()(Vertex& vRaster, const Scene& scene, Triangle<Vertex>& tri) const
+		uint32_t operator()(Vertex& vRaster, const Scene& scene, Polygon<Vertex>& tri) const
 		{
 
             float w = 1 / vRaster.tex.w;

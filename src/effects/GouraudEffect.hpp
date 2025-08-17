@@ -80,7 +80,7 @@ public:
 	{
 	public:
     
-        void operator()(Triangle<Vertex>& tri, const Scene& scene) const
+        void operator()(Polygon<Vertex>& tri, const Scene& scene) const
         {
             const auto& Ka = tri.material.Ka; // vec3
             const auto& Kd = tri.material.Kd; // vec3
@@ -90,17 +90,17 @@ public:
                 float ds = std::max(0.0f, smath::dot(normal, light)); // diffuse scalar
                 return Color(Ka + Kd * ds); // assumes vec3 uses .r/g/b or [0]/[1]/[2]
             };
-        
-            tri.p1.color = computeColor(tri.p1.normal);
-            tri.p2.color = computeColor(tri.p2.normal);
-            tri.p3.color = computeColor(tri.p3.normal);
+
+            for(auto& point : tri.points) {
+                point.color = computeColor(point.normal);
+            }        
         }
 	};    
 
 	class PixelShader
 	{
 	public:
-		uint32_t operator()(Vertex& vRaster, const Scene& scene, Triangle<Vertex>& tri) const
+		uint32_t operator()(Vertex& vRaster, const Scene& scene, Polygon<Vertex>& tri) const
 		{
 			return vRaster.color.toBgra();
 		}

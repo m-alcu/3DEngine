@@ -53,8 +53,8 @@ struct Camera
 
 typedef struct Screen
 {
-    int height;
-    int width;
+    int32_t height;
+    int32_t width;
 } Screen;
 
 class Scene
@@ -108,7 +108,7 @@ public:
     }
 
     Screen screen;
-    SceneType sceneType = SceneType::TORUS; // Default scene type
+    SceneType sceneType = SceneType::TETRAKIS; // Default scene type
    
     slib::vec3 lux;
     slib::vec3 eye;

@@ -74,7 +74,7 @@ public:
 	{
 	public:
     
-        void operator()(Triangle<Vertex>& tri, const Scene& scene) const
+        void operator()(Polygon<Vertex>& tri, const Scene& scene) const
 		{
 
             const auto& Ka = tri.material.Ka; // vec3
@@ -90,7 +90,7 @@ public:
 	class PixelShader
 	{
 	public:
-		uint32_t operator()(Vertex& vRaster, const Scene& scene, Triangle<Vertex>& tri) const
+		uint32_t operator()(Vertex& vRaster, const Scene& scene, Polygon<Vertex>& tri) const
 		{
 
             float w = 1 / vRaster.tex.w;

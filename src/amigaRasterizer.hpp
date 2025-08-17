@@ -285,7 +285,7 @@ class AmigaRasterizer {
         void drawAmiga(int x0, int y0, int x1, int y1, int x2, int y2, uint32_t color, uint32_t* pixels) {
             int x,y;
 
-            std::vector<int> line(2 * scene->screen.height);
+            std::vector<int16_t> line(2 * scene->screen.height);
             for(y=0;y<scene->screen.height;y++) { line[2*y+0] = scene->screen.width+1; line[2*y+1] = -1; }
 
             rasterizeAmiga( x0, y0, x1, y1, line.data());
@@ -303,7 +303,7 @@ class AmigaRasterizer {
         It works by calculating the difference in x and y coordinates between the two endpoints of the line and then incrementally drawing pixels along the line.
         */
 
-        void rasterizeAmiga(int x0, int y0, int x1, int y1, int *line) 
+        void rasterizeAmiga(int x0, int y0, int x1, int y1, int16_t *line) 
         {
             if((y0<0 && y1<0) || (y0>=scene->screen.height && y1>=scene->screen.height)) return; // exit if line outside rasterized area
             int dx = std::abs(x1 - x0);
