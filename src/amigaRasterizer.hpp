@@ -5,7 +5,7 @@
 #include "scene.hpp"
 #include "slib.hpp"
 #include "smath.hpp"
-#include "tri.hpp"
+#include "polygon.hpp"
 
 template<class Effect>
 class AmigaRasterizer {
@@ -129,10 +129,10 @@ class AmigaRasterizer {
                 const auto& faceDataEntry = solid->faceData[faceIndicesWithDepth[i].index];
                 const auto& face = faceDataEntry.face;
 
-                Triangle<vertex> tri(
-                    *projectedPoints[face.vertex1],
+                Polygon<vertex> tri(
+                    { *projectedPoints[face.vertex1],
                     *projectedPoints[face.vertex2],
-                    *projectedPoints[face.vertex3],
+                    *projectedPoints[face.vertex3] },
                     face,
                     faceIndicesWithDepth[i].rotatedFaceNormal,
                     solid->materials.at(face.materialKey)
@@ -170,8 +170,8 @@ class AmigaRasterizer {
         https://en.wikipedia.org/wiki/Sutherland%E2%80%93Hodgman_algorithm
         */
 
-        void ClipCullDrawTriangleSutherlandHodgman(const Triangle<vertex>& t) {
-            std::vector<vertex> polygon = { t.p1, t.p2, t.p3 };
+        void ClipCullDrawTriangleSutherlandHodgman(const Polygon<vertex>& t) {
+            std::vector<vertex> polygon = t.points;
 
             for (ClipPlane plane : {ClipPlane::Left, ClipPlane::Right, ClipPlane::Bottom, 
                                     ClipPlane::Top, ClipPlane::Near, ClipPlane::Far}) {
@@ -179,11 +179,8 @@ class AmigaRasterizer {
                 if (polygon.empty()) return; // Completely outside
             }
 
-            // Triangulate fan-style and draw
-            for (size_t i = 1; i + 1 < polygon.size(); ++i) {
-                Triangle<vertex> tri(polygon[0], polygon[i], polygon[i + 1], t.face, t.faceNormal, t.material);
-                draw(tri);
-            }
+            Polygon<vertex> tri(polygon , t.face, t.faceNormal, t.material);
+            draw(tri);
         }
 
         std::vector<vertex> ClipAgainstPlane(const std::vector<vertex>& poly, ClipPlane plane) {
@@ -262,35 +259,31 @@ class AmigaRasterizer {
         The algorithm uses a slope to determine the x-coordinates of the left and right edges of the triangle at each scanline.
         */
 
-        void draw(Triangle<vertex>& tri) {
+        void draw(Polygon<vertex>& tri) {
 
             auto* pixels = static_cast<uint32_t*>(scene->sdlSurface->pixels);
-            orderVertices(&tri.p1, &tri.p2, &tri.p3);
-            if(tri.p1.p_y == tri.p3.p_y) return;
 
             effect.gs(tri, *scene);
 
             if (wireframe) 
-                drawWireframeAmiga(tri.p1.p_x, tri.p1.p_y, tri.p2.p_x, tri.p2.p_y, tri.p3.p_x, tri.p3.p_y, 0xffffffff, pixels);
+                drawWireframeAmiga(tri, 0xffffffff, pixels);
             else 
-                drawAmiga(tri.p1.p_x, tri.p1.p_y, tri.p2.p_x, tri.p2.p_y, tri.p3.p_x, tri.p3.p_y, tri.flatColor, pixels);
-        };
-
-        inline void orderVertices(vertex *p1, vertex *p2, vertex *p3) {
-            if (p1->p_y > p2->p_y) std::swap(*p1,*p2);
-            if (p2->p_y > p3->p_y) std::swap(*p2,*p3);
-            if (p1->p_y > p2->p_y) std::swap(*p1,*p2);
+                drawAmiga(tri, tri.flatColor, pixels);
         };
         
-        void drawAmiga(int x0, int y0, int x1, int y1, int x2, int y2, uint32_t color, uint32_t* pixels) {
+        void drawAmiga(Polygon<vertex> tri, uint32_t color, uint32_t* pixels) {
             int x,y;
 
             std::vector<int16_t> line(2 * scene->screen.height);
             for(y=0;y<scene->screen.height;y++) { line[2*y+0] = scene->screen.width+1; line[2*y+1] = -1; }
 
-            rasterizeAmiga( x0, y0, x1, y1, line.data());
-            rasterizeAmiga( x1, y1, x2, y2, line.data());
-            rasterizeAmiga( x2, y2, x0, y0, line.data());
+            // Loop through vertices and chain to the next, including wrap-around
+            for (size_t i = 0; i < tri.points.size(); i++) {
+                auto& v0 = tri.points[i];
+                auto& v1 = tri.points[(i + 1) % tri.points.size()]; // wrap back to first
+
+                rasterizeAmiga(v0.p_x, v0.p_y, v1.p_x, v1.p_y, line.data());
+            }
 
             for(y=0;y<scene->screen.height;y++)
                 if(line[2*y+1]>line[2*y+0]) for(x=line[2*y+0]; x<=line[2*y+1]; x++) pixels[scene->screen.width*y+x] = color;
@@ -325,12 +318,17 @@ class AmigaRasterizer {
             }
         }
 
-        void drawWireframeAmiga(int x0, int y0, int x1, int y1, int x2, int y2, uint32_t color, uint32_t* pixels) {
+        void drawWireframeAmiga(Polygon<vertex> tri, uint32_t color, uint32_t* pixels) {
             int width = scene->screen.width;
             int height = scene->screen.height;
-            drawLine(x0, y0, x1, y1, pixels, width, height, color);
-            drawLine(x1, y1, x2, y2, pixels, width, height, color);
-            drawLine(x2, y2, x0, y0, pixels, width, height, color);
+
+            // Loop through vertices and chain to the next, including wrap-around
+            for (size_t i = 0; i < tri.points.size(); i++) {
+                auto& v0 = tri.points[i];
+                auto& v1 = tri.points[(i + 1) % tri.points.size()]; // wrap back to first
+
+                drawLine(v0.p_x, v0.p_y, v1.p_x, v1.p_y, pixels, width, height, color);
+            }
         }
 
         void drawLine(int x0, int y0, int x1, int y1, uint32_t* pixels, int width, int height, uint32_t color) {
