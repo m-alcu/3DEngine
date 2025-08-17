@@ -143,12 +143,8 @@ class Rasterizer {
                 if (polygon.empty()) return; // Completely outside
             }
 
-            // Triangulate fan-style and draw
-            for (size_t i = 1; i + 1 < polygon.size(); ++i) {
-                std::vector<vertex> poly = { polygon[0], polygon[i], polygon[i + 1] };
-                Polygon<vertex> tri(poly, t.face, t.faceNormal, t.material);
-                draw(tri);
-            }
+            Polygon<vertex> tri(polygon, t.face, t.faceNormal, t.material);
+            draw(tri);
         }
 
         std::vector<vertex> ClipAgainstPlane(const std::vector<vertex>& poly, ClipPlane plane) {
@@ -263,8 +259,8 @@ class Rasterizer {
             effect.gs(tri, *scene);
             
             int forwards = 1;
-            Slope sides[2] {};
-            for(int side = 0, cury = y(side), next[2] = {cury,cury}, hy = cury * scene->sdlSurface->w; cur[side] != last; )
+            Slope slopes[2] {};
+            for(int side = 0, cury = y(side), nexty[2] = {cury,cury}, hy = cury * scene->sdlSurface->w; cur[side] != last; )
             {
                 // We have reached a bend on either side (or both). "side" indicates which side the next bend is.
                 // In the beginning of the loop, both sides have a bend (top-left corner of the polygon).
@@ -275,14 +271,14 @@ class Rasterizer {
                 if(side == forwards) cur[side] = (std::next(prev) == end) ? begin : std::next(prev);
                 else                 cur[side] = std::prev(prev == begin ? end : prev);
 
-                next[side]  = y(side);
-                sides[side] = Slope(*prev, *cur[side], next[side] - cury);
+                nexty[side]  = y(side);
+                slopes[side] = Slope(*prev, *cur[side], nexty[side] - cury);
 
                 // Identify which side the next bend is going to be, by choosing the smaller Y coordinate.
-                side = (next[0] <= next[1]) ? 0 : 1;
+                side = (nexty[0] <= nexty[1]) ? 0 : 1;
                 // Process scanlines until the next bend.
-                for(int limit = next[side]; cury < limit; ++cury, hy+= scene->sdlSurface->w)
-                    DrawScanline(hy, sides[0], sides[1], tri, pixels);
+                for(int limit = nexty[side]; cury < limit; ++cury, hy+= scene->sdlSurface->w)
+                    DrawScanline(hy, slopes[0], slopes[1], tri, pixels);
 
             }                   
 
