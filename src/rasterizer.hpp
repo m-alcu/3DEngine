@@ -261,13 +261,6 @@ class Rasterizer {
             auto y = [&](int side) -> int { return cur[side]->p_y; };
 
             effect.gs(tri, *scene);
-
-            auto&& MakeSlope = [&](const vertex& from, const vertex& to, int num_steps)
-            {
-                // Retrieve X coordinates for begin and end.
-                // Number of steps = number of scanlines
-                return Slope( from, to, num_steps );
-            };
             
             int forwards = 1;
             Slope sides[2] {};
@@ -283,7 +276,7 @@ class Rasterizer {
                 else                 cur[side] = std::prev(prev == begin ? end : prev);
 
                 next[side]  = y(side);
-                sides[side] = MakeSlope(*prev, *cur[side], next[side] - cury);
+                sides[side] = Slope(*prev, *cur[side], next[side] - cury);
 
                 // Identify which side the next bend is going to be, by choosing the smaller Y coordinate.
                 side = (next[0] <= next[1]) ? 0 : 1;
@@ -311,8 +304,7 @@ class Rasterizer {
                 for (int x = xStart; x < xEnd; ++x) {
                     int index = hy + x;
                     if (scene->zBuffer->TestAndSet(index, vStart.p_z)) {
-                        auto sal = effect.ps(vStart, *scene, tri);
-                        pixels[index] = sal;
+                        pixels[index] = effect.ps(vStart, *scene, tri);
                     }
                     vStart += vStep;
                 }
