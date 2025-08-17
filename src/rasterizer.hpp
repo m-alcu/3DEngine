@@ -264,7 +264,7 @@ class Rasterizer {
             
             int forwards = 1;
             Slope sides[2] {};
-            for(int side = 0, cury = y(side), next[2] = {cury,cury}; cur[side] != last; )
+            for(int side = 0, cury = y(side), next[2] = {cury,cury}, hy = cury * scene->sdlSurface->w; cur[side] != last; )
             {
                 // We have reached a bend on either side (or both). "side" indicates which side the next bend is.
                 // In the beginning of the loop, both sides have a bend (top-left corner of the polygon).
@@ -281,20 +281,19 @@ class Rasterizer {
                 // Identify which side the next bend is going to be, by choosing the smaller Y coordinate.
                 side = (next[0] <= next[1]) ? 0 : 1;
                 // Process scanlines until the next bend.
-                for(int limit = next[side]; cury < limit; ++cury)
-                    DrawScanline(cury, sides[0], sides[1], tri, pixels);
+                for(int limit = next[side]; cury < limit; ++cury, hy+= scene->sdlSurface->w)
+                    DrawScanline(hy, sides[0], sides[1], tri, pixels);
 
             }                   
 
         };
 
        
-        inline void DrawScanline(const int& y, Slope& left, Slope& right, Polygon<vertex>& tri, uint32_t* pixels) {
+        inline void DrawScanline(const int& hy, Slope& left, Slope& right, Polygon<vertex>& tri, uint32_t* pixels) {
             
             int xStart = left.getx();
             int xEnd = right.getx();
             int dx = xEnd - xStart;
-            const int hy = y * scene->sdlSurface->w;
         
             if (dx != 0) {
                 float invDx = 1.0f / dx;
