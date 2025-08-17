@@ -6,7 +6,6 @@
 #include "scene.hpp"
 #include "slib.hpp"
 #include "smath.hpp"
-#include "tri.hpp"
 #include "polygon.hpp"
 
 enum class ClipPlane {
