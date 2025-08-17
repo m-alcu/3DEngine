@@ -247,11 +247,6 @@ class Rasterizer {
 
             for(auto& point : tri.points) {
                 effect.vs.viewProjection(*scene, point);
-            }
-
-            bool shortside = (tri.points[1].p_y - tri.points[0].p_y) * (tri.points[2].p_x - tri.points[0].p_x) < (tri.points[1].p_x - tri.points[0].p_x) * (tri.points[2].p_y - tri.points[0].p_y); // false=left side, true=right side
-
-            for(auto& point : tri.points) {
                 point.p_x = point.p_x << 16;
             }
 
@@ -274,7 +269,7 @@ class Rasterizer {
                 return Slope( from, to, num_steps );
             };
             
-            int forwards = 0;
+            int forwards = 1;
             Slope sides[2] {};
             for(int side = 0, cury = y(side), next[2] = {cury,cury}; cur[side] != last; )
             {
@@ -316,7 +311,8 @@ class Rasterizer {
                 for (int x = xStart; x < xEnd; ++x) {
                     int index = hy + x;
                     if (scene->zBuffer->TestAndSet(index, vStart.p_z)) {
-                        pixels[index] = effect.ps(vStart, *scene, tri);
+                        auto sal = effect.ps(vStart, *scene, tri);
+                        pixels[index] = sal;
                     }
                     vStart += vStep;
                 }
