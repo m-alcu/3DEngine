@@ -245,59 +245,53 @@ class Rasterizer {
 
             auto begin = std::begin(tri.points), end = std::end(tri.points);
 
-            for(auto& point : tri.points) {
+            for (auto& point : tri.points) {
                 effect.vs.viewProjection(*scene, point);
             }
 
-            bool shortside = (tri.points[1].p_y - tri.points[0].p_y) * (tri.points[2].p_x - tri.points[0].p_x) < (tri.points[1].p_x - tri.points[0].p_x) * (tri.points[2].p_y - tri.points[0].p_y); // false=left side, true=right side
-
-            for(auto& point : tri.points) {
-                point.p_x = point.p_x << 16;
-            }
-
-            // Find the point that is topleft-most. Begin both slopes (left & right) from there.
-            // Also find the bottomright-most vertex; that’s where the rendering ends.
-            auto cmp_top_left = [&](const vertex& a, const vertex& b) {
-                return std::tie(a.p_y, a.p_x) < std::tie(b.p_y, b.p_x); // top-left is "smaller"
-            };
-            auto [first, last] = std::minmax_element(begin, end, cmp_top_left);
-
-            std::array cur { first, first };
-            auto y = [&](int side) -> int { return cur[side]->p_y; };
+            orderVertices(&tri.points[0], &tri.points[1], &tri.points[2]);
+            if (tri.points[0].p_y == tri.points[2].p_y) return;
 
             effect.gs(tri, *scene);
 
-            auto&& MakeSlope = [&](const vertex& from, const vertex& to, int num_steps)
+            bool shortside = (tri.points[1].p_y - tri.points[0].p_y) * (tri.points[2].p_x - tri.points[0].p_x) < (tri.points[1].p_x - tri.points[0].p_x) * (tri.points[2].p_y - tri.points[0].p_y); // false=left side, true=right side
+
+            for (auto& point : tri.points) {
+                point.p_x = point.p_x << 16; // shift to 16.16 space
+            }
+
+            Slope sides[2];
+
+            auto&& MakeSlope = [&](const vertex from, const vertex to, int num_steps)
+                {
+                    // Retrieve X coordinates for begin and end.
+                    // Number of steps = number of scanlines
+                    return Slope(from, to, num_steps);
+                };
+
+            sides[!shortside] = MakeSlope(tri.points[0], tri.points[2], tri.points[2].p_y - tri.points[0].p_y);
+
+            for (auto y = tri.points[0].p_y, endy = tri.points[0].p_y, hy = y * scene->screen.width; ; ++y)
             {
-                // Retrieve X coordinates for begin and end.
-                // Number of steps = number of scanlines
-                return Slope( from, to, num_steps );
-            };
-            
-            int forwards = 0;
-            Slope sides[2] {};
-            for(int side = 0, cury = y(side), next[2] = {cury,cury}; cur[side] != last; )
-            {
-                // We have reached a bend on either side (or both). "side" indicates which side the next bend is.
-                // In the beginning of the loop, both sides have a bend (top-left corner of the polygon).
-                // In that situation, we first process the left side, then without rendering anything, process the right side.
-                // Now check whether to go forwards or backwards in the circular chain of points.
-                auto prev = std::move(cur[side]);
+                if (y >= endy)
+                {
+                    // If y of p2 is reached, the triangle is complete.
+                    if (y >= tri.points[2].p_y) break;
+                    // Recalculate slope for short side. The number of lines cannot be zero.
+                    sides[shortside] = std::apply(MakeSlope, (y < tri.points[1].p_y) ? std::tuple(tri.points[0], tri.points[1], (endy = tri.points[1].p_y) - tri.points[0].p_y)
+                        : std::tuple(tri.points[1], tri.points[2], (endy = tri.points[2].p_y) - tri.points[1].p_y));
+                }
+                // On a single scanline, we go from the left X coordinate to the right X coordinate.
+                DrawScanline(hy, sides[0], sides[1], tri, pixels);
+                hy += scene->screen.width;
+            }
 
-                if(side == forwards) cur[side] = (std::next(prev) == end) ? begin : std::next(prev);
-                else                 cur[side] = std::prev(prev == begin ? end : prev);
+        };
 
-                next[side]  = y(side);
-                sides[side] = MakeSlope(*prev, *cur[side], next[side] - cury);
-
-                // Identify which side the next bend is going to be, by choosing the smaller Y coordinate.
-                side = (next[0] <= next[1]) ? 0 : 1;
-                // Process scanlines until the next bend.
-                for(int limit = next[side]; cury < limit; ++cury)
-                    DrawScanline(cury, sides[0], sides[1], tri, pixels);
-
-            }                   
-
+        inline void orderVertices(vertex* p1, vertex* p2, vertex* p3) {
+            if (p1->p_y > p2->p_y) std::swap(*p1, *p2);
+            if (p2->p_y > p3->p_y) std::swap(*p2, *p3);
+            if (p1->p_y > p2->p_y) std::swap(*p1, *p2);
         };
 
        
@@ -306,7 +300,6 @@ class Rasterizer {
             int xStart = left.getx();
             int xEnd = right.getx();
             int dx = xEnd - xStart;
-            const int hy = y * scene->sdlSurface->w;
         
             if (dx != 0) {
                 float invDx = 1.0f / dx;
@@ -314,7 +307,7 @@ class Rasterizer {
                 vertex vStep = (right.get() - vStart) * invDx;
         
                 for (int x = xStart; x < xEnd; ++x) {
-                    int index = hy + x;
+                    int index = y + x;
                     if (scene->zBuffer->TestAndSet(index, vStart.p_z)) {
                         pixels[index] = effect.ps(vStart, *scene, tri);
                     }
