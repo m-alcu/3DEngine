@@ -92,10 +92,10 @@ class Rasterizer {
                 vertex* p1 = projectedPoints[face.vertex1].get();
 
                 if (Visible(p1->world, rotatedFaceNormal)) {
-                    Triangle<vertex> tri(
-                        *projectedPoints[face.vertex1],
+                    Polygon<vertex> tri(
+                        { *projectedPoints[face.vertex1],
                         *projectedPoints[face.vertex2],
-                        *projectedPoints[face.vertex3],
+                        *projectedPoints[face.vertex3] },
                         face,
                         rotatedFaceNormal,
                         solid->materials.at(face.materialKey)
@@ -134,8 +134,8 @@ class Rasterizer {
         https://en.wikipedia.org/wiki/Sutherland%E2%80%93Hodgman_algorithm
         */
 
-        void ClipCullDrawTriangleSutherlandHodgman(const Triangle<vertex>& t) {
-            std::vector<vertex> polygon = { t.p1, t.p2, t.p3 };
+        void ClipCullDrawTriangleSutherlandHodgman(const Polygon<vertex>& t) {
+            std::vector<vertex> polygon = t.points;
 
             for (ClipPlane plane : {ClipPlane::Left, ClipPlane::Right, ClipPlane::Bottom, 
                                     ClipPlane::Top, ClipPlane::Near, ClipPlane::Far}) {
