@@ -61,8 +61,13 @@ public:
 
         void viewProjection(const Scene& scene, Vertex& p) {
             float oneOverW = 1.0f / p.ndc.w;
-            p.p_x = static_cast<int>((p.ndc.x * oneOverW + 1.0f) * (scene.screen.width / 2.0f)+ 0.5f); // Convert from NDC to screen coordinates
-            p.p_y = static_cast<int>((p.ndc.y * oneOverW + 1.0f) * (scene.screen.height / 2.0f)+ 0.5f); // Convert from NDC to screen coordinates
+            float sx = (p.ndc.x * oneOverW + 1.0f) * (scene.screen.width / 2.0f) + 0.5f; // Convert from NDC to screen coordinates
+            float sy = (p.ndc.y * oneOverW + 1.0f) * (scene.screen.height / 2.0f) + 0.5f; // Convert from NDC to screen coordinates
+
+            // Keep subpixel precision: 16.16 fixed-point
+            constexpr float FP = 65536.0f; // 1<<16
+            p.p_x = static_cast<int32_t>(sx * FP);
+            p.p_y = static_cast<int32_t>(sy * FP);
             p.p_z = p.ndc.z * oneOverW; // Store the depth value in the z-buffer
             p.tex.x = p.tex.x * oneOverW;
             p.tex.y = p.tex.y * oneOverW;

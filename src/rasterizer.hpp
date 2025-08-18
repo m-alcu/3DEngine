@@ -242,7 +242,6 @@ class Rasterizer {
 
             for(auto& point : tri.points) {
                 effect.vs.viewProjection(*scene, point);
-                point.p_x = point.p_x << 16;
             }
 
             // Find the point that is topleft-most. Begin both slopes (left & right) from there.
@@ -253,13 +252,13 @@ class Rasterizer {
             auto [first, last] = std::minmax_element(begin, end, cmp_top_left);
 
             std::array cur { first, first };
-            auto y = [&](int side) -> int { return cur[side]->p_y; };
+            auto gety = [&](int side) -> int { return cur[side]->p_y >> 16; };
 
             effect.gs(tri, *scene);
             
             int forwards = 1;
             Slope slopes[2] {};
-            for(int side = 0, cury = y(side), nexty[2] = {cury,cury}, hy = cury * scene->sdlSurface->w; cur[side] != last; )
+            for(int side = 0, cury = gety(side), nexty[2] = {cury,cury}, hy = cury * scene->sdlSurface->w; cur[side] != last; )
             {
                 // We have reached a bend on either side (or both). "side" indicates which side the next bend is.
                 // In the beginning of the loop, both sides have a bend (top-left corner of the polygon).
@@ -270,7 +269,7 @@ class Rasterizer {
                 if(side == forwards) cur[side] = (std::next(prev) == end) ? begin : std::next(prev);
                 else                 cur[side] = std::prev(prev == begin ? end : prev);
 
-                nexty[side]  = y(side);
+                nexty[side]  = gety(side);
                 slopes[side] = Slope(*prev, *cur[side], nexty[side] - cury);
 
                 // Identify which side the next bend is going to be, by choosing the smaller Y coordinate.

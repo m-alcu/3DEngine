@@ -13,19 +13,19 @@ public:
 	public:
     Vertex() {}
 
-    Vertex(int32_t px, int32_t py, float pz, slib::vec3 n, slib::vec4 vp, slib::zvec2 _tex, Color _color) :
-    p_x(px), p_y(py), p_z(pz), normal(n), ndc(vp), tex(_tex), color(_color) {}
+    Vertex(int32_t px, int32_t py, float pz, slib::vec3 n, slib::vec4 vp, Color _color) :
+    p_x(px), p_y(py), p_z(pz), normal(n), ndc(vp), color(_color) {}
 
     Vertex operator+(const Vertex &v) const {
-        return Vertex(p_x + v.p_x, p_y + v.p_y, p_z + v.p_z, normal + v.normal, ndc + v.ndc, tex + v.tex, color + v.color);
+        return Vertex(p_x + v.p_x, p_y + v.p_y, p_z + v.p_z, normal + v.normal, ndc + v.ndc, color + v.color);
     }
 
     Vertex operator-(const Vertex &v) const {
-        return Vertex(p_x - v.p_x, p_y - v.p_y, p_z - v.p_z, normal - v.normal, ndc - v.ndc, tex - v.tex, color - v.color);
+        return Vertex(p_x - v.p_x, p_y - v.p_y, p_z - v.p_z, normal - v.normal, ndc - v.ndc, color - v.color);
     }
 
     Vertex operator*(const float &rhs) const {
-        return Vertex(p_x * rhs, p_y * rhs, p_z * rhs, normal * rhs, ndc * rhs, tex * rhs, color * rhs);
+        return Vertex(p_x * rhs, p_y * rhs, p_z * rhs, normal * rhs, ndc * rhs, color * rhs);
     }
 
 
@@ -35,7 +35,6 @@ public:
         p_z += v.p_z;
         normal += v.normal;
         ndc += v.ndc;
-        tex += v.tex;
         color += v.color;
         return *this;
     }
@@ -48,7 +47,6 @@ public:
         slib::vec3 point;
         slib::vec3 normal;
         slib::vec4 ndc;
-        slib::zvec2 tex; // Texture coordinates
         Color color;
 	};
 
@@ -67,12 +65,14 @@ public:
 
         void viewProjection(const Scene& scene, Vertex& p) {
             float oneOverW = 1.0f / p.ndc.w;
-            p.p_x = static_cast<int>((p.ndc.x * oneOverW + 1.0f) * (scene.screen.width / 2.0f)+ 0.5f); // Convert from NDC to screen coordinates
-            p.p_y = static_cast<int>((p.ndc.y * oneOverW + 1.0f) * (scene.screen.height / 2.0f)+ 0.5f); // Convert from NDC to screen coordinates
+            float sx = (p.ndc.x * oneOverW + 1.0f) * (scene.screen.width / 2.0f) + 0.5f; // Convert from NDC to screen coordinates
+            float sy = (p.ndc.y * oneOverW + 1.0f) * (scene.screen.height / 2.0f) + 0.5f; // Convert from NDC to screen coordinates
+
+            // Keep subpixel precision: 16.16 fixed-point
+            constexpr float FP = 65536.0f; // 1<<16
+            p.p_x = static_cast<int32_t>(sx * FP);
+            p.p_y = static_cast<int32_t>(sy * FP);
             p.p_z = p.ndc.z * oneOverW; // Store the depth value in the z-buffer
-            p.tex.x = p.tex.x * oneOverW;
-            p.tex.y = p.tex.y * oneOverW;
-            p.tex.w = oneOverW;   
         }        
 	};
     
