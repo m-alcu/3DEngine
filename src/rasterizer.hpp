@@ -88,13 +88,12 @@ class Rasterizer {
                 slib::vec3 rotatedFaceNormal;
                 rotatedFaceNormal = normalTransformMat * slib::vec4(faceDataEntry.faceNormal, 0);
 
-                const auto& idx = face.vertexIndices;
-                if (idx.size() < 3) return; // nothing to draw
-
-
                 vertex* p1 = projectedPoints[face.vertexIndices[0]].get();
 
                 if (Visible(p1->world, rotatedFaceNormal)) {
+
+                    const auto& idx = face.vertexIndices;
+                    if (idx.size() < 3) return; // nothing to draw
 
                     // Build the vertex list for the polygon
                     std::vector<vertex> polyVerts;
