@@ -40,9 +40,7 @@ struct VertexData {
 
 typedef struct Face
 {
-    int vertex1;
-    int vertex2;
-    int vertex3;
+	std::vector<int> vertexIndices; // For wireframe rendering
     std::string materialKey;
 } Face;
 

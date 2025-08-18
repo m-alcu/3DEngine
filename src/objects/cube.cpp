@@ -87,8 +87,14 @@ void Cube::loadFaces() {
     // Each face has 2 triangles, so for each face we generate 6 indices
     for (int baseIndex = 0; baseIndex < 6*6; baseIndex += 6) {
 
-        FaceData face1 { .face = { baseIndex + 0, baseIndex + 1, baseIndex + 2, materialKey} };
-        FaceData face2 { .face = { baseIndex + 3, baseIndex + 4, baseIndex + 5, materialKey} };
+        FaceData face1;
+		face1.face.vertexIndices = { baseIndex + 0, baseIndex + 1, baseIndex + 2 };
+		face1.face.materialKey = materialKey;
+        
+        FaceData face2;
+		face2.face.vertexIndices = { baseIndex + 3, baseIndex + 4, baseIndex + 5 };
+		face2.face.materialKey = materialKey;
+        
         this->faceData.push_back(face1);
         this->faceData.push_back(face2);
     }

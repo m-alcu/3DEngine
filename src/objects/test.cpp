@@ -26,7 +26,7 @@ void Test::loadFaces() {
 
     MaterialProperties properties = getMaterialProperties(MaterialType::Metal);
 
-    FaceData face;
+    
     std::vector<FaceData> faces;
 
     // Create and store the material
@@ -43,29 +43,37 @@ void Test::loadFaces() {
     material.Ns = properties.shininess;
     materials.insert({"white", material});
 
-    face.face.vertex1 = 0+4;
-    face.face.vertex2 = 1+4;
-    face.face.vertex3 = 2+4;
-    face.face.materialKey = "blue";
-    faces.push_back(face);
+    FaceData face1;
 
-    face.face.vertex1 = 0+4;
-    face.face.vertex2 = 2+4;
-    face.face.vertex3 = 3+4;
-    face.face.materialKey = "white";
-    faces.push_back(face);
+    face1.face.vertexIndices.push_back(0 + 4);
+	face1.face.vertexIndices.push_back(1 + 4);
+	face1.face.vertexIndices.push_back(2 + 4);
+    face1.face.materialKey = "blue";
+    faces.push_back(face1);
 
-    face.face.vertex1 = 0;
-    face.face.vertex2 = 1;
-    face.face.vertex3 = 2;
-    face.face.materialKey = "blue";
-    faces.push_back(face);
+	FaceData face2;
 
-    face.face.vertex1 = 0;
-    face.face.vertex2 = 2;
-    face.face.vertex3 = 3;
-    face.face.materialKey = "white";
-    faces.push_back(face);
+	face2.face.vertexIndices.push_back(0 + 4);
+	face2.face.vertexIndices.push_back(2 + 4);
+	face2.face.vertexIndices.push_back(3 + 4);
+    face2.face.materialKey = "white";
+    faces.push_back(face2);
+
+    FaceData face3;
+
+	face3.face.vertexIndices.push_back(0);
+	face3.face.vertexIndices.push_back(1);
+	face3.face.vertexIndices.push_back(2);
+    face3.face.materialKey = "blue";
+    faces.push_back(face3);
+
+    FaceData face4;
+
+	face4.face.vertexIndices.push_back(0);
+	face4.face.vertexIndices.push_back(2);
+	face4.face.vertexIndices.push_back(3);
+    face4.face.materialKey = "white";
+    faces.push_back(face4);
 
     this->faceData = faces;
     this->numFaces = faces.size();

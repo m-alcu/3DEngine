@@ -8,9 +8,9 @@ void Solid::calculateNormals() {
 
     for (int i = 0; i < numFaces; i++) {
         const Face &face = Solid::faceData[i].face;
-        slib::vec3 v1 = Solid::vertexData[face.vertex1].vertex;
-        slib::vec3 v2 = Solid::vertexData[face.vertex2].vertex;
-        slib::vec3 v3 = Solid::vertexData[face.vertex3].vertex;
+        slib::vec3 v1 = Solid::vertexData[face.vertexIndices[0]].vertex;
+        slib::vec3 v2 = Solid::vertexData[face.vertexIndices[1]].vertex;
+        slib::vec3 v3 = Solid::vertexData[face.vertexIndices[2]].vertex;
 
         // Calculate the edge vectors.
         slib::vec3 v21 = v2 - v1;
@@ -25,12 +25,13 @@ void Solid::calculateVertexNormals() {
     for (int i = 0; i < numVertices; i++) { 
         slib::vec3 vertexNormal = { 0, 0, 0 };
         for(int j = 0; j < numFaces; j++) {
-            if (Solid::faceData[j].face.vertex1 == i || 
-                Solid::faceData[j].face.vertex2 == i || 
-                Solid::faceData[j].face.vertex3 == i) {
+
+            for (int vi : Solid::faceData[j].face.vertexIndices) {
+                // guard in case your data can contain bad indices
+                if (vi == i) {
                     vertexNormal += Solid::faceData[j].faceNormal;
-            }
-        }
+                }
+            }        }
         Solid::vertexData[i].normal = smath::normalize(vertexNormal);
     }
 

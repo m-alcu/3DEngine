@@ -101,9 +101,12 @@ void AscLoader::loadVertices(const std::string& filename) {
                 std::smatch match;
 
                 if (std::regex_search(line, match, faceRegex)) {
-                    faceData.face.vertex1 = std::stoi(match[1]);
-                    faceData.face.vertex2 = std::stoi(match[2]);
-                    faceData.face.vertex3 = std::stoi(match[3]);
+
+                    FaceData faceData;
+
+					faceData.face.vertexIndices.push_back(std::stoi(match[1]));
+					faceData.face.vertexIndices.push_back(std::stoi(match[2]));
+					faceData.face.vertexIndices.push_back(std::stoi(match[3]));
                     faceData.face.materialKey = "blue"; // Default material key
                     faces.push_back(faceData);
                 }

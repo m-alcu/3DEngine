@@ -99,11 +99,11 @@ class AmigaRasterizer {
 
                 slib::vec3 rotatedFaceNormal;
                 rotatedFaceNormal = normalTransformMat * slib::vec4(faceDataEntry.faceNormal, 0);
-                if (Visible(projectedPoints[face.vertex1]->world, rotatedFaceNormal) || wireframe) {
+                if (Visible(projectedPoints[face.vertexIndices[0]]->world, rotatedFaceNormal) || wireframe) {
 
-                    float z1 = projectedPoints[face.vertex1]->p_z;
-                    float z2 = projectedPoints[face.vertex2]->p_z;
-                    float z3 = projectedPoints[face.vertex3]->p_z;
+                    float z1 = projectedPoints[face.vertexIndices[0]]->p_z;
+                    float z2 = projectedPoints[face.vertexIndices[1]]->p_z;
+                    float z3 = projectedPoints[face.vertexIndices[2]]->p_z;
                     float averageZ = z1 + z2 + z3;
                     faceIndicesWithDepth.emplace_back(i, averageZ, rotatedFaceNormal);
                 }
@@ -130,9 +130,9 @@ class AmigaRasterizer {
                 const auto& face = faceDataEntry.face;
 
                 Polygon<vertex> tri(
-                    { *projectedPoints[face.vertex1],
-                    *projectedPoints[face.vertex2],
-                    *projectedPoints[face.vertex3] },
+                    { *projectedPoints[face.vertexIndices[0]],
+                    *projectedPoints[face.vertexIndices[1]],
+                    *projectedPoints[face.vertexIndices[2]] },
                     face,
                     faceIndicesWithDepth[i].rotatedFaceNormal,
                     solid->materials.at(face.materialKey)

@@ -79,14 +79,16 @@ void ObjLoader::loadVertices(const std::string& filename) {
 
         if (line.find("f") != std::string::npos) {
             // Example line: f 791 763 645
-            FaceData faceData;
             std::regex faceRegex(R"(^f\s+(\d+)\s+(\d+)\s+(\d+)$)");
             std::smatch match;
 
             if (std::regex_search(line, match, faceRegex)) {
-                faceData.face.vertex1 = std::stoi(match[3])-1;
-                faceData.face.vertex2 = std::stoi(match[2])-1;
-                faceData.face.vertex3 = std::stoi(match[1])-1;
+
+                FaceData faceData;
+
+				faceData.face.vertexIndices.push_back(std::stoi(match[3]) - 1);
+				faceData.face.vertexIndices.push_back(std::stoi(match[2]) - 1);
+				faceData.face.vertexIndices.push_back(std::stoi(match[1]) - 1);
                 faceData.face.materialKey = "blue"; // Default material key
                 faces.push_back(faceData);
             }

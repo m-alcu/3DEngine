@@ -81,18 +81,21 @@ void Torus::loadFaces(int uSteps, int vSteps) {
             int idx2 = nextI * vSteps + nextJ;
             int idx3 = i * vSteps + nextJ;
 
-            FaceData face;
-            face.face.vertex1 = idx0;
-            face.face.vertex2 = idx1; // wrap-around for the quad
-            face.face.vertex3 = idx2;
-            face.face.materialKey = "blue";
-            faces.push_back(face);
+            FaceData face1;
 
-            face.face.vertex1 = idx0;
-            face.face.vertex2 = idx2; // wrap-around for the quad
-            face.face.vertex3 = idx3;
-            face.face.materialKey = "white";
-            faces.push_back(face);
+			face1.face.vertexIndices.push_back(idx0);
+			face1.face.vertexIndices.push_back(idx1);
+			face1.face.vertexIndices.push_back(idx2);
+            face1.face.materialKey = "blue";
+            faces.push_back(face1);
+
+            FaceData face2;
+
+			face2.face.vertexIndices.push_back(idx0);
+			face2.face.vertexIndices.push_back(idx2);
+			face2.face.vertexIndices.push_back(idx3);
+            face2.face.materialKey = "white";
+            faces.push_back(face2);
         }
     }
 

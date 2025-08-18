@@ -102,17 +102,17 @@ for (int i = 0; i < lat; i++) {
 
         // Triangle 1
         FaceData face1;
-        face1.face.vertex1 = v3;
-        face1.face.vertex2 = v2;
-        face1.face.vertex3 = v1;
+		face1.face.vertexIndices.push_back(v3);
+		face1.face.vertexIndices.push_back(v2);
+		face1.face.vertexIndices.push_back(v1);
         face1.face.materialKey = color;
         faces.push_back(face1);
 
         // Triangle 2
         FaceData face2;
-        face2.face.vertex1 = v4;
-        face2.face.vertex2 = v2;
-        face2.face.vertex3 = v3;
+		face2.face.vertexIndices.push_back(v4);
+		face2.face.vertexIndices.push_back(v2);
+		face2.face.vertexIndices.push_back(v3);
         face2.face.materialKey = color;
         faces.push_back(face2);
     }

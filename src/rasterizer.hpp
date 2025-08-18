@@ -88,13 +88,13 @@ class Rasterizer {
                 slib::vec3 rotatedFaceNormal;
                 rotatedFaceNormal = normalTransformMat * slib::vec4(faceDataEntry.faceNormal, 0);
 
-                vertex* p1 = projectedPoints[face.vertex1].get();
+                vertex* p1 = projectedPoints[face.vertexIndices[0]].get();
 
                 if (Visible(p1->world, rotatedFaceNormal)) {
                     Polygon<vertex> tri(
-                        { *projectedPoints[face.vertex1],
-                        *projectedPoints[face.vertex2],
-                        *projectedPoints[face.vertex3] },
+                        { *projectedPoints[face.vertexIndices[0]],
+                        *projectedPoints[face.vertexIndices[1]],
+                        *projectedPoints[face.vertexIndices[2]] },
                         face,
                         rotatedFaceNormal,
                         solid->materials.at(face.materialKey)

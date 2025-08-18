@@ -81,9 +81,10 @@ void Tetrakis::loadFaces() {
             uint32_t color = ((j % 2 == 0) ? 0xff0058fc : 0Xffffffff);
 
             FaceData face;
-            face.face.vertex1 = quads[i][(j + 1) % 4]; // wrap-around for the quad
-            face.face.vertex2 = quads[i][j];
-            face.face.vertex3 = centers[i];
+
+            face.face.vertexIndices.push_back(quads[i][(j + 1) % 4]);
+            face.face.vertexIndices.push_back(quads[i][j]);
+            face.face.vertexIndices.push_back(centers[i]);
 
             if (j % 2 == 0) {
                 face.face.materialKey = "blue";
