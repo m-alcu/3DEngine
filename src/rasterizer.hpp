@@ -88,20 +88,38 @@ class Rasterizer {
                 slib::vec3 rotatedFaceNormal;
                 rotatedFaceNormal = normalTransformMat * slib::vec4(faceDataEntry.faceNormal, 0);
 
+                const auto& idx = face.vertexIndices;
+                if (idx.size() < 3) return; // nothing to draw
+
+
                 vertex* p1 = projectedPoints[face.vertexIndices[0]].get();
 
                 if (Visible(p1->world, rotatedFaceNormal)) {
-                    Polygon<vertex> tri(
-                        { *projectedPoints[face.vertexIndices[0]],
-                        *projectedPoints[face.vertexIndices[1]],
-                        *projectedPoints[face.vertexIndices[2]] },
+
+                    // Build the vertex list for the polygon
+                    std::vector<vertex> polyVerts;
+                    polyVerts.reserve(idx.size());
+
+                    for (int i : idx) {
+                        // (Optional) bounds/null checks:
+                        if (i < 0 || static_cast<size_t>(i) >= projectedPoints.size() || !projectedPoints[i])
+                            return; // or continue / handle error
+
+                        const vertex& v = *projectedPoints[i];
+                        polyVerts.push_back(v);
+                    }
+
+                    Polygon<vertex> poly(
+                        std::move(polyVerts),
                         face,
                         rotatedFaceNormal,
                         solid->materials.at(face.materialKey)
                     );
 
-                    ClipCullDrawTriangleSutherlandHodgman(tri); // Must be thread-safe!
+                    // For n-gons; rename your function if it isn't triangle-specific anymore
+                    ClipCullDrawTriangleSutherlandHodgman(poly); // must be thread-safe
                 }
+
             }
         }
 
