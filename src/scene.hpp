@@ -48,6 +48,7 @@ struct Camera
     slib::vec3 up;
     float pitch;
     float yaw;
+	float roll = 0.0f; // Roll is not used in FPS view, but can be added if needed.
     slib::vec3 forward;
 };
 

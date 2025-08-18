@@ -51,7 +51,7 @@ class AmigaRasterizer {
             slib::mat4 translate = smath::translation(slib::vec3({solid->position.x, solid->position.y, solid->position.z}));
             slib::mat4 scale = smath::scale(slib::vec3({solid->position.zoom, solid->position.zoom, solid->position.zoom}));
             //slib::mat4 viewMatrix = smath::view(scene->camera.eye, scene->camera.target, scene->camera.up);
-            viewMatrix = smath::fpsview(scene->camera.pos, scene->camera.pitch, scene->camera.yaw);
+            viewMatrix = smath::fpsview(scene->camera.pos, scene->camera.pitch, scene->camera.yaw, scene->camera.roll);
 
             float pitch = scene->camera.pitch * RAD;
             float yaw = scene->camera.yaw * RAD;

@@ -154,6 +154,12 @@ int main(int, char**)
                     case SDLK_DOWN:
                         scene.camera.pitch += mouseSensitivity;
                         break;
+                    case SDLK_Z:
+                        scene.camera.roll += mouseSensitivity;
+                        break;
+                    case SDLK_X:
+                        scene.camera.roll -= mouseSensitivity;
+                        break;
                     case SDLK_Q:
                         scene.camera.pos -= scene.camera.forward * cameraSpeed;
                         break;
