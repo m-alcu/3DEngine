@@ -116,7 +116,7 @@ class Rasterizer {
                     );
 
                     // For n-gons; rename your function if it isn't triangle-specific anymore
-                    ClipCullDrawTriangleSutherlandHodgman(poly); // must be thread-safe
+                    ClipCullDrawPolygonSutherlandHodgman(poly); // must be thread-safe
                 }
 
             }
@@ -150,7 +150,7 @@ class Rasterizer {
         https://en.wikipedia.org/wiki/Sutherland%E2%80%93Hodgman_algorithm
         */
 
-        void ClipCullDrawTriangleSutherlandHodgman(const Polygon<vertex>& t) {
+        void ClipCullDrawPolygonSutherlandHodgman(const Polygon<vertex>& t) {
             std::vector<vertex> polygon = t.points;
 
             for (ClipPlane plane : {ClipPlane::Left, ClipPlane::Right, ClipPlane::Bottom, 

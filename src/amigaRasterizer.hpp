@@ -138,7 +138,7 @@ class AmigaRasterizer {
                     solid->materials.at(face.materialKey)
                 );
 
-                ClipCullDrawTriangleSutherlandHodgman(tri); // Must be thread-safe!
+                ClipCullDrawPolygonSutherlandHodgman(tri); // Must be thread-safe!
             }
         }
 
@@ -170,7 +170,7 @@ class AmigaRasterizer {
         https://en.wikipedia.org/wiki/Sutherland%E2%80%93Hodgman_algorithm
         */
 
-        void ClipCullDrawTriangleSutherlandHodgman(const Polygon<vertex>& t) {
+        void ClipCullDrawPolygonSutherlandHodgman(const Polygon<vertex>& t) {
             std::vector<vertex> polygon = t.points;
 
             for (ClipPlane plane : {ClipPlane::Left, ClipPlane::Right, ClipPlane::Bottom, 
