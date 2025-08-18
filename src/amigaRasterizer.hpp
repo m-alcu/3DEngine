@@ -129,16 +129,30 @@ class AmigaRasterizer {
                 const auto& faceDataEntry = solid->faceData[faceIndicesWithDepth[i].index];
                 const auto& face = faceDataEntry.face;
 
-                Polygon<vertex> tri(
-                    { *projectedPoints[face.vertexIndices[0]],
-                    *projectedPoints[face.vertexIndices[1]],
-                    *projectedPoints[face.vertexIndices[2]] },
+                const auto& idx = face.vertexIndices;
+                if (idx.size() < 3) return; // nothing to draw
+
+                // Build the vertex list for the polygon
+                std::vector<vertex> polyVerts;
+                polyVerts.reserve(idx.size());
+
+                for (int i : idx) {
+                    // (Optional) bounds/null checks:
+                    if (i < 0 || static_cast<size_t>(i) >= projectedPoints.size() || !projectedPoints[i])
+                        return; // or continue / handle error
+
+                    const vertex& v = *projectedPoints[i];
+                    polyVerts.push_back(v);
+                }
+
+                Polygon<vertex> poly(
+                    std::move(polyVerts),
                     face,
                     faceIndicesWithDepth[i].rotatedFaceNormal,
                     solid->materials.at(face.materialKey)
                 );
 
-                ClipCullDrawPolygonSutherlandHodgman(tri); // Must be thread-safe!
+                ClipCullDrawPolygonSutherlandHodgman(poly); // Must be thread-safe!
             }
         }
 
