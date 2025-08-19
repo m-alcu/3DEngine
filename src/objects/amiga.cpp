@@ -85,40 +85,31 @@ void Amiga::loadFaces(int lat, int lon) {
     material.map_Kd.textureFilter = slib::TextureFilter::NEIGHBOUR;
     materials.insert({"white", material});  
 
-for (int i = 0; i < lat; i++) {
-    for (int j = 0; j < lon; j++) {
-        int jNext = (j + 1) % lon; // wraps last column to the first
+    for (int i = 0; i < lat; i++) {
+        for (int j = 0; j < lon; j++) {
+            int jNext = (j + 1) % lon; // wraps last column to the first
 
-        int row1 = i * lon;
-        int row2 = (i + 1) * lon;
+            int row1 = i * lon;
+            int row2 = (i + 1) * lon;
 
-        int v1 = row1 + j;
-        int v2 = row2 + j;
-        int v3 = row1 + jNext;
-        int v4 = row2 + jNext;
+            int v1 = row1 + j;
+            int v2 = row2 + j;
+            int v3 = row1 + jNext;
+            int v4 = row2 + jNext;
 
-        // Optional: base color on (u,v)
-        std::string color = isRedTile(j / (float)lon, i / (float)lat, lat, lon) ? "red" : "white";
+            // Optional: base color on (u,v)
+            std::string color = isRedTile(j / (float)lon, i / (float)lat, lat, lon) ? "red" : "white";
 
-        // Triangle 1
-        FaceData face1;
-		face1.face.vertexIndices.push_back(v3);
-		face1.face.vertexIndices.push_back(v2);
-		face1.face.vertexIndices.push_back(v1);
-        face1.face.materialKey = color;
-        faces.push_back(face1);
-
-        // Triangle 2
-        FaceData face2;
-		face2.face.vertexIndices.push_back(v4);
-		face2.face.vertexIndices.push_back(v2);
-		face2.face.vertexIndices.push_back(v3);
-        face2.face.materialKey = color;
-        faces.push_back(face2);
+            // Quad
+            FaceData face;
+		    face.face.vertexIndices.push_back(v4);
+		    face.face.vertexIndices.push_back(v2);
+            face.face.vertexIndices.push_back(v1);
+		    face.face.vertexIndices.push_back(v3);
+            face.face.materialKey = color;
+            faces.push_back(face);
+        }
     }
-}
-
-    
 
     Amiga::faceData = faces;
     Amiga::numFaces = faces.size();

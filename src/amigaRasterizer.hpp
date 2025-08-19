@@ -87,14 +87,14 @@ class AmigaRasterizer {
             slib::vec3 rotatedFaceNormal;  // transformed face normal
         };
 
-        std::vector<FaceDepthInfo> SortFaces() {
+        std::vector<FaceDepthInfo> SortFaces(std::vector<FaceData>& faceData) {
 
             std::vector<FaceDepthInfo> faceIndicesWithDepth;
             // This does not change the size of the vector, just reserves space for future entries, this is more efficient
-            faceIndicesWithDepth.reserve(solid->faceData.size());
+            faceIndicesWithDepth.reserve(faceData.size());
 
-            for (int i = 0; i < static_cast<int>(solid->faceData.size()); ++i) {
-                const auto& faceDataEntry = solid->faceData[i];
+            for (int i = 0; i < static_cast<int>(faceData.size()); ++i) {
+                const auto& faceDataEntry = faceData[i];
                 const auto& face = faceDataEntry.face;
 
                 slib::vec3 rotatedFaceNormal;
@@ -123,7 +123,7 @@ class AmigaRasterizer {
 
         void DrawFaces() {
 
-            std::vector<FaceDepthInfo> faceIndicesWithDepth = SortFaces();
+            std::vector<FaceDepthInfo> faceIndicesWithDepth = SortFaces(solid->faceData);
 
             for (int i = 0; i < static_cast<int>(faceIndicesWithDepth.size()); ++i) {
                 const auto& faceDataEntry = solid->faceData[faceIndicesWithDepth[i].index];
