@@ -179,7 +179,7 @@ int main(int, char**)
 
         // Update camera using momentum
         scene.camera.pitch -= r.x;
-        scene.camera.yaw += r.y;
+        scene.camera.yaw -= r.y;
         scene.camera.roll += r.z;
         scene.camera.pos += m;
         // Change the rotation momentum vector (r) with hysteresis: newvalue = oldvalue*(1-eagerness) + input*eagerness

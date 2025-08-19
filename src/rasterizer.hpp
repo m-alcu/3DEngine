@@ -343,11 +343,11 @@ class Rasterizer {
                 auto& v0 = tri.points[i];
                 auto& v1 = tri.points[(i + 1) % tri.points.size()]; // wrap back to first
 
-                drawLine(v0.p_x >> 16, v0.p_y >> 16, v1.p_x >> 16, v1.p_y >> 16, pixels, width, height, color);
+                drawBresenhamLine(v0.p_x >> 16, v0.p_y >> 16, v1.p_x >> 16, v1.p_y >> 16, pixels, width, height, color);
             }
         }
 
-        void drawLine(int x0, int y0, int x1, int y1, uint32_t* pixels, int width, int height, uint32_t color) {
+        void drawBresenhamLine(int x0, int y0, int x1, int y1, uint32_t* pixels, int width, int height, uint32_t color) {
             int dx = std::abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
             int dy = -std::abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
             int err = dx + dy, e2;
