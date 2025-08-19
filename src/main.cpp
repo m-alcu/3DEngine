@@ -101,6 +101,10 @@ int main(int, char**)
     scene.camera.yaw = 0;
     scene.setup();
 
+    slib::vec3 r{ 0.f, 0.f, .2f };             // Rotation momentum vector (nonzero indicates view is still rotating)
+    slib::vec3 m{ 0.f, 0.f, 0.f };             // Movement momentum vector (nonzero indicates camera is still moving)
+    static float cameraEagerness = 0.1f; // 0 = no response, 1 = instant response
+
     float zNear = 10.0f; // Near plane distance
     float zFar  = 10000.0f; // Far plane distance
     float viewAngle = 45.0f; // Field of view angle in degrees    
@@ -159,10 +163,26 @@ int main(int, char**)
         bool fwd = keys[SDLK_A], sup = keys[SDLK_KP_MINUS], sleft = keys[SDLK_KP_1];
         bool back = keys[SDLK_Z], sdown = keys[SDLK_KP_PLUS], sright = keys[SDLK_KP_3];
 
-		scene.camera.yaw += (mouseSensitivity * cameraSpeed) * (right - left);
-		scene.camera.pitch -= (mouseSensitivity * cameraSpeed) * (up - down);
-		scene.camera.roll += (mouseSensitivity * cameraSpeed) * (rleft - rright);
-		scene.camera.pos += scene.camera.forward * (fwd - back) * cameraSpeed;
+        // Calculate input deltas
+        float yawInput = (mouseSensitivity * cameraSpeed) * (right - left);
+        float pitchInput = (mouseSensitivity * cameraSpeed) * (up - down);
+        float rollInput = (mouseSensitivity * cameraSpeed) * (rleft - rright);
+        float moveInput = (fwd - back) * cameraSpeed;
+
+        // Apply hysteresis to rotation momentum
+        r.x = r.x * (1.0f - cameraEagerness) + pitchInput * cameraEagerness;
+        r.y = r.y * (1.0f - cameraEagerness) + yawInput * cameraEagerness;
+        r.z = r.z * (1.0f - cameraEagerness) + rollInput * cameraEagerness;
+
+        // Apply hysteresis to movement momentum
+        m = m * (1.0f - cameraEagerness) + scene.camera.forward * moveInput * cameraEagerness;
+
+        // Update camera using momentum
+        scene.camera.pitch -= r.x;
+        scene.camera.yaw += r.y;
+        scene.camera.roll += r.z;
+        scene.camera.pos += m;
+        // Change the rotation momentum vector (r) with hysteresis: newvalue = oldvalue*(1-eagerness) + input*eagerness
 
         // [If using SDL_MAIN_USE_CALLBACKS: all code below would likely be your SDL_AppIterate() function]
         if (SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED)
