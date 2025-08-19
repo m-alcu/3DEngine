@@ -116,8 +116,8 @@ int main(int, char**)
     auto background = std::unique_ptr<Background>(BackgroundFactory::createBackground(backgroundType));
     background->draw(backg, height, width);
 
-    static float mouseSensitivity = 1.0f;
-    static float cameraSpeed = 6.0f;
+    static float mouseSensitivity = 1.f;
+    static float cameraSpeed = 25.0f;
 
     // Main loop
     bool done = false;
@@ -164,9 +164,9 @@ int main(int, char**)
         bool back = keys[SDLK_Z], sdown = keys[SDLK_KP_PLUS], sright = keys[SDLK_KP_3];
 
         // Calculate input deltas
-        float yawInput = (mouseSensitivity * cameraSpeed) * (right - left);
-        float pitchInput = (mouseSensitivity * cameraSpeed) * (up - down);
-        float rollInput = (mouseSensitivity * cameraSpeed) * (rleft - rright);
+        float yawInput = mouseSensitivity * (right - left);
+        float pitchInput = mouseSensitivity * (up - down);
+        float rollInput = mouseSensitivity * (rleft - rright);
         float moveInput = (fwd - back) * cameraSpeed;
 
         // Apply hysteresis to rotation momentum
