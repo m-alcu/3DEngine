@@ -108,9 +108,9 @@ int main(int, char**)
     BackgroundType backgroundType = BackgroundType::DESERT; // Default background type
 
     // Backgroud
-    Uint32* back = new Uint32[width * height];
+    Uint32* backg = new Uint32[width * height];
     auto background = std::unique_ptr<Background>(BackgroundFactory::createBackground(backgroundType));
-    background->draw(back, height, width);
+    background->draw(backg, height, width);
 
     static float mouseSensitivity = 1.0f;
     static float cameraSpeed = 6.0f;
@@ -123,7 +123,7 @@ int main(int, char**)
     io.IniFilename = nullptr;
     EMSCRIPTEN_MAINLOOP_BEGIN
 #else
-    while (!done)
+    for (std::map<int, bool> keys; !keys[SDLK_ESCAPE]; )
 #endif
     {
         // Poll and handle events (inputs, window resize, etc.)
@@ -132,49 +132,37 @@ int main(int, char**)
         // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application, or clear/overwrite your copy of the keyboard data.
         // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
         // [If using SDL_MAIN_USE_CALLBACKS: call ImGui_ImplSDL3_ProcessEvent() from your SDL_AppEvent() function]
-        SDL_Event event;
-        while (SDL_PollEvent(&event))
-        {
-            ImGui_ImplSDL3_ProcessEvent(&event);
+        // Process events.
+        for (SDL_Event ev; SDL_PollEvent(&ev); ) {
 
-            if (event.type == SDL_EVENT_KEY_DOWN) {
-                SDL_KeyboardEvent* key_event = (SDL_KeyboardEvent*)&event;
-                SDL_Keycode keycode = key_event->key;
+            ImGui_ImplSDL3_ProcessEvent(&ev);
 
-                switch (keycode) {
-                    case SDLK_LEFT:
-                        scene.camera.yaw += mouseSensitivity;
-                        break;
-                    case SDLK_RIGHT:
-                        scene.camera.yaw -= mouseSensitivity;
-                        break;
-                    case SDLK_UP:
-                        scene.camera.pitch -= mouseSensitivity;
-                        break;
-                    case SDLK_DOWN:
-                        scene.camera.pitch += mouseSensitivity;
-                        break;
-                    case SDLK_Z:
-                        scene.camera.roll += mouseSensitivity;
-                        break;
-                    case SDLK_X:
-                        scene.camera.roll -= mouseSensitivity;
-                        break;
-                    case SDLK_Q:
-                        scene.camera.pos -= scene.camera.forward * cameraSpeed;
-                        break;
-                    case SDLK_A:
-                        scene.camera.pos += scene.camera.forward * cameraSpeed;
-                        break;
-                }
+            switch (ev.type)
+            {
+                case SDL_EVENT_QUIT: keys[SDLK_ESCAPE] = true; break;
+                case SDL_EVENT_KEY_DOWN: keys[ev.key.key] = true; break;
+                case SDL_EVENT_KEY_UP:   keys[ev.key.key] = false; break;
+				case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+					if (ev.window.windowID == SDL_GetWindowID(window)) {
+						done = true;
+					}
+					break;
             }
-
-
-            if (event.type == SDL_EVENT_QUIT)
-                done = true;
-            if (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED && event.window.windowID == SDL_GetWindowID(window))
-                done = true;
         }
+
+        // The input scheme is the same as in Descent, the game by Parallax Interactive.
+        // Mouse input is not handled for now.
+        bool up = keys[SDLK_UP] || keys[SDLK_KP_8];
+        bool down = keys[SDLK_DOWN] || keys[SDLK_KP_2], alt = keys[SDLK_LALT] || keys[SDLK_RALT];
+        bool left = keys[SDLK_LEFT] || keys[SDLK_KP_4], rleft = keys[SDLK_Q] || keys[SDLK_KP_7];
+        bool right = keys[SDLK_RIGHT] || keys[SDLK_KP_6], rright = keys[SDLK_E] || keys[SDLK_KP_9];
+        bool fwd = keys[SDLK_A], sup = keys[SDLK_KP_MINUS], sleft = keys[SDLK_KP_1];
+        bool back = keys[SDLK_Z], sdown = keys[SDLK_KP_PLUS], sright = keys[SDLK_KP_3];
+
+		scene.camera.yaw += (mouseSensitivity * cameraSpeed) * (right - left);
+		scene.camera.pitch -= (mouseSensitivity * cameraSpeed) * (up - down);
+		scene.camera.roll += (mouseSensitivity * cameraSpeed) * (rleft - rright);
+		scene.camera.pos += scene.camera.forward * (fwd - back) * cameraSpeed;
 
         // [If using SDL_MAIN_USE_CALLBACKS: all code below would likely be your SDL_AppIterate() function]
         if (SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED)
@@ -224,8 +212,8 @@ int main(int, char**)
             ImGui::End();
         }
 
-        background->draw(back, height, width);
-        solidRenderer.drawScene(scene, zNear, zFar, viewAngle, back);
+        background->draw(backg, height, width);
+        solidRenderer.drawScene(scene, zNear, zFar, viewAngle, backg);
 
         // Rendering
         ImGui::Render();
@@ -255,7 +243,7 @@ int main(int, char**)
     ImGui_ImplSDL3_Shutdown();
     ImGui::DestroyContext();
 
-    delete[] back;
+    delete[] backg;
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
