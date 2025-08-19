@@ -6,8 +6,7 @@
 #include "../constants.hpp"
 
 enum class Shading {
-    AmigaFlat,
-    AmigaWireframe,
+    Wireframe,
     Flat,
     Gouraud,
     BlinnPhong,
@@ -20,8 +19,7 @@ enum class Shading {
 
 // Labels for the enum (must match order of enum values)
 static const char* shadingNames[] = {
-    "Amiga Flat",
-    "Amiga Wireframe",
+    "Wireframe",
     "Flat",
     "Gouraud",
     "Blinn-Phong",

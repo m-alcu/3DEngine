@@ -4,9 +4,7 @@
 #include <cstdint>
 #include "objects/solid.hpp"
 #include "rasterizer.hpp"
-#include "amigaRasterizer.hpp"
 #include "effects/flatEffect.hpp"
-#include "effects/amigaFlatEffect.hpp"
 #include "effects/GouraudEffect.hpp"
 #include "effects/BlinnPhongEffect.hpp"
 #include "effects/PhongEffect.hpp"
@@ -25,15 +23,12 @@ class Renderer {
             for (auto& solidPtr : scene.solids) {
                 switch (solidPtr->shading) {
                     case Shading::Flat: 
+                        flatRasterizer.setWireframe(false);
                         flatRasterizer.drawRenderable(*solidPtr, scene);
                         break;   
-                    case Shading::AmigaFlat:
-                        amigaFlatRasterizer.setWireframe(false);
-                        amigaFlatRasterizer.drawRenderable(*solidPtr, scene);
-                        break;        
-                    case Shading::AmigaWireframe: 
-                        amigaFlatRasterizer.setWireframe(true);
-                        amigaFlatRasterizer.drawRenderable(*solidPtr, scene);
+                    case Shading::Wireframe: 
+                        flatRasterizer.setWireframe(true);
+                        flatRasterizer.drawRenderable(*solidPtr, scene);
                         break;                                              
                     case Shading::TexturedFlat: 
                         texturedFlatRasterizer.drawRenderable(*solidPtr, scene);
@@ -77,7 +72,6 @@ class Renderer {
         }
         
         Rasterizer<FlatEffect> flatRasterizer;
-        AmigaRasterizer<AmigaFlatEffect> amigaFlatRasterizer;
         Rasterizer<GouraudEffect> gouraudRasterizer;
         Rasterizer<PhongEffect> phongRasterizer;
         Rasterizer<BlinnPhongEffect> blinnPhongRasterizer;

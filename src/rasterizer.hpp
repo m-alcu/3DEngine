@@ -28,6 +28,10 @@ class Rasterizer {
             DrawFaces();
         }
 
+        void setWireframe(bool wireframeMode) {
+            wireframe = wireframeMode;
+        }
+
     private:
         typedef typename Effect::Vertex vertex;
         std::vector<std::unique_ptr<vertex>> projectedPoints;
@@ -36,7 +40,8 @@ class Rasterizer {
         slib::mat4 fullTransformMat;
         slib::mat4 normalTransformMat;
         slib::mat4 viewMatrix;
-        Effect effect;    
+        Effect effect;
+        bool wireframe = false;
         
         void setRenderable(Solid* solidPtr) {
             projectedPoints.clear();
@@ -90,7 +95,7 @@ class Rasterizer {
 
                 vertex* p1 = projectedPoints[face.vertexIndices[0]].get();
 
-                if (Visible(p1->world, rotatedFaceNormal)) {
+                if (wireframe || Visible(p1->world, rotatedFaceNormal)) {
 
                     const auto& idx = face.vertexIndices;
                     if (idx.size() < 3) return; // nothing to draw
@@ -255,11 +260,16 @@ class Rasterizer {
 
             auto* pixels = static_cast<uint32_t*>(scene->sdlSurface->pixels);
 
-            auto begin = std::begin(tri.points), end = std::end(tri.points);
-
-            for(auto& point : tri.points) {
+            for (auto& point : tri.points) {
                 effect.vs.viewProjection(*scene, point);
             }
+
+            if (wireframe) {
+                drawWireframeAmiga(tri, 0xffffffff, pixels);
+				return; // No rasterization in wireframe mode
+            }
+
+            auto begin = std::begin(tri.points), end = std::end(tri.points);
 
             // Find the point that is topleft-most. Begin both slopes (left & right) from there.
             // Also find the bottomright-most vertex; that’s where the rendering ends.
@@ -322,7 +332,36 @@ class Rasterizer {
         
             left.advance();
             right.advance();
-        }       
+        } 
+
+        void drawWireframeAmiga(Polygon<vertex> tri, uint32_t color, uint32_t* pixels) {
+            int width = scene->screen.width;
+            int height = scene->screen.height;
+
+            // Loop through vertices and chain to the next, including wrap-around
+            for (size_t i = 0; i < tri.points.size(); i++) {
+                auto& v0 = tri.points[i];
+                auto& v1 = tri.points[(i + 1) % tri.points.size()]; // wrap back to first
+
+                drawLine(v0.p_x >> 16, v0.p_y >> 16, v1.p_x >> 16, v1.p_y >> 16, pixels, width, height, color);
+            }
+        }
+
+        void drawLine(int x0, int y0, int x1, int y1, uint32_t* pixels, int width, int height, uint32_t color) {
+            int dx = std::abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+            int dy = -std::abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+            int err = dx + dy, e2;
+
+            while (true) {
+                if (x0 >= 0 && x0 < width && y0 >= 0 && y0 < height)
+                    pixels[y0 * width + x0] = color;
+
+                if (x0 == x1 && y0 == y1) break;
+                e2 = 2 * err;
+                if (e2 >= dy) { err += dy; x0 += sx; }
+                if (e2 <= dx) { err += dx; y0 += sy; }
+            }
+        }
 
     };
     
