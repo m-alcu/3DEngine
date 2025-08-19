@@ -116,7 +116,7 @@ int main(int, char**)
     auto background = std::unique_ptr<Background>(BackgroundFactory::createBackground(backgroundType));
     background->draw(backg, height, width);
 
-    static float mouseSensitivity = 1.f;
+    static float sensitivity = 1.f;
     static float cameraSpeed = 25.0f;
 
     // Main loop
@@ -164,9 +164,9 @@ int main(int, char**)
         bool back = keys[SDLK_Z], sdown = keys[SDLK_KP_PLUS], sright = keys[SDLK_KP_3];
 
         // Calculate input deltas
-        float yawInput = mouseSensitivity * (right - left);
-        float pitchInput = mouseSensitivity * (up - down);
-        float rollInput = mouseSensitivity * (rleft - rright);
+        float yawInput = sensitivity * (right - left);
+        float pitchInput = sensitivity * (up - down);
+        float rollInput = sensitivity * (rleft - rright);
         float moveInput = (fwd - back) * cameraSpeed;
 
         // Apply hysteresis to rotation momentum
@@ -202,10 +202,10 @@ int main(int, char**)
         // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
         {
             ImGui::Begin("3d params");                         
-            ImGui::SliderFloat("x angle", &incXangle, 0.0f, 1.0f); 
-            ImGui::SliderFloat("y angle", &incYangle, 0.0f, 1.0f); 
-            ImGui::SliderFloat("camera speed", &cameraSpeed, 0.1f, 10.0f); 
-            ImGui::SliderFloat("pitch/yaw sensitivity", &mouseSensitivity, 0.0f, 10.0f);
+            ImGui::SliderFloat("rot x angle", &incXangle, 0.0f, 1.0f); 
+            ImGui::SliderFloat("rot y angle", &incYangle, 0.0f, 1.0f); 
+            ImGui::SliderFloat("cam speed", &cameraSpeed, 0.1f, 10.0f); 
+            ImGui::SliderFloat("pitch/yaw/roll sens", &sensitivity, 0.0f, 10.0f);
 
             // Render combo box in your ImGui window code
             int currentShading = static_cast<int>(scene.solids[0]->shading);
