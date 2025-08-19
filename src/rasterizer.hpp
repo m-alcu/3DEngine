@@ -265,7 +265,7 @@ class Rasterizer {
             }
 
             if (wireframe) {
-                drawWireframeAmiga(tri, 0xffffffff, pixels);
+                drawWireframe(tri, 0xffffffff, pixels);
 				return; // No rasterization in wireframe mode
             }
 
@@ -334,7 +334,7 @@ class Rasterizer {
             right.advance();
         } 
 
-        void drawWireframeAmiga(Polygon<vertex> tri, uint32_t color, uint32_t* pixels) {
+        void drawWireframe(Polygon<vertex> tri, uint32_t color, uint32_t* pixels) {
             int width = scene->screen.width;
             int height = scene->screen.height;
 
