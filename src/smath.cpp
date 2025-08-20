@@ -174,7 +174,20 @@ namespace smath
         b = (px >> 16) & 0xFF;
     }
 
-
+    /**
+     * Bilinear sampler for RGBA8 textures.
+     *
+     * Optimizations applied:
+     *  - Computes integer texel coordinates once (floor), clamps only twice.
+     *  - Uses precomputed row stride to avoid repeated multiplications.
+     *  - Assumes bpp == 4 (RGBA8), so pixels are read as 32-bit words.
+     *  - Loads four neighboring pixels with 32-bit reads, then unpacks channels.
+     *  - Performs bilinear interpolation as two horizontal lerps + one vertical lerp
+     *    instead of four weighted blends, reducing multiplications.
+     *
+     * Input (u,v) are normalized [0,1] texture coordinates.
+     * Output r,g,b are floating-point channel values in [0,255].
+     */
     void sampleBilinear(const slib::texture& tex, float u, float v, float& r, float& g, float& b)
     {
         // Map to texel space and center on texel centers (-0.5)
