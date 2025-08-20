@@ -94,15 +94,7 @@ int main(int, char**)
 
 
     Scene scene({height, width});
-	// Light comming from origin towards far y and z
-    scene.lux = smath::normalize(slib::vec3{0, 1, 1});
-	// Far is positive z, so we are looking from the origin to the positive z axis.
-    scene.eye = {0, 0, 1};
     scene.setup();
-
-    float zNear = 10.0f; // Near plane distance
-    float zFar  = 10000.0f; // Far plane distance
-    float viewAngle = 45.0f; // Field of view angle in degrees    
 
     BackgroundType backgroundType = BackgroundType::DESERT; // Default background type
 
@@ -110,9 +102,6 @@ int main(int, char**)
     Uint32* backg = new Uint32[width * height];
     auto background = std::unique_ptr<Background>(BackgroundFactory::createBackground(backgroundType));
     background->draw(backg, height, width);
-
-    static float sensitivity = 1.f;
-    static float cameraSpeed = 25.0f;
 
     // Main loop
     bool done = false;
@@ -159,10 +148,10 @@ int main(int, char**)
         bool back = keys[SDLK_Z], sdown = keys[SDLK_KP_PLUS], sright = keys[SDLK_KP_3];
 
         // Calculate input deltas
-        float yawInput = sensitivity * (right - left);
-        float pitchInput = sensitivity * (up - down);
-        float rollInput = sensitivity * (rleft - rright);
-        float moveInput = (fwd - back) * cameraSpeed;
+        float yawInput = scene.camera.sensitivity * (right - left);
+        float pitchInput = scene.camera.sensitivity * (up - down);
+        float rollInput = scene.camera.sensitivity * (rleft - rright);
+        float moveInput = (fwd - back) * scene.camera.speed;
 
         // Apply hysteresis to rotation momentum
         scene.rotationMomentum.x = scene.rotationMomentum.x * (1.0f - scene.camera.eagerness) + pitchInput * scene.camera.eagerness;
@@ -199,8 +188,8 @@ int main(int, char**)
             ImGui::Begin("3d params");                         
             ImGui::SliderFloat("rot x angle", &incXangle, 0.0f, 1.0f); 
             ImGui::SliderFloat("rot y angle", &incYangle, 0.0f, 1.0f); 
-            ImGui::SliderFloat("cam speed", &cameraSpeed, 0.1f, 10.0f); 
-            ImGui::SliderFloat("pitch/yaw/roll sens", &sensitivity, 0.0f, 10.0f);
+            ImGui::SliderFloat("cam speed", &scene.camera.speed, 0.1f, 10.0f);
+            ImGui::SliderFloat("pitch/yaw/roll sens", &scene.camera.sensitivity, 0.0f, 10.0f);
 
             // Render combo box in your ImGui window code
             int currentShading = static_cast<int>(scene.solids[0]->shading);
@@ -228,7 +217,7 @@ int main(int, char**)
         }
 
         background->draw(backg, height, width);
-        solidRenderer.drawScene(scene, zNear, zFar, viewAngle, backg);
+        solidRenderer.drawScene(scene, scene.zNear, scene.zFar, scene.viewAngle, backg);
 
         // Rendering
         ImGui::Render();

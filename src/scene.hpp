@@ -51,6 +51,8 @@ struct Camera
 	float roll = 0.0f; // Roll is not used in FPS view, but can be added if needed.
     slib::vec3 forward = { 0,0,0 };
     float eagerness = 0.1f; // 0 = no response, 1 = instant response
+    float sensitivity = 1.f;
+    float speed = 25.0f;
 };
 
 typedef struct Screen
@@ -121,6 +123,10 @@ public:
 
     slib::vec3 rotationMomentum{ 0.f, 0.f, .2f }; // Rotation momentum vector (nonzero indicates view is still rotating)
     slib::vec3 movementMomentum{ 0.f, 0.f, 0.f }; // Movement momentum vector (nonzero indicates camera is still moving)
+
+    float zNear = 10.0f; // Near plane distance
+    float zFar = 10000.0f; // Far plane distance
+    float viewAngle = 45.0f; // Field of view angle in degrees   
 
     Camera camera; // Camera object to manage camera properties.
     // Store solids in a vector of unique_ptr to handle memory automatically.
