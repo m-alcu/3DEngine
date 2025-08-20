@@ -149,6 +149,8 @@ void Scene::setup() {
 	// Used in BlinnPhong shading
     halfwayVector = smath::normalize(lux + eye);
 
+    pixels = new uint32_t [screen.width * screen.height];
+
     switch (sceneType) {
         case SceneType::TORUS:
             torusInit();

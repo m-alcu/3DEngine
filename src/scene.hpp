@@ -70,12 +70,6 @@ public:
           zBuffer( std::make_shared<ZBuffer>( scr.width,scr.height )),
           projectionMatrix(smath::identity())
     {
-        sdlSurface = SDL_CreateSurface(screen.width, screen.height, SDL_PIXELFORMAT_BGRA32);
-        if (!sdlSurface) {
-            SDL_Log("SDL_CreateSurface failed: %s", SDL_GetError());
-        }
-
-        SDL_SetSurfaceBlendMode(sdlSurface, SDL_BLENDMODE_NONE);
         camera.eye = {0.0f, 0.0f, 0.0f};          // Camera position
         camera.target = {0.0f, 0.0f, -1.0f};      // Point to look at (in -Z)
         camera.up = {0.0f, 1.0f, 0.0f};           // Up vector (typically +Y)
@@ -84,7 +78,10 @@ public:
     // Destructor to free the allocated memory.
     ~Scene()
     {
-        SDL_DestroySurface(sdlSurface);
+		if (pixels) {
+			delete[] pixels; // Free the pixel data
+			pixels = nullptr;
+		}
     }
 
     // Called to set up the Scene, including creation of Solids, etc.
@@ -119,7 +116,7 @@ public:
     slib::vec3 halfwayVector;
     slib::mat4 projectionMatrix;
     std::shared_ptr<ZBuffer> zBuffer; // Use shared_ptr for zBuffer to manage its lifetime automatically.
-    SDL_Surface* sdlSurface = nullptr; // SDL surface for rendering.
+    uint32_t* pixels = nullptr; // Pointer to the pixel data.
 
     slib::vec3 rotationMomentum{ 0.f, 0.f, .2f }; // Rotation momentum vector (nonzero indicates view is still rotating)
     slib::vec3 movementMomentum{ 0.f, 0.f, 0.f }; // Movement momentum vector (nonzero indicates camera is still moving)

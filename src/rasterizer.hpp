@@ -253,7 +253,7 @@ class Rasterizer {
 
         void draw(Polygon<vertex>& tri) {
 
-            auto* pixels = static_cast<uint32_t*>(scene->sdlSurface->pixels);
+            auto* pixels = static_cast<uint32_t*>(scene->pixels);
 
             for (auto& point : tri.points) {
                 effect.vs.viewProjection(*scene, point);
@@ -280,7 +280,7 @@ class Rasterizer {
             
             int forwards = 1;
             Slope slopes[2] {};
-            for(int side = 0, cury = gety(side), nexty[2] = {cury,cury}, hy = cury * scene->sdlSurface->w; cur[side] != last; )
+            for(int side = 0, cury = gety(side), nexty[2] = {cury,cury}, hy = cury * scene->screen.width; cur[side] != last; )
             {
                 // We have reached a bend on either side (or both). "side" indicates which side the next bend is.
                 // In the beginning of the loop, both sides have a bend (top-left corner of the polygon).
@@ -297,7 +297,7 @@ class Rasterizer {
                 // Identify which side the next bend is going to be, by choosing the smaller Y coordinate.
                 side = (nexty[0] <= nexty[1]) ? 0 : 1;
                 // Process scanlines until the next bend.
-                for(int limit = nexty[side]; cury < limit; ++cury, hy+= scene->sdlSurface->w)
+                for(int limit = nexty[side]; cury < limit; ++cury, hy+= scene->screen.width)
                     DrawScanline(hy, slopes[0], slopes[1], tri, pixels);
 
             }                   

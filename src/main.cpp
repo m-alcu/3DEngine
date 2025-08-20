@@ -42,7 +42,7 @@ int main(int, char**)
 
     // Create window with SDL_Renderer graphics context
     SDL_WindowFlags window_flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN | SDL_WINDOW_HIGH_PIXEL_DENSITY;
-    SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL3+SDL_Renderer example", width * 2, height * 2, window_flags);
+    SDL_Window* window = SDL_CreateWindow("3D Engine", width * 2, height * 2, window_flags);
     if (window == nullptr)
     {
         printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
@@ -55,6 +55,9 @@ int main(int, char**)
         SDL_Log("Error: SDL_CreateRenderer(): %s\n", SDL_GetError());
         return -1;
     }
+
+    SDL_Texture* texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, width, height);
+    SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_NONE);
 
 
     SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
@@ -222,17 +225,11 @@ int main(int, char**)
         // Rendering
         ImGui::Render();
 
-        SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, scene.sdlSurface);
-        if (!tex) {
-            SDL_Log("SDL_CreateTextureFromSurface failed: %s", SDL_GetError());
-        }
-
-        SDL_RenderTexture(renderer, tex, nullptr, nullptr);
+        SDL_UpdateTexture(texture, nullptr, &scene.pixels[0], 4 * width);
+        SDL_RenderTexture(renderer, texture, nullptr, nullptr);
 
         ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
         SDL_RenderPresent(renderer);
-
-        SDL_DestroyTexture(tex);
 
         scene.solids[0]->position.xAngle += incXangle;
         scene.solids[0]->position.yAngle += incYangle;
@@ -250,6 +247,7 @@ int main(int, char**)
     delete[] backg;
 
     SDL_DestroyRenderer(renderer);
+	SDL_DestroyTexture(texture);
     SDL_DestroyWindow(window);
     SDL_Quit();
 
