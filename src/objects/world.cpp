@@ -102,21 +102,14 @@ for (int i = 0; i < lat; i++) {
         // Optional: base color on (u,v)
         std::string color = isRedTile(j / (float)lon, i / (float)lat, lat, lon) ? "red" : "white";
 
-        // Triangle 1
-        FaceData face1;
-		face1.face.vertexIndices.push_back(v3);
-		face1.face.vertexIndices.push_back(v2);
-		face1.face.vertexIndices.push_back(v1);
-        face1.face.materialKey = color;
-        faces.push_back(face1);
-
-        // Triangle 2
-        FaceData face2;
-		face2.face.vertexIndices.push_back(v4);
-		face2.face.vertexIndices.push_back(v2);
-		face2.face.vertexIndices.push_back(v3);
-        face2.face.materialKey = color;
-        faces.push_back(face2);
+        // Quad
+        FaceData face;
+        face.face.vertexIndices.push_back(v4);
+        face.face.vertexIndices.push_back(v2);
+        face.face.vertexIndices.push_back(v1);
+        face.face.vertexIndices.push_back(v3);
+        face.face.materialKey = color;
+        faces.push_back(face);
     }
 }
 
