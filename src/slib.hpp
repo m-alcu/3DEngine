@@ -26,6 +26,7 @@ namespace slib
         int w, h;
         std::vector<unsigned char> data;
         unsigned int bpp;
+        unsigned int rowStride; // == w * bpp (set once)
         TextureFilter textureFilter;
     };
 

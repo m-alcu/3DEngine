@@ -6,6 +6,7 @@
 #include "constants.hpp"
 #include <cmath>
 #include <algorithm>
+#include <cstdint>
 
 namespace smath
 {
@@ -156,45 +157,76 @@ namespace smath
 
     void sampleNearest(const slib::texture& tex, float u, float v, int& r, int& g, int& b)
     {
-        int tx = static_cast<int>(u * (tex.w - 1));
-        int ty = static_cast<int>(v * (tex.h - 1));
-        int index = (ty * tex.w + tx) * tex.bpp;
+        int tx = static_cast<int>(u * tex.w);
+        if (tx == tex.w) tx = tex.w - 1;
 
-        r = tex.data[index];
-        g = tex.data[index + 1];
-        b = tex.data[index + 2];
+        int ty = static_cast<int>(v * tex.h);
+        if (ty == tex.h) ty = tex.h - 1;
+
+		//we assume always bpp = 4 (RGBA)
+
+        const uint32_t* row32 = reinterpret_cast<const uint32_t*>(&tex.data[ty * tex.rowStride]);
+        uint32_t px;
+        std::memcpy(&px, row32 + tx, 4);
+
+        r = (px) & 0xFF;
+        g = (px >> 8) & 0xFF;
+        b = (px >> 16) & 0xFF;
     }
+
 
     void sampleBilinear(const slib::texture& tex, float u, float v, float& r, float& g, float& b)
     {
-        float tx = u * tex.w - 0.5f;
-        float ty = v * tex.h - 0.5f;
+        // Map to texel space and center on texel centers (-0.5)
+        float xf = u * tex.w - 0.5f;
+        float yf = v * tex.h - 0.5f;
 
-        int left = std::clamp(static_cast<int>(tx), 0, tex.w - 2);
-        int top = std::clamp(static_cast<int>(ty), 0, tex.h - 2);
-        int right = left + 1;
-        int bottom = top + 1;
+        // Floor once; clamp to keep (x+1,y+1) in-bounds
+        int x = static_cast<int>(std::floor(xf));
+        int y = static_cast<int>(std::floor(yf));
+        if (x < 0) x = 0; else if (x > tex.w - 2) x = tex.w - 2;
+        if (y < 0) y = 0; else if (y > tex.h - 2) y = tex.h - 2;
 
-        float fracU = tx - left;
-        float fracV = ty - top;
+        float fx = xf - x;          // frac in [0,1)
+        float fy = yf - y;
+        float one_minus_fx = 1.0f - fx;
+        float one_minus_fy = 1.0f - fy;
 
-        float ul = (1.0f - fracU) * (1.0f - fracV);
-        float ll = (1.0f - fracU) * fracV;
-        float ur = fracU * (1.0f - fracV);
-        float lr = fracU * fracV;
+        // Precompute row bases (in bytes)
+        const uint8_t* rowT = tex.data.data() + y * tex.rowStride;
+        const uint8_t* rowB = rowT + tex.rowStride;
 
-        auto idx = [&](int x, int y) {
-            return (y * tex.w + x) * tex.bpp;
-        };
+        // Assume RGBA8 (bpp = 4)
+        const uint32_t* rowT32 = reinterpret_cast<const uint32_t*>(rowT);
+        const uint32_t* rowB32 = reinterpret_cast<const uint32_t*>(rowB);
 
-        auto tL = idx(left, top);
-        auto tR = idx(right, top);
-        auto bL = idx(left, bottom);
-        auto bR = idx(right, bottom);
+        // Load 4 neighboring pixels (safe for unaligned on x86; use memcpy if you prefer strict aliasing safety)
+        uint32_t p00 = rowT32[x];     // (x,   y)
+        uint32_t p10 = rowT32[x + 1]; // (x+1, y)
+        uint32_t p01 = rowB32[x];     // (x,   y+1)
+        uint32_t p11 = rowB32[x + 1]; // (x+1, y+1)
 
-        r = ul * tex.data[tL] + ll * tex.data[bL] + ur * tex.data[tR] + lr * tex.data[bR];
-        g = ul * tex.data[tL + 1] + ll * tex.data[bL + 1] + ur * tex.data[tR + 1] + lr * tex.data[bR + 1];
-        b = ul * tex.data[tL + 2] + ll * tex.data[bL + 2] + ur * tex.data[tR + 2] + lr * tex.data[bR + 2];
+        // Horizontal lerp on top and bottom rows per channel (8 muls total), then vertical lerp (3 more)
+        // Extract channels as 0..255 ints
+        auto lerp = [](float a, float b, float t) { return a + (b - a) * t; };
+
+        float rT = lerp(static_cast<float>(p00 & 0xFF),
+            static_cast<float>(p10 & 0xFF), fx);
+        float gT = lerp(static_cast<float>((p00 >> 8) & 0xFF),
+            static_cast<float>((p10 >> 8) & 0xFF), fx);
+        float bT = lerp(static_cast<float>((p00 >> 16) & 0xFF),
+            static_cast<float>((p10 >> 16) & 0xFF), fx);
+
+        float rB = lerp(static_cast<float>(p01 & 0xFF),
+            static_cast<float>(p11 & 0xFF), fx);
+        float gB = lerp(static_cast<float>((p01 >> 8) & 0xFF),
+            static_cast<float>((p11 >> 8) & 0xFF), fx);
+        float bB = lerp(static_cast<float>((p01 >> 16) & 0xFF),
+            static_cast<float>((p11 >> 16) & 0xFF), fx);
+
+        r = lerp(rT, rB, fy);
+        g = lerp(gT, gB, fy);
+        b = lerp(bT, bB, fy);
     }
 
 } // namespace smath
