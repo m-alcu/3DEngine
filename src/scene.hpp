@@ -41,15 +41,16 @@ static const char* sceneNames[] = {
 
 struct Camera
 {
-    slib::vec3 pos;
-    slib::vec3 rotation;    
-    slib::vec3 eye;
-    slib::vec3 target;
-    slib::vec3 up;
-    float pitch;
-    float yaw;
+    slib::vec3 pos = { 0,0,0 };
+    slib::vec3 rotation = { 0,0,0 };
+    slib::vec3 eye = { 0,0,0 };;
+    slib::vec3 target = { 0,0,0 };
+    slib::vec3 up = { 0,0,0 };
+    float pitch = 0.0f;
+    float yaw = 0.0f;
 	float roll = 0.0f; // Roll is not used in FPS view, but can be added if needed.
-    slib::vec3 forward;
+    slib::vec3 forward = { 0,0,0 };
+    float eagerness = 0.1f; // 0 = no response, 1 = instant response
 };
 
 typedef struct Screen
@@ -117,6 +118,9 @@ public:
     slib::mat4 projectionMatrix;
     std::shared_ptr<ZBuffer> zBuffer; // Use shared_ptr for zBuffer to manage its lifetime automatically.
     SDL_Surface* sdlSurface = nullptr; // SDL surface for rendering.
+
+    slib::vec3 rotationMomentum{ 0.f, 0.f, .2f }; // Rotation momentum vector (nonzero indicates view is still rotating)
+    slib::vec3 movementMomentum{ 0.f, 0.f, 0.f }; // Movement momentum vector (nonzero indicates camera is still moving)
 
     Camera camera; // Camera object to manage camera properties.
     // Store solids in a vector of unique_ptr to handle memory automatically.

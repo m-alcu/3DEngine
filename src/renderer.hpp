@@ -5,13 +5,13 @@
 #include "objects/solid.hpp"
 #include "rasterizer.hpp"
 #include "effects/flatEffect.hpp"
-#include "effects/GouraudEffect.hpp"
-#include "effects/BlinnPhongEffect.hpp"
-#include "effects/PhongEffect.hpp"
-#include "effects/TexturedFlatEffect.hpp"
-#include "effects/TexturedGouraudEffect.hpp"
-#include "effects/TexturedPhongEffect.hpp"
-#include "effects/TexturedBlinnPhongEffect.hpp"
+#include "effects/gouraudEffect.hpp"
+#include "effects/blinnPhongEffect.hpp"
+#include "effects/phongEffect.hpp"
+#include "effects/texturedFlatEffect.hpp"
+#include "effects/texturedGouraudEffect.hpp"
+#include "effects/texturedPhongEffect.hpp"
+#include "effects/texturedBlinnPhongEffect.hpp"
 
 class Renderer {
 

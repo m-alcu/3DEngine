@@ -94,16 +94,11 @@ int main(int, char**)
 
 
     Scene scene({height, width});
-    scene.lux = smath::normalize(slib::vec3{0, 1, 1});;
+	// Light comming from origin towards far y and z
+    scene.lux = smath::normalize(slib::vec3{0, 1, 1});
+	// Far is positive z, so we are looking from the origin to the positive z axis.
     scene.eye = {0, 0, 1};
-    scene.camera.pos = {0, 0, 0};
-    scene.camera.pitch = 0;
-    scene.camera.yaw = 0;
     scene.setup();
-
-    slib::vec3 r{ 0.f, 0.f, .2f };             // Rotation momentum vector (nonzero indicates view is still rotating)
-    slib::vec3 m{ 0.f, 0.f, 0.f };             // Movement momentum vector (nonzero indicates camera is still moving)
-    static float cameraEagerness = 0.1f; // 0 = no response, 1 = instant response
 
     float zNear = 10.0f; // Near plane distance
     float zFar  = 10000.0f; // Far plane distance
@@ -170,18 +165,18 @@ int main(int, char**)
         float moveInput = (fwd - back) * cameraSpeed;
 
         // Apply hysteresis to rotation momentum
-        r.x = r.x * (1.0f - cameraEagerness) + pitchInput * cameraEagerness;
-        r.y = r.y * (1.0f - cameraEagerness) + yawInput * cameraEagerness;
-        r.z = r.z * (1.0f - cameraEagerness) + rollInput * cameraEagerness;
+        scene.rotationMomentum.x = scene.rotationMomentum.x * (1.0f - scene.camera.eagerness) + pitchInput * scene.camera.eagerness;
+        scene.rotationMomentum.y = scene.rotationMomentum.y * (1.0f - scene.camera.eagerness) + yawInput * scene.camera.eagerness;
+        scene.rotationMomentum.z = scene.rotationMomentum.z * (1.0f - scene.camera.eagerness) + rollInput * scene.camera.eagerness;
 
         // Apply hysteresis to movement momentum
-        m = m * (1.0f - cameraEagerness) + scene.camera.forward * moveInput * cameraEagerness;
+        scene.movementMomentum = scene.movementMomentum * (1.0f - scene.camera.eagerness) + scene.camera.forward * moveInput * scene.camera.eagerness;
 
         // Update camera using momentum
-        scene.camera.pitch -= r.x;
-        scene.camera.yaw -= r.y;
-        scene.camera.roll += r.z;
-        scene.camera.pos += m;
+        scene.camera.pitch -= scene.rotationMomentum.x;
+        scene.camera.yaw -= scene.rotationMomentum.y;
+        scene.camera.roll += scene.rotationMomentum.z;
+        scene.camera.pos += scene.movementMomentum;
         // Change the rotation momentum vector (r) with hysteresis: newvalue = oldvalue*(1-eagerness) + input*eagerness
 
         // [If using SDL_MAIN_USE_CALLBACKS: all code below would likely be your SDL_AppIterate() function]

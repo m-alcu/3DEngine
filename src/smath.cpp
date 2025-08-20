@@ -166,8 +166,7 @@ namespace smath
 		//we assume always bpp = 4 (RGBA)
 
         const uint32_t* row32 = reinterpret_cast<const uint32_t*>(&tex.data[ty * tex.rowStride]);
-        uint32_t px;
-        std::memcpy(&px, row32 + tx, 4);
+        uint32_t px = row32[tx];
 
         r = (px) & 0xFF;
         g = (px >> 8) & 0xFF;

@@ -86,7 +86,7 @@ class Rasterizer {
 
         void DrawFaces() {
 
-            #pragma omp parallel for
+            //#pragma omp parallel for
             for (int i = 0; i < static_cast<int>(solid->faceData.size()); ++i) {
                 const auto& faceDataEntry = solid->faceData[i];
                 const auto& face = faceDataEntry.face;
@@ -98,17 +98,12 @@ class Rasterizer {
                 if (wireframe || Visible(p1->world, rotatedFaceNormal)) {
 
                     const auto& idx = face.vertexIndices;
-                    if (idx.size() < 3) return; // nothing to draw
 
                     // Build the vertex list for the polygon
                     std::vector<vertex> polyVerts;
                     polyVerts.reserve(idx.size());
 
                     for (int i : idx) {
-                        // (Optional) bounds/null checks:
-                        if (i < 0 || static_cast<size_t>(i) >= projectedPoints.size() || !projectedPoints[i])
-                            return; // or continue / handle error
-
                         const vertex& v = *projectedPoints[i];
                         polyVerts.push_back(v);
                     }
