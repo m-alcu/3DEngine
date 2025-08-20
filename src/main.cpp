@@ -57,9 +57,12 @@ int main(int, char**)
     }
 
     SDL_Texture* texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, width, height);
+    if (texture == nullptr)
+    {
+        SDL_Log("Error: SDL_CreateTexture(): %s\n", SDL_GetError());
+        return -1;
+    }
     SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_NONE);
-
-
     SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
     SDL_ShowWindow(window);
 
