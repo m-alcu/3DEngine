@@ -221,7 +221,6 @@ int main(int, char**)
             ImGui::End();
         }
 
-        background->draw(backg, height, width);
         solidRenderer.drawScene(scene, scene.zNear, scene.zFar, scene.viewAngle, backg);
 
         // Rendering
