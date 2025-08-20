@@ -238,6 +238,8 @@ int main(int, char**)
                 // Rotate the solid around its local axes
                 solidPtr->rotate(incXangle, incYangle, 0.0f);
             }
+
+            solidPtr->updateOrbit(io.DeltaTime);
         }
     }
 #ifdef __EMSCRIPTEN__

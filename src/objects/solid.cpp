@@ -92,5 +92,58 @@ void Solid::rotate(float xAngle, float yAngle, float zAngle) {
 	position.zAngle += zAngle;
 }
 
+static inline float wrapTwoPi(float a) {
+    const float TWO_PI = 6.2831853071795864769f;
+    a = std::fmod(a, TWO_PI);
+    if (a < 0) a += TWO_PI;
+    return a;
+}
+
+// Build U,V in the plane orthogonal to n (n must be unit)
+void Solid::buildOrbitBasis(const slib::vec3& n) {
+    // pick a vector not parallel to n
+    slib::vec3 a = (std::fabs(n.x) < 0.9f) ? slib::vec3{ 1,0,0 } : slib::vec3{ 0,1,0 };
+    orbitU = smath::normalize(smath::cross(n, a));
+    orbitV = smath::normalize(smath::cross(n, orbitU));
+}
+
+// Enable a circular orbit
+void Solid::enableCircularOrbit(const slib::vec3& center,
+    float radius,
+    const slib::vec3& planeNormal,
+    float angularSpeedRadiansPerSec,
+    float initialPhaseRadians,
+    bool faceCenter)
+{
+    orbit_.center = center;
+    orbit_.radius = radius;
+    orbit_.n = smath::normalize(planeNormal);
+    orbit_.omega = angularSpeedRadiansPerSec;
+    orbit_.phase = initialPhaseRadians;
+    orbit_.enabled = true;
+    buildOrbitBasis(orbit_.n);
+}
+
+// Disable the orbit motion
+void Solid::disableCircularOrbit() { orbit_.enabled = false; }
+
+// Call once per frame with delta time (seconds)
+void Solid::updateOrbit(float dt)
+{
+    if (!orbit_.enabled) return;
+
+    orbit_.phase = wrapTwoPi(orbit_.phase + orbit_.omega * dt);
+
+    float c = std::cos(orbit_.phase);
+    float s = std::sin(orbit_.phase);
+
+    // Position on the circle in the U-V plane
+    slib::vec3 P = orbit_.center + (orbitU * c + orbitV * s) * orbit_.radius;
+
+    position.x = P.x;
+    position.y = P.y;
+    position.z = P.z;
+
+}
 
 

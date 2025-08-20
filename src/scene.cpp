@@ -63,7 +63,6 @@ void Scene::tetrakisInit() {
 
     clearAllSolids();
     auto tetrakis = std::make_unique<Tetrakis>();
-    tetrakis->setup();
 
     tetrakis->position.z = -5000;   
     tetrakis->position.x = 0;
@@ -73,6 +72,14 @@ void Scene::tetrakisInit() {
     tetrakis->position.yAngle = 0.0f;
     tetrakis->position.zAngle = 0.0f;
     tetrakis->shading = Shading::Flat;
+
+    tetrakis->setup();
+
+    tetrakis->enableCircularOrbit(/*center*/{ tetrakis->position.x,tetrakis->position.y,tetrakis->position.z },
+        /*radius*/1000.0f,
+        /*planeNormal*/{ 0,1,1 },   // orbit in XZ plane
+        /*omega*/(3.14159265f / 3), // 60°/s
+        /*initialPhase*/0.0f);
     
     addSolid(std::move(tetrakis));
 
@@ -122,8 +129,7 @@ void Scene::starInit() {
     clearAllSolids();
     
     auto ascLoader = std::make_unique<AscLoader>();
-    ascLoader->setup("resources/STAR.ASC");
-
+    
     ascLoader->position.z = -500;   
     ascLoader->position.x = 0;
     ascLoader->position.y = 0;
@@ -132,6 +138,14 @@ void Scene::starInit() {
     ascLoader->position.yAngle = 0.0f;
     ascLoader->position.zAngle = 0.0f;
     ascLoader->shading = Shading::Flat;
+
+    ascLoader->setup("resources/STAR.ASC");
+
+    ascLoader->enableCircularOrbit(/*center*/{ ascLoader->position.x,ascLoader->position.y,ascLoader->position.z },
+        /*radius*/100.0f,
+        /*planeNormal*/{ 0,0,1 },   // orbit in XZ plane
+        /*omega*/(3.14159265f / 1), // 60°/s
+        /*initialPhase*/0.0f);
     
     addSolid(std::move(ascLoader));
 

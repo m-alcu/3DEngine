@@ -76,6 +76,15 @@ struct MaterialProperties {
     float shininess;
 };
 
+struct OrbitState {
+    slib::vec3 center{ 0,0,0 };   // orbit center
+    float radius = 1.0f;         // orbit radius
+    slib::vec3 n{ 0,1,0 };         // plane normal (unit)
+    float omega = 1.0f;          // angular speed (radians/sec)
+    float phase = 0.0f;          // current angle (radians)
+    bool enabled = false;
+};
+
 class Solid {
 public:
     std::vector<VertexData> vertexData;
@@ -87,6 +96,11 @@ public:
 
     int numVertices;
     int numFaces;
+
+    // Orthonormal basis of the orbit plane
+    slib::vec3 orbitU{ 1,0,0 };
+    slib::vec3 orbitV{ 0,0,1 };
+    OrbitState orbit_;
  
 public:
     // Base constructor that initializes common data members.
@@ -116,6 +130,20 @@ public:
     slib::texture DecodePng(const char* filename);
 
     virtual void rotate(float xAngle, float yAngle, float zAngle);
+
+    virtual void buildOrbitBasis(const slib::vec3& n);
+
+    // Enable a circular orbit
+    virtual void enableCircularOrbit(const slib::vec3& center,
+        float radius,
+        const slib::vec3& planeNormal,
+        float angularSpeedRadiansPerSec,
+        float initialPhaseRadians = 0.0f,
+        bool faceCenter = false);
+
+    virtual void disableCircularOrbit();
+
+    virtual void updateOrbit(float dt);
 
 protected:
     // Protected virtual methods to be implemented by derived classes.
