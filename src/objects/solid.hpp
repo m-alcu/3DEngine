@@ -82,6 +82,7 @@ public:
     std::vector<FaceData> faceData;
     Shading shading;
     Position position;
+	bool rotationEnabled = true;
     std::map<std::string, slib::material> materials;
 
     int numVertices;
@@ -114,10 +115,13 @@ public:
 
     slib::texture DecodePng(const char* filename);
 
+    virtual void rotate(float xAngle, float yAngle, float zAngle);
+
 protected:
     // Protected virtual methods to be implemented by derived classes.
     virtual void loadVertices() = 0;
     virtual void loadFaces() = 0;
+	
 };
 
 

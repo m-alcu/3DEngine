@@ -1,5 +1,4 @@
 #pragma once
-#include <SDL3/SDL.h>
 #include <vector>
 #include <memory>    // for std::unique_ptr
 #include <algorithm> // for std::fill

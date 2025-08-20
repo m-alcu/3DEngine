@@ -232,8 +232,13 @@ int main(int, char**)
         ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
         SDL_RenderPresent(renderer);
 
-        scene.solids[0]->position.xAngle += incXangle;
-        scene.solids[0]->position.yAngle += incYangle;
+        for (auto& solidPtr : scene.solids) {
+            // Update the solid's position based on the input angles
+            if (solidPtr->rotationEnabled) {
+                // Rotate the solid around its local axes
+                solidPtr->rotate(incXangle, incYangle, 0.0f);
+            }
+        }
     }
 #ifdef __EMSCRIPTEN__
     EMSCRIPTEN_MAINLOOP_END;

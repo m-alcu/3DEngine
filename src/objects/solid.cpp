@@ -86,5 +86,11 @@ slib::texture Solid::DecodePng(const char* filename)
     return {static_cast<int>(width), static_cast<int>(height), image, bpp_bytes, rowStride};
 }
 
+void Solid::rotate(float xAngle, float yAngle, float zAngle) {
+	position.xAngle += xAngle;
+	position.yAngle += yAngle;
+	position.zAngle += zAngle;
+}
+
 
 
