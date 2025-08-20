@@ -46,7 +46,7 @@ void Scene::worldInit() {
     auto world = std::make_unique<World>();
     world->setup(16, 32);
 
-    world->position.z = -500;
+    world->position.z = -150;
     world->position.x = 0;
     world->position.y = 0;
     world->position.zoom = 100.0f;
