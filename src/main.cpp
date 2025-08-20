@@ -104,14 +104,14 @@ int main(int, char**)
     background->draw(backg, height, width);
 
     // Main loop
-    bool done = false;
+    bool closedWindow = false;
 #ifdef __EMSCRIPTEN__
     // For an Emscripten build we are disabling file-system access, so let's not attempt to do a fopen() of the imgui.ini file.
     // You may manually call LoadIniSettingsFromMemory() to load settings from your own storage.
     io.IniFilename = nullptr;
     EMSCRIPTEN_MAINLOOP_BEGIN
 #else
-    for (std::map<int, bool> keys; !keys[SDLK_ESCAPE]; )
+    for (std::map<int, bool> keys; !keys[SDLK_ESCAPE] && !closedWindow; )
 #endif
     {
         // Poll and handle events (inputs, window resize, etc.)
@@ -132,7 +132,7 @@ int main(int, char**)
                 case SDL_EVENT_KEY_UP:   keys[ev.key.key] = false; break;
 				case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
 					if (ev.window.windowID == SDL_GetWindowID(window)) {
-						done = true;
+						closedWindow = true;
 					}
 					break;
             }
