@@ -201,8 +201,6 @@ namespace smath
 
         float fx = xf - x;          // frac in [0,1)
         float fy = yf - y;
-        float one_minus_fx = 1.0f - fx;
-        float one_minus_fy = 1.0f - fy;
 
         // Precompute row bases (in bytes)
         const uint8_t* rowT = tex.data.data() + y * tex.rowStride;
