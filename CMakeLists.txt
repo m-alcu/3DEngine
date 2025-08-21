@@ -36,4 +36,9 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3)
+
+target_compile_options(${PROJECT_NAME} PRIVATE
+    $<$<CONFIG:Release>:-O3>
+)
+
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 23 CXX_STANDARD_REQUIRED on)
