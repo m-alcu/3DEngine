@@ -87,8 +87,6 @@ public:
             const auto& light = scene.lux;         // vec3
 
             tri.flatDiffuse = std::max(0.0f, smath::dot(tri.faceNormal,light));
-            slib::vec3 color = Ka + Kd * tri.flatDiffuse;
-            tri.flatColor = Color(color).toBgra(); // assumes vec3 uses .r/g/b or [0]/[1]/[2]
 		}
 	};
 

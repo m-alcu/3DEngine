@@ -13,26 +13,25 @@ public:
 	public:
     Vertex() {}
 
-    Vertex(int32_t px, int32_t py, float pz, slib::vec3 n, slib::vec4 vp, slib::zvec2 _tex, float _diffuse) :
-    p_x(px), p_y(py), p_z(pz), normal(n), ndc(vp), tex(_tex), diffuse(_diffuse) {}
+    Vertex(int32_t px, int32_t py, float pz, slib::vec4 vp, slib::zvec2 _tex, float _diffuse) :
+    p_x(px), p_y(py), p_z(pz), ndc(vp), tex(_tex), diffuse(_diffuse) {}
 
     Vertex operator+(const Vertex &v) const {
-        return Vertex(p_x + v.p_x, p_y + v.p_y, p_z + v.p_z, normal + v.normal, ndc + v.ndc, tex + v.tex, diffuse + v.diffuse);
+        return Vertex(p_x + v.p_x, p_y + v.p_y, p_z + v.p_z, ndc + v.ndc, tex + v.tex, diffuse + v.diffuse);
     }
 
     Vertex operator-(const Vertex &v) const {
-        return Vertex(p_x - v.p_x, p_y - v.p_y, p_z - v.p_z, normal - v.normal, ndc - v.ndc, tex - v.tex, diffuse - v.diffuse);
+        return Vertex(p_x - v.p_x, p_y - v.p_y, p_z - v.p_z, ndc - v.ndc, tex - v.tex, diffuse - v.diffuse);
     }
 
     Vertex operator*(const float &rhs) const {
-        return Vertex(p_x * rhs, p_y * rhs, p_z * rhs, normal * rhs, ndc * rhs, tex * rhs, diffuse * rhs);
+        return Vertex(p_x * rhs, p_y * rhs, p_z * rhs, ndc * rhs, tex * rhs, diffuse * rhs);
     }
 
     Vertex& operator+=(const Vertex &v) {
         p_x += v.p_x;
         p_y += v.p_y;
         p_z += v.p_z;
-        normal += v.normal;
         ndc += v.ndc;
         tex += v.tex;
         diffuse += v.diffuse;
@@ -45,7 +44,6 @@ public:
         float p_z; 
         slib::vec3 world;
         slib::vec3 point;
-        slib::vec3 normal;
         slib::vec4 ndc;
         slib::zvec2 tex; // Texture coordinates
         float diffuse; // Diffuse color
@@ -57,11 +55,13 @@ public:
         std::unique_ptr<Vertex> operator()(const VertexData& vData, const slib::mat4& fullTransformMat, const slib::mat4& viewMatrix, const slib::mat4& normalTransformMat, const Scene& scene) const
 		{
             Vertex screenPoint;
+            slib::vec3 normal;
             screenPoint.world = fullTransformMat * slib::vec4(vData.vertex, 1);
             screenPoint.point =  slib::vec4(screenPoint.world, 1) * viewMatrix;
             screenPoint.ndc = slib::vec4(screenPoint.point, 1) * scene.projectionMatrix;
             screenPoint.tex = slib::zvec2(vData.texCoord.x, vData.texCoord.y, 1);
-            screenPoint.normal = normalTransformMat * slib::vec4(vData.normal, 0);
+            normal = normalTransformMat * slib::vec4(vData.normal, 0);
+            screenPoint.diffuse = std::max(0.0f, smath::dot(normal, scene.lux));
             return std::make_unique<Vertex>(screenPoint);
 		}
 
@@ -87,9 +87,6 @@ public:
     
         void operator()(Polygon<Vertex>& tri, const Scene& scene) const
         {
-            for(auto& point : tri.points) {
-                point.diffuse = std::max(0.0f, smath::dot(point.normal, scene.lux));        
-            }
         }
 	};    
 
