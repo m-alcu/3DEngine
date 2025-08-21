@@ -208,6 +208,9 @@ int main(int, char**)
                 // Update the enum value when selection changes
                 backgroundType = static_cast<BackgroundType>(currentBackground);
                 background = BackgroundFactory::createBackground(backgroundType);
+                if (backgroundType != BackgroundType::TWISTER) {
+                    background->draw(backg, height, width);
+                }
             } 
 
             int currentScene = static_cast<int>(scene.sceneType);
@@ -219,6 +222,10 @@ int main(int, char**)
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
             ImGui::End();
+        }
+
+        if (backgroundType == BackgroundType::TWISTER) {
+            background->draw(backg, height, width);
         }
 
         solidRenderer.drawScene(scene, scene.zNear, scene.zFar, scene.viewAngle, backg);
