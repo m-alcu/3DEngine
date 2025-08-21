@@ -208,9 +208,6 @@ int main(int, char**)
                 // Update the enum value when selection changes
                 backgroundType = static_cast<BackgroundType>(currentBackground);
                 background = BackgroundFactory::createBackground(backgroundType);
-                if (backgroundType != BackgroundType::TWISTER) {
-                    background->draw(backg, height, width);
-                }
             } 
 
             int currentScene = static_cast<int>(scene.sceneType);
@@ -224,9 +221,7 @@ int main(int, char**)
             ImGui::End();
         }
 
-        if (backgroundType == BackgroundType::TWISTER) {
-            background->draw(backg, height, width);
-        }
+        background->draw(backg, height, width);
 
         solidRenderer.drawScene(scene, scene.zNear, scene.zFar, scene.viewAngle, backg);
 
