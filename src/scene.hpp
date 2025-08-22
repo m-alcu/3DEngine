@@ -16,6 +16,8 @@
 #include "smath.hpp"
 #include "slib.hpp"
 #include "ZBuffer.hpp"
+#include "backgrounds/background.hpp"
+#include "backgrounds/backgroundFactory.hpp"
 
 
 enum class SceneType {
@@ -72,15 +74,15 @@ public:
         camera.eye = {0.0f, 0.0f, 0.0f};          // Camera position
         camera.target = {0.0f, 0.0f, -1.0f};      // Point to look at (in -Z)
         camera.up = {0.0f, 1.0f, 0.0f};           // Up vector (typically +Y)
+        pixels = new uint32_t[screen.width * screen.height];
+        backg = new uint32_t[screen.width * screen.height];
     }
 
     // Destructor to free the allocated memory.
     ~Scene()
     {
-		if (pixels) {
-			delete[] pixels; // Free the pixel data
-			pixels = nullptr;
-		}
+        delete[] pixels;
+        delete[] backg;
     }
 
     // Called to set up the Scene, including creation of Solids, etc.
@@ -92,6 +94,7 @@ public:
     void starInit();
     void amigaInit();
     void worldInit();
+    void drawBackground();
 
     // Add a solid to the scene's list of solids.
     // Using std::unique_ptr is a good practice for ownership.
@@ -127,4 +130,8 @@ public:
     Camera camera; // Camera object to manage camera properties.
     // Store solids in a vector of unique_ptr to handle memory automatically.
     std::vector<std::unique_ptr<Solid>> solids;
+
+    BackgroundType backgroundType = BackgroundType::DESERT;
+    uint32_t* backg = nullptr;
+    std::unique_ptr<Background> background = std::unique_ptr<Background>(BackgroundFactory::createBackground(backgroundType));
 };

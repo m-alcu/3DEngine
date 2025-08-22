@@ -81,9 +81,15 @@ public:
 
             const auto& Ka = tri.material.Ka; // vec3
             const auto& Kd = tri.material.Kd; // vec3
-            const auto& light = scene.lux;         // vec3
+            const auto& light = scene.lux;    // vec3
 
-            tri.flatDiffuse = std::max(0.0f, smath::dot(tri.faceNormal,light));
+            /*
+            All vertex faces are counterwise (cw), so normal is pointing towards the screen,
+			Light is also set to point towards the screen.
+			So, it's resulting in a positive dot product.
+            */
+
+            tri.flatDiffuse = std::max(0.0f, smath::dot(tri.rotatedFaceNormal,light));
             slib::vec3 color = Ka + Kd * tri.flatDiffuse;
             tri.flatColor = Color(color).toBgra(); // assumes vec3 uses .r/g/b or [0]/[1]/[2]
 		}

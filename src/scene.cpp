@@ -151,7 +151,10 @@ void Scene::starInit() {
 
 }
 
+void Scene::drawBackground() {
 
+    background->draw(backg, screen.height, screen.width);
+}
 
 
 void Scene::setup() {
@@ -162,8 +165,6 @@ void Scene::setup() {
     eye = { 0, 0, 1 };
 	// Used in BlinnPhong shading
     halfwayVector = smath::normalize(lux + eye);
-
-    pixels = new uint32_t [screen.width * screen.height];
 
     switch (sceneType) {
         case SceneType::TORUS:

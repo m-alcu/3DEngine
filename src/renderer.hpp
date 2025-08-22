@@ -1,5 +1,5 @@
 #pragma once
-#include <SDL3/SDL.h>
+
 #include <iostream>
 #include <cstdint>
 #include "objects/solid.hpp"
@@ -17,9 +17,11 @@ class Renderer {
 
     public:
 
-        void drawScene(Scene& scene, float zNear, float zFar, float viewAngle, uint32_t* back) {
+        void drawScene(Scene& scene, float zNear, float zFar, float viewAngle) {
 
-            prepareFrame(scene, zNear, zFar, viewAngle, back);
+            scene.drawBackground();
+
+            prepareFrame(scene, zNear, zFar, viewAngle);
             for (auto& solidPtr : scene.solids) {
                 switch (solidPtr->shading) {
                     case Shading::Flat: 
@@ -56,10 +58,10 @@ class Renderer {
             }
         }
 
-        void prepareFrame(Scene& scene, float zNear, float zFar, float viewAngle, uint32_t* back) {
+        void prepareFrame(Scene& scene, float zNear, float zFar, float viewAngle) {
 
             //std::fill_n(scene.pixels, scene.screen.width * scene.screen.height, 0);
-            std::copy(back, back + scene.screen.width * scene.screen.height, scene.pixels);
+            std::copy(scene.backg, scene.backg + scene.screen.width * scene.screen.height, scene.pixels);
             scene.zBuffer->Clear(); // Clear the zBuffer
         
             //float zNear = 0.1f; // Near plane distance

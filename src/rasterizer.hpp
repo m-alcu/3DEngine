@@ -158,7 +158,7 @@ class Rasterizer {
                 if (polygon.empty()) return; // Completely outside
             }
 
-            Polygon<vertex> tri(polygon, t.face, t.faceNormal, t.material);
+            Polygon<vertex> tri(polygon, t.face, t.rotatedFaceNormal, t.material);
             draw(tri);
         }
 

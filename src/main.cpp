@@ -10,13 +10,11 @@
 // Important to understand: SDL_Renderer is an _optional_ component of SDL3.
 // For a multi-platform app consider using e.g. SDL+DirectX on Windows and SDL+OpenGL on Linux/OSX.
 
+#include <stdio.h>
+#include <SDL3/SDL.h>
 #include "vendor/imgui/imgui.h"
 #include "vendor/imgui/imgui_impl_sdl3.h"
 #include "vendor/imgui/imgui_impl_sdlrenderer3.h"
-#include <stdio.h>
-#include <SDL3/SDL.h>
-#include "backgrounds/background.hpp"
-#include "backgrounds/backgroundFactory.hpp"
 #include "renderer.hpp"
 #include "scene.hpp"
 
@@ -100,13 +98,6 @@ int main(int, char**)
 
     Scene scene({height, width});
     scene.setup();
-
-    BackgroundType backgroundType = BackgroundType::DESERT; // Default background type
-
-    // Backgroud
-    Uint32* backg = new Uint32[width * height];
-    auto background = std::unique_ptr<Background>(BackgroundFactory::createBackground(backgroundType));
-    background->draw(backg, height, width);
 
     // Main loop
     bool closedWindow = false;
@@ -203,11 +194,11 @@ int main(int, char**)
                 scene.solids[0]->shading = static_cast<Shading>(currentShading);
             }
             
-            int currentBackground = static_cast<int>(backgroundType);
+            int currentBackground = static_cast<int>(scene.backgroundType);
             if (ImGui::Combo("Background", &currentBackground, backgroundNames, IM_ARRAYSIZE(backgroundNames))) {
                 // Update the enum value when selection changes
-                backgroundType = static_cast<BackgroundType>(currentBackground);
-                background = BackgroundFactory::createBackground(backgroundType);
+                scene.backgroundType = static_cast<BackgroundType>(currentBackground);
+                scene.background = std::unique_ptr<Background>(BackgroundFactory::createBackground(scene.backgroundType));
             } 
 
             int currentScene = static_cast<int>(scene.sceneType);
@@ -221,9 +212,7 @@ int main(int, char**)
             ImGui::End();
         }
 
-        background->draw(backg, height, width);
-
-        solidRenderer.drawScene(scene, scene.zNear, scene.zFar, scene.viewAngle, backg);
+        solidRenderer.drawScene(scene, scene.zNear, scene.zFar, scene.viewAngle);
 
         // Rendering
         ImGui::Render();
@@ -254,7 +243,7 @@ int main(int, char**)
     ImGui_ImplSDL3_Shutdown();
     ImGui::DestroyContext();
 
-    delete[] backg;
+    
 
     SDL_DestroyRenderer(renderer);
 	SDL_DestroyTexture(texture);
