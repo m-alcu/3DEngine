@@ -242,9 +242,7 @@ int main(int, char**)
     ImGui_ImplSDLRenderer3_Shutdown();
     ImGui_ImplSDL3_Shutdown();
     ImGui::DestroyContext();
-
-    
-
+	// Destroy the SDL_Texture, SDL_Renderer, and SDL_Window
     SDL_DestroyRenderer(renderer);
 	SDL_DestroyTexture(texture);
     SDL_DestroyWindow(window);
