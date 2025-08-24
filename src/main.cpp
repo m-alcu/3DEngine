@@ -97,7 +97,18 @@ int main(int, char**)
     //IM_ASSERT(font != nullptr);
 
     Scene scene({height, width});
+    scene.sceneType = SceneType::TORUS;
     scene.setup();
+
+    bool orbiting = false;
+    float lastMouseX = 0, lastMouseY = 0;
+
+    // After scene.setup();
+    if (!scene.solids.empty()) {
+        // If you have a centroid method: scene.solids[0]->centroid();
+        scene.camera.orbitTarget = { scene.solids[0]->position.x, scene.solids[0]->position.y, scene.solids[0]->position.z }; // or compute one
+    }
+    scene.cameraSetOrbitFromCurrent(scene.camera);
 
     // Main loop
     bool closedWindow = false;
@@ -131,6 +142,49 @@ int main(int, char**)
 						closedWindow = true;
 					}
 					break;
+                case SDL_EVENT_MOUSE_BUTTON_DOWN:
+                    if (ev.button.button == SDL_BUTTON_RIGHT) {
+                        // Respect ImGui focus: do not orbit if ImGui wants the mouse
+                        if (!ImGui::GetIO().WantCaptureMouse) {
+                            orbiting = true;
+                            SDL_GetMouseState(&lastMouseX, &lastMouseY);
+                            SDL_SetWindowRelativeMouseMode(window, true); // hide cursor + get relative deltas
+                        }
+                    }
+                    break;
+                case SDL_EVENT_MOUSE_BUTTON_UP:
+                    if (ev.button.button == SDL_BUTTON_RIGHT && orbiting) {
+                        orbiting = false;
+                        SDL_SetWindowRelativeMouseMode(window, false);
+                    }
+                    break;
+                case SDL_EVENT_MOUSE_WHEEL:
+                    // Zoom (wheel.y > 0 => zoom in)
+                    if (!ImGui::GetIO().WantCaptureMouse) {
+                        float zoomStep = 0.9f; // multiplicative for nicer feel
+                        if (ev.wheel.y > 0) scene.camera.orbitRadius *= zoomStep;
+                        if (ev.wheel.y < 0) scene.camera.orbitRadius /= zoomStep;
+                        scene.camera.orbitRadius = std::max(0.1f, scene.camera.orbitRadius);
+                        scene.cameraApplyOrbit(scene.camera);
+                    }
+                    break;
+                case SDL_EVENT_MOUSE_MOTION:
+                    if (orbiting) {
+                        // Relative mode gives motion.xrel/yrel directly
+                        float dx = static_cast<float>(ev.motion.xrel);
+                        float dy = static_cast<float>(ev.motion.yrel);
+
+                        // Tune these two if orbit feels too slow/fast
+                        const float orbitYawSpeed = 0.0035f; // radians per pixel
+                        const float orbitPitchSpeed = 0.0035f;
+
+                        scene.camera.orbitAzimuth -= dx * orbitYawSpeed;   // drag right => orbit right
+                        scene.camera.orbitElevation -= dy * orbitPitchSpeed; // drag up   => orbit up
+                        // Clamp elevation in apply
+                        scene.cameraApplyOrbit(scene.camera);
+                    }
+                    break;
+
             }
         }
 
@@ -158,11 +212,14 @@ int main(int, char**)
         scene.movementMomentum = scene.movementMomentum * (1.0f - scene.camera.eagerness) + scene.camera.forward * moveInput * scene.camera.eagerness;
 
         // Update camera using momentum
+
         scene.camera.pitch -= scene.rotationMomentum.x;
         scene.camera.yaw -= scene.rotationMomentum.y;
         scene.camera.roll += scene.rotationMomentum.z;
         scene.camera.pos += scene.movementMomentum;
         // Change the rotation momentum vector (r) with hysteresis: newvalue = oldvalue*(1-eagerness) + input*eagerness
+
+
 
         // [If using SDL_MAIN_USE_CALLBACKS: all code below would likely be your SDL_AppIterate() function]
         if (SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED)
@@ -177,7 +234,7 @@ int main(int, char**)
         ImGui::NewFrame();
         ImGui::SetNextWindowBgAlpha(0.3f);
 
-        static float incXangle = 0.5f;
+        static float incXangle = 0.0f;
         static float incYangle = 1.0f;
         // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
         {

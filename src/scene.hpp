@@ -54,6 +54,12 @@ struct Camera
     float eagerness = 0.1f; // 0 = no response, 1 = instant response
     float sensitivity = 1.f;
     float speed = 25.0f;
+
+    // Orbit parameters
+    slib::vec3 orbitTarget{ 0,0,0 };
+    float orbitRadius = 5.0f;
+    float orbitAzimuth = 0.0f;     // around Y (left/right)
+    float orbitElevation = 0.0f;   // up/down, clamp to (-pi/2, pi/2)
 };
 
 typedef struct Screen
@@ -95,6 +101,8 @@ public:
     void amigaInit();
     void worldInit();
     void drawBackground();
+    void cameraSetOrbitFromCurrent(Camera& cam);
+    void cameraApplyOrbit(Camera& cam);
 
     // Add a solid to the scene's list of solids.
     // Using std::unique_ptr is a good practice for ownership.
