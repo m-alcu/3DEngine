@@ -155,17 +155,18 @@ int main(int, char**)
                     if (ev.button.button == SDL_BUTTON_RIGHT && scene.orbiting) {
                         scene.orbiting = false;
                         SDL_SetWindowRelativeMouseMode(window, false);
-
+                        /*
                         slib::vec3 eye = scene.camera.pos;
                         slib::vec3 target = scene.camera.orbitTarget;
-
+                        
                         // 1) Forward (camera looks from eye -> target)
                         slib::vec3 forward = smath::normalize(target - eye);
-
+                        
                         // 2) Yaw & pitch (radians), matching your zaxis convention:
                         // zaxis = { sinYaw*cosPitch, -sinPitch, cosYaw*cosPitch }
-                        scene.camera.yaw = std::atan2(forward.x, -forward.z); // [-pi, pi]
-                        scene.camera.pitch = std::asin(-forward.y);            // [-pi/2, pi/2]
+                          ne.camera.yaw = std::atan2(forward.x, -forward.z); // [-pi, pi]
+                          scene.camera.pitch = std::asin(-forward.y);            // [-pi/2, pi/2]
+                        */
                     }
                     break;
                 case SDL_EVENT_MOUSE_WHEEL:
@@ -212,14 +213,15 @@ int main(int, char**)
         float pitchInput = scene.camera.sensitivity * (up - down);
         float rollInput = scene.camera.sensitivity * (rleft - rright);
         float moveInput = (fwd - back) * scene.camera.speed;
-
-        // Apply hysteresis to rotation momentum
-        scene.rotationMomentum.x = scene.rotationMomentum.x * (1.0f - scene.camera.eagerness) + pitchInput * scene.camera.eagerness;
-        scene.rotationMomentum.y = scene.rotationMomentum.y * (1.0f - scene.camera.eagerness) + yawInput * scene.camera.eagerness;
-        scene.rotationMomentum.z = scene.rotationMomentum.z * (1.0f - scene.camera.eagerness) + rollInput * scene.camera.eagerness;
-
-        // Update camera using momentum
+        
         if (!scene.orbiting) { // No free-fly when orbiting
+
+            // Update camera using momentum
+            // Apply hysteresis to rotation momentum
+            // Change the rotation momentum vector (r) with hysteresis: newvalue = oldvalue*(1-eagerness) + input*eagerness
+            scene.rotationMomentum.x = scene.rotationMomentum.x * (1.0f - scene.camera.eagerness) + pitchInput * scene.camera.eagerness;
+            scene.rotationMomentum.y = scene.rotationMomentum.y * (1.0f - scene.camera.eagerness) + yawInput * scene.camera.eagerness;
+            scene.rotationMomentum.z = scene.rotationMomentum.z * (1.0f - scene.camera.eagerness) + rollInput * scene.camera.eagerness;
 
             scene.camera.pitch -= scene.rotationMomentum.x;
             scene.camera.yaw -= scene.rotationMomentum.y;
@@ -239,10 +241,6 @@ int main(int, char**)
             scene.movementMomentum = scene.movementMomentum * (1.0f - scene.camera.eagerness) + scene.camera.forward * moveInput * scene.camera.eagerness;
 
         }
-
-        // Change the rotation momentum vector (r) with hysteresis: newvalue = oldvalue*(1-eagerness) + input*eagerness
-
-
 
         // [If using SDL_MAIN_USE_CALLBACKS: all code below would likely be your SDL_AppIterate() function]
         if (SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED)

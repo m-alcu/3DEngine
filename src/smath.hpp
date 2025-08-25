@@ -16,7 +16,6 @@ namespace smath
     slib::vec3 cross(const slib::vec3& v1, const slib::vec3& v2);
     slib::mat4 perspective(float zFar, float zNear, float aspect, float fov);
     slib::mat4 view(const slib::vec3& eye, const slib::vec3& target, const slib::vec3& up);
-    slib::mat4 view_yaw_pitch(const slib::vec3& eye, float yaw, float pitch, const slib::vec3& worldUp);
     slib::mat4 rotation(const slib::vec3& eulerAngles);
     slib::mat4 scale(const slib::vec3& scale);
     slib::mat4 translation(const slib::vec3& translation);
