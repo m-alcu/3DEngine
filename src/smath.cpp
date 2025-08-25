@@ -89,7 +89,6 @@ namespace smath
 
     slib::mat4 fpsview(const slib::vec3& eye, float pitch, float yaw, float roll)
     {
-        pitch *= RAD; yaw *= RAD; roll *= RAD;
 
         const float cp = std::cos(pitch), sp = std::sin(pitch);
         const float cy = std::cos(yaw), sy = std::sin(yaw);

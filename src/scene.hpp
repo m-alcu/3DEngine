@@ -52,7 +52,7 @@ struct Camera
 	float roll = 0.0f; // Roll is not used in FPS view, but can be added if needed.
     slib::vec3 forward = { 0,0,0 };
     float eagerness = 0.1f; // 0 = no response, 1 = instant response
-    float sensitivity = 1.f;
+    float sensitivity = 0.01f;
     float speed = 25.0f;
 
     // Orbit parameters
@@ -128,7 +128,7 @@ public:
     std::shared_ptr<ZBuffer> zBuffer; // Use shared_ptr for zBuffer to manage its lifetime automatically.
     uint32_t* pixels = nullptr; // Pointer to the pixel data.
 
-    slib::vec3 rotationMomentum{ 0.f, 0.f, .2f }; // Rotation momentum vector (nonzero indicates view is still rotating)
+    slib::vec3 rotationMomentum{ 0.f, 0.f, 0.f }; // Rotation momentum vector (nonzero indicates view is still rotating)
     slib::vec3 movementMomentum{ 0.f, 0.f, 0.f }; // Movement momentum vector (nonzero indicates camera is still moving)
 
     float zNear = 10.0f; // Near plane distance
@@ -138,6 +138,7 @@ public:
     Camera camera; // Camera object to manage camera properties.
     // Store solids in a vector of unique_ptr to handle memory automatically.
     std::vector<std::unique_ptr<Solid>> solids;
+    bool orbiting = false;
 
     BackgroundType backgroundType = BackgroundType::DESERT;
     uint32_t* backg = nullptr;

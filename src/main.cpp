@@ -97,10 +97,9 @@ int main(int, char**)
     //IM_ASSERT(font != nullptr);
 
     Scene scene({height, width});
-    scene.sceneType = SceneType::TORUS;
+    scene.sceneType = SceneType::CUBE;
     scene.setup();
 
-    bool orbiting = false;
     float lastMouseX = 0, lastMouseY = 0;
 
     // After scene.setup();
@@ -146,16 +145,27 @@ int main(int, char**)
                     if (ev.button.button == SDL_BUTTON_RIGHT) {
                         // Respect ImGui focus: do not orbit if ImGui wants the mouse
                         if (!ImGui::GetIO().WantCaptureMouse) {
-                            orbiting = true;
+                            scene.orbiting = true;
                             SDL_GetMouseState(&lastMouseX, &lastMouseY);
                             SDL_SetWindowRelativeMouseMode(window, true); // hide cursor + get relative deltas
                         }
                     }
                     break;
                 case SDL_EVENT_MOUSE_BUTTON_UP:
-                    if (ev.button.button == SDL_BUTTON_RIGHT && orbiting) {
-                        orbiting = false;
+                    if (ev.button.button == SDL_BUTTON_RIGHT && scene.orbiting) {
+                        scene.orbiting = false;
                         SDL_SetWindowRelativeMouseMode(window, false);
+
+                        slib::vec3 eye = scene.camera.pos;
+                        slib::vec3 target = scene.camera.orbitTarget;
+
+                        // 1) Forward (camera looks from eye -> target)
+                        slib::vec3 forward = smath::normalize(target - eye);
+
+                        // 2) Yaw & pitch (radians), matching your zaxis convention:
+                        // zaxis = { sinYaw*cosPitch, -sinPitch, cosYaw*cosPitch }
+                        scene.camera.yaw = std::atan2(forward.x, -forward.z); // [-pi, pi]
+                        scene.camera.pitch = std::asin(-forward.y);            // [-pi/2, pi/2]
                     }
                     break;
                 case SDL_EVENT_MOUSE_WHEEL:
@@ -169,7 +179,7 @@ int main(int, char**)
                     }
                     break;
                 case SDL_EVENT_MOUSE_MOTION:
-                    if (orbiting) {
+                    if (scene.orbiting) {
                         // Relative mode gives motion.xrel/yrel directly
                         float dx = static_cast<float>(ev.motion.xrel);
                         float dy = static_cast<float>(ev.motion.yrel);
@@ -208,8 +218,7 @@ int main(int, char**)
         scene.rotationMomentum.y = scene.rotationMomentum.y * (1.0f - scene.camera.eagerness) + yawInput * scene.camera.eagerness;
         scene.rotationMomentum.z = scene.rotationMomentum.z * (1.0f - scene.camera.eagerness) + rollInput * scene.camera.eagerness;
 
-        // Apply hysteresis to movement momentum
-        scene.movementMomentum = scene.movementMomentum * (1.0f - scene.camera.eagerness) + scene.camera.forward * moveInput * scene.camera.eagerness;
+
 
         // Update camera using momentum
 
@@ -217,6 +226,19 @@ int main(int, char**)
         scene.camera.yaw -= scene.rotationMomentum.y;
         scene.camera.roll += scene.rotationMomentum.z;
         scene.camera.pos += scene.movementMomentum;
+
+        float pitch = scene.camera.pitch;
+        float yaw = scene.camera.yaw;
+        float cosPitch = cos(pitch);
+        float sinPitch = sin(pitch);
+        float cosYaw = cos(yaw);
+        float sinYaw = sin(yaw);
+        slib::vec3 zaxis = { sinYaw * cosPitch, -sinPitch, cosPitch * cosYaw };
+        scene.camera.forward = zaxis;
+
+        // Apply hysteresis to movement momentum
+        scene.movementMomentum = scene.movementMomentum * (1.0f - scene.camera.eagerness) + scene.camera.forward * moveInput * scene.camera.eagerness;
+
         // Change the rotation momentum vector (r) with hysteresis: newvalue = oldvalue*(1-eagerness) + input*eagerness
 
 
@@ -235,7 +257,7 @@ int main(int, char**)
         ImGui::SetNextWindowBgAlpha(0.3f);
 
         static float incXangle = 0.0f;
-        static float incYangle = 1.0f;
+        static float incYangle = 0.0f;
         // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
         {
             ImGui::Begin("3d params");                         
@@ -266,6 +288,10 @@ int main(int, char**)
             }
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+			ImGui::Text("Camera pos: (%.2f, %.2f, %.2f)", scene.camera.pos.x, scene.camera.pos.y, scene.camera.pos.z);
+			ImGui::Text("Camera for: (%.2f, %.2f, %.2f)", scene.camera.forward.x, scene.camera.forward.y, scene.camera.forward.z);
+			ImGui::Text("OrbitTarget: (%.2f, %.2f, %.2f)", scene.camera.orbitTarget.x, scene.camera.orbitTarget.y, scene.camera.orbitTarget.z);
+            ImGui::Text("Camera Pitch: %.2f, Yaw: %.2f, Roll: %.2f", scene.camera.pitch, scene.camera.yaw, scene.camera.roll);
             ImGui::End();
         }
 

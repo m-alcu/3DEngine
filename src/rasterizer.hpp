@@ -53,17 +53,13 @@ class Rasterizer {
             slib::mat4 translate = smath::translation(slib::vec3({solid->position.x, solid->position.y, solid->position.z}));
             slib::mat4 scale = smath::scale(slib::vec3({solid->position.zoom, solid->position.zoom, solid->position.zoom}));
             //slib::mat4 viewMatrix = smath::view(scene->camera.eye, scene->camera.target, scene->camera.up);
-            viewMatrix = smath::fpsview(scene->camera.pos, scene->camera.pitch, scene->camera.yaw, scene->camera.roll);
-
-            float pitch = scene->camera.pitch * RAD;
-            float yaw = scene->camera.yaw * RAD;
-            float cosPitch = cos(pitch);
-            float sinPitch = sin(pitch);
-            float cosYaw = cos(yaw);
-            float sinYaw = sin(yaw);
-            slib::vec3 zaxis = {sinYaw * cosPitch, -sinPitch, cosPitch * cosYaw};
-
-            scene->camera.forward = zaxis;
+            
+			if (scene->orbiting) {
+                viewMatrix = smath::view(scene->camera.pos, scene->camera.orbitTarget, { 0,1,0 });
+            }
+            else {
+                viewMatrix = smath::fpsview(scene->camera.pos, scene->camera.pitch, scene->camera.yaw, scene->camera.roll);
+            }
 
             fullTransformMat = translate * rotate * scale;
             normalTransformMat = rotate;

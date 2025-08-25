@@ -218,21 +218,15 @@ void Scene::cameraApplyOrbit(Camera& cam) {
         cam.orbitRadius * ca * ce
     };
 
-    std::cout << "================================" << "\n";
-
     cam.pos = cam.orbitTarget + offset;
-
-    std::cout << "Azimut: " << cam.orbitAzimuth << " offset: {" << offset.x << "," << offset.y << "," << offset.z << "}" << " orbitTarget: {" << cam.orbitTarget.x << ", " << cam.orbitTarget.y << ", " << cam.orbitTarget.z << "}" << " cam pos: {" << cam.pos.x << "," << cam.pos.y << "," << cam.pos.z << "}" << "\n";
 
     // Look at target
     cam.forward = smath::normalize(cam.orbitTarget - cam.pos);
     // Optionally refresh Euler yaw/pitch so your existing code stays in sync:
-    /*
+    
     cam.yaw = std::atan2(cam.forward.x, cam.forward.z);
     cam.pitch = std::asin(-cam.forward.y);
-    */
-    std::cout << "Yaw: " << cam.yaw << "Pitch: " << cam.pitch << " forward: {" << cam.forward.x << "," << cam.forward.y << "," << cam.forward.z << "}" << "\n";
-
+    
 
 }
 
