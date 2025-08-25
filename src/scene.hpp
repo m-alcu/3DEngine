@@ -75,7 +75,8 @@ public:
     Scene(const Screen& scr)
         : screen(scr),
           zBuffer( std::make_shared<ZBuffer>( scr.width,scr.height )),
-          projectionMatrix(smath::identity())
+          projectionMatrix(smath::identity()),
+		  viewMatrix(smath::identity())
     {
         camera.eye = {0.0f, 0.0f, 0.0f};          // Camera position
         camera.target = {0.0f, 0.0f, -1.0f};      // Point to look at (in -Z)
@@ -125,6 +126,7 @@ public:
     slib::vec3 eye;
     slib::vec3 halfwayVector;
     slib::mat4 projectionMatrix;
+	slib::mat4 viewMatrix;
     std::shared_ptr<ZBuffer> zBuffer; // Use shared_ptr for zBuffer to manage its lifetime automatically.
     uint32_t* pixels = nullptr; // Pointer to the pixel data.
 

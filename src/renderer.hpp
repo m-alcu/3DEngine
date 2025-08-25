@@ -70,6 +70,13 @@ class Renderer {
             float fovRadians = viewAngle * (PI / 180.0f);
         
             scene.projectionMatrix = smath::perspective(zFar, zNear, aspectRatio, fovRadians);
+
+            if (scene.orbiting) {
+                scene.viewMatrix = smath::view(scene.camera.pos, scene.camera.orbitTarget, { 0,1,0 });
+            }
+            else {
+                scene.viewMatrix = smath::fpsview(scene.camera.pos, scene.camera.pitch, scene.camera.yaw, scene.camera.roll);
+            }
         }
         
         Rasterizer<FlatEffect> flatRasterizer;

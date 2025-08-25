@@ -52,11 +52,11 @@ public:
 	class VertexShader
 	{
 	public:
-        std::unique_ptr<Vertex> operator()(const VertexData& vData, const slib::mat4& fullTransformMat, const slib::mat4& viewMatrix, const slib::mat4& normalTransformMat, const Scene& scene) const
+        std::unique_ptr<Vertex> operator()(const VertexData& vData, const slib::mat4& fullTransformMat, const slib::mat4& normalTransformMat, const Scene& scene) const
 		{
             Vertex screenPoint;
             screenPoint.world = fullTransformMat * slib::vec4(vData.vertex, 1);
-            screenPoint.point =  slib::vec4(screenPoint.world, 1) * viewMatrix;
+            screenPoint.point =  slib::vec4(screenPoint.world, 1) * scene.viewMatrix;
             screenPoint.ndc = slib::vec4(screenPoint.point, 1) * scene.projectionMatrix;
             screenPoint.tex = slib::zvec2(vData.texCoord.x, vData.texCoord.y, 1);
             screenPoint.normal = normalTransformMat * slib::vec4(vData.normal, 0);
