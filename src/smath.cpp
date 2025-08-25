@@ -87,11 +87,35 @@ namespace smath
         return viewMatrix;
     }
 
+// yaw,pitch are RADIANS. Y up. Right-handed.
+// yaw rotates around +Y; pitch rotates around camera-right.
+    slib::mat4 view_yaw_pitch(const slib::vec3& eye, float yaw, float pitch, const slib::vec3& worldUp)
+    {
+        // Forward from yaw/pitch (camera looks along +forward)
+        slib::vec3 forward{
+            -std::sin(yaw) * std::cos(pitch),
+            -std::sin(pitch),
+            -std::cos(yaw) * std::cos(pitch)
+        };
+
+        // Build orthonormal basis (your lookAt style uses zaxis as "back")
+        slib::vec3 zaxis = normalize(forward);               // camera backward
+        slib::vec3 xaxis = normalize(cross(worldUp, zaxis));  // right
+        slib::vec3 yaxis = cross(zaxis, xaxis);               // up
+
+        return slib::mat4({
+            { xaxis.x, yaxis.x, zaxis.x, 0 },
+            { xaxis.y, yaxis.y, zaxis.y, 0 },
+            { xaxis.z, yaxis.z, zaxis.z, 0 },
+            { -dot(xaxis,eye), -dot(yaxis,eye), -dot(zaxis,eye), 1 }
+            });
+    }
+
     slib::mat4 fpsview(const slib::vec3& eye, float pitch, float yaw, float roll)
     {
 
-        const float cp = std::cos(pitch), sp = std::sin(pitch);
-        const float cy = std::cos(yaw), sy = std::sin(yaw);
+        const float cp = std::cos(-pitch), sp = std::sin(-pitch);
+        const float cy = std::cos(-yaw), sy = std::sin(-yaw);
         const float cr = std::cos(roll), sr = std::sin(roll);
 
         // Base FPS axes from yaw/pitch (your original)

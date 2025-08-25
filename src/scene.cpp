@@ -223,10 +223,8 @@ void Scene::cameraApplyOrbit(Camera& cam) {
     // Look at target
     cam.forward = smath::normalize(cam.orbitTarget - cam.pos);
     // Optionally refresh Euler yaw/pitch so your existing code stays in sync:
-    
-    cam.yaw = std::atan2(cam.forward.x, cam.forward.z);
+    cam.yaw = std::atan2(cam.forward.x, -cam.forward.z);
     cam.pitch = std::asin(-cam.forward.y);
-    
 
 }
 

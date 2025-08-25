@@ -218,26 +218,27 @@ int main(int, char**)
         scene.rotationMomentum.y = scene.rotationMomentum.y * (1.0f - scene.camera.eagerness) + yawInput * scene.camera.eagerness;
         scene.rotationMomentum.z = scene.rotationMomentum.z * (1.0f - scene.camera.eagerness) + rollInput * scene.camera.eagerness;
 
-
-
         // Update camera using momentum
+        if (!scene.orbiting) { // No free-fly when orbiting
 
-        scene.camera.pitch -= scene.rotationMomentum.x;
-        scene.camera.yaw -= scene.rotationMomentum.y;
-        scene.camera.roll += scene.rotationMomentum.z;
-        scene.camera.pos += scene.movementMomentum;
+            scene.camera.pitch -= scene.rotationMomentum.x;
+            scene.camera.yaw -= scene.rotationMomentum.y;
+            scene.camera.roll += scene.rotationMomentum.z;
+            scene.camera.pos += scene.movementMomentum;
 
-        float pitch = scene.camera.pitch;
-        float yaw = scene.camera.yaw;
-        float cosPitch = cos(pitch);
-        float sinPitch = sin(pitch);
-        float cosYaw = cos(yaw);
-        float sinYaw = sin(yaw);
-        slib::vec3 zaxis = { sinYaw * cosPitch, -sinPitch, cosPitch * cosYaw };
-        scene.camera.forward = zaxis;
+            float pitch = scene.camera.pitch;
+            float yaw = scene.camera.yaw;
+            float cosPitch = cos(pitch);
+            float sinPitch = sin(pitch);
+            float cosYaw = cos(yaw);
+            float sinYaw = sin(yaw);
+            slib::vec3 zaxis = { -sinYaw * cosPitch, sinPitch, -cosPitch * cosYaw };
+            scene.camera.forward = zaxis;
 
-        // Apply hysteresis to movement momentum
-        scene.movementMomentum = scene.movementMomentum * (1.0f - scene.camera.eagerness) + scene.camera.forward * moveInput * scene.camera.eagerness;
+            // Apply hysteresis to movement momentum
+            scene.movementMomentum = scene.movementMomentum * (1.0f - scene.camera.eagerness) + scene.camera.forward * moveInput * scene.camera.eagerness;
+
+        }
 
         // Change the rotation momentum vector (r) with hysteresis: newvalue = oldvalue*(1-eagerness) + input*eagerness
 
