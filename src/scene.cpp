@@ -161,7 +161,7 @@ void Scene::drawBackground() {
 void Scene::setup() {
 
     // Light comming from origin towards far y and z
-    lux = smath::normalize(slib::vec3{ 0, 1, 1 });
+    lux = smath::normalize(slib::vec3{ 1, 1, 1 });
 
     Light light(LightType::Directional, { 1.0f, 1.0f, 1.0f }, 1.0f);
 	light.direction = smath::normalize(slib::vec3{ 0, 1, 1 });

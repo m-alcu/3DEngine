@@ -44,16 +44,12 @@ static const char* sceneNames[] = {
 struct Camera
 {
     slib::vec3 pos = { 0,0,0 };
-    slib::vec3 rotation = { 0,0,0 };
-    slib::vec3 eye = { 0,0,0 };;
-    slib::vec3 target = { 0,0,0 };
-    slib::vec3 up = { 0,0,0 };
     float pitch = 0.0f;
     float yaw = 0.0f;
 	float roll = 0.0f; // Roll is not used in FPS view, but can be added if needed.
     slib::vec3 forward = { 0,0,0 };
     float eagerness = 0.1f; // 0 = no response, 1 = instant response
-    float sensitivity = 0.01f;
+    float sensitivity = 0.05f;
     float speed = 25.0f;
 
     // Orbit parameters
@@ -79,9 +75,6 @@ public:
           projectionMatrix(smath::identity()),
 		  viewMatrix(smath::identity())
     {
-        camera.eye = {0.0f, 0.0f, 0.0f};          // Camera position
-        camera.target = {0.0f, 0.0f, -1.0f};      // Point to look at (in -Z)
-        camera.up = {0.0f, 1.0f, 0.0f};           // Up vector (typically +Y)
         pixels = new uint32_t[screen.width * screen.height];
         backg = new uint32_t[screen.width * screen.height];
     }
