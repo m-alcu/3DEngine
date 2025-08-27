@@ -72,7 +72,7 @@ namespace smath
         return mat;
     }
 
-    slib::mat4 view(const slib::vec3& eye, const slib::vec3& target, const slib::vec3& up)
+    slib::mat4 lookAt(const slib::vec3& eye, const slib::vec3& target, const slib::vec3& up)
     {
         slib::vec3 zaxis = normalize(eye - target);
         slib::vec3 xaxis = normalize(cross(up, zaxis));

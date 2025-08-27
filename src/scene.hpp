@@ -127,9 +127,9 @@ public:
     slib::vec3 rotationMomentum{ 0.f, 0.f, 0.f }; // Rotation momentum vector (nonzero indicates view is still rotating)
     slib::vec3 movementMomentum{ 0.f, 0.f, 0.f }; // Movement momentum vector (nonzero indicates camera is still moving)
 
-    float zNear = 100.0f; // Near plane distance
-    float zFar = 10000.0f; // Far plane distance
-    float viewAngle = 45.0f; // Field of view angle in degrees   
+    float zNear; // Near plane distance
+    float zFar; // Far plane distance
+    float viewAngle; // Field of view angle in degrees   
 
     Camera camera; // Camera object to manage camera properties.
     // Store solids in a vector of unique_ptr to handle memory automatically.

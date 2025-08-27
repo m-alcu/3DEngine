@@ -63,16 +63,18 @@ class Renderer {
             //std::fill_n(scene.pixels, scene.screen.width * scene.screen.height, 0);
             std::copy(scene.backg, scene.backg + scene.screen.width * scene.screen.height, scene.pixels);
             scene.zBuffer->Clear(); // Clear the zBuffer
-        
-            //float zNear = 0.1f; // Near plane distance
-            //float zFar  = 10000.0f; // Far plane distance
+
+            zNear = 100.0f; // Near plane distance
+            zFar = 10000.0f; // Far plane distance
+            viewAngle = 45.0f; // Field of view angle in degrees   
+
             float aspectRatio = (float) scene.screen.width / scene.screen.height; // Width / Height ratio
             float fovRadians = viewAngle * (PI / 180.0f);
         
             scene.projectionMatrix = smath::perspective(zFar, zNear, aspectRatio, fovRadians);
 
             if (scene.orbiting) {
-                scene.viewMatrix = smath::view(scene.camera.pos, scene.camera.orbitTarget, { 0,1,0 });
+                scene.viewMatrix = smath::lookAt(scene.camera.pos, scene.camera.orbitTarget, { 0,1,0 });
             }
             else {
                 scene.viewMatrix = smath::fpsview(scene.camera.pos, scene.camera.pitch, scene.camera.yaw, scene.camera.roll);
