@@ -77,6 +77,9 @@ class Renderer {
             else {
                 scene.viewMatrix = smath::fpsview(scene.camera.pos, scene.camera.pitch, scene.camera.yaw, scene.camera.roll);
             }
+
+            // Used in BlinnPhong shading
+            scene.halfwayVector = smath::normalize(scene.lux + scene.camera.forward);
         }
         
         Rasterizer<FlatEffect> flatRasterizer;

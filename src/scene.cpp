@@ -162,10 +162,10 @@ void Scene::setup() {
 
     // Light comming from origin towards far y and z
     lux = smath::normalize(slib::vec3{ 0, 1, 1 });
-    // Far is positive z, so we are looking from the origin to the positive z axis.
-    eye = { 0, 0, 1 };
-	// Used in BlinnPhong shading
-    halfwayVector = smath::normalize(lux + eye);
+
+    Light light(LightType::Directional, { 1.0f, 1.0f, 1.0f }, 1.0f);
+	light.direction = smath::normalize(slib::vec3{ 0, 1, 1 });
+	lights.push_back(light);
 
     switch (sceneType) {
         case SceneType::TORUS:

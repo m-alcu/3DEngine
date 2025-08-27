@@ -167,6 +167,7 @@ int main(int, char**)
                           ne.camera.yaw = std::atan2(forward.x, -forward.z); // [-pi, pi]
                           scene.camera.pitch = std::asin(-forward.y);            // [-pi/2, pi/2]
                         */
+                        
                     }
                     break;
                 case SDL_EVENT_MOUSE_WHEEL:
@@ -234,12 +235,15 @@ int main(int, char**)
             float sinPitch = sin(pitch);
             float cosYaw = cos(yaw);
             float sinYaw = sin(yaw);
-            slib::vec3 zaxis = { -sinYaw * cosPitch, sinPitch, -cosPitch * cosYaw };
+            slib::vec3 zaxis = { -sinYaw * cosPitch, sinPitch, cosPitch * cosYaw };
             scene.camera.forward = zaxis;
 
             // Apply hysteresis to movement momentum
             scene.movementMomentum = scene.movementMomentum * (1.0f - scene.camera.eagerness) + scene.camera.forward * moveInput * scene.camera.eagerness;
 
+        }
+        else {
+            scene.camera.forward = smath::normalize(scene.camera.pos - scene.camera.orbitTarget);
         }
 
         // [If using SDL_MAIN_USE_CALLBACKS: all code below would likely be your SDL_AppIterate() function]

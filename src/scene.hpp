@@ -18,6 +18,7 @@
 #include "ZBuffer.hpp"
 #include "backgrounds/background.hpp"
 #include "backgrounds/backgroundFactory.hpp"
+#include "light.hpp"
 
 
 enum class SceneType {
@@ -123,7 +124,7 @@ public:
     SceneType sceneType = SceneType::TETRAKIS; // Default scene type
    
     slib::vec3 lux;
-    slib::vec3 eye;
+	std::vector<Light> lights;
     slib::vec3 halfwayVector;
     slib::mat4 projectionMatrix;
 	slib::mat4 viewMatrix;

@@ -94,7 +94,7 @@ public:
             // Normalize vectors
             slib::vec3 N = smath::normalize(vRaster.normal); // Normal at the fragment
             slib::vec3 L = scene.lux; // Light direction
-            slib::vec3 V = scene.eye; // Viewer direction (you may want to define this differently later)
+            //slib::vec3 V = scene.eye; // Viewer direction (you may want to define this differently later)
         
             // Diffuse component
             float diff = std::max(0.0f, smath::dot(N,L));
