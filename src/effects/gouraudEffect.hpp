@@ -84,7 +84,7 @@ public:
         {
             const auto& Ka = tri.material.Ka; // vec3
             const auto& Kd = tri.material.Kd; // vec3
-            const auto& light = scene.lux;         // vec3
+            const auto& light = scene.lux;    // vec3
         
             auto computeColor = [&](const slib::vec3& normal) -> Color {
                 float ds = std::max(0.0f, smath::dot(normal, light)); // diffuse scalar

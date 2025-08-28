@@ -235,7 +235,7 @@ int main(int, char**)
             float sinPitch = sin(pitch);
             float cosYaw = cos(yaw);
             float sinYaw = sin(yaw);
-            slib::vec3 zaxis = { -sinYaw * cosPitch, sinPitch, cosPitch * cosYaw };
+            slib::vec3 zaxis = { sinYaw * cosPitch, -sinPitch, -cosPitch * cosYaw };
             scene.camera.forward = zaxis;
 
             // Apply hysteresis to movement momentum
@@ -243,7 +243,7 @@ int main(int, char**)
 
         }
         else {
-            scene.camera.forward = smath::normalize(scene.camera.pos - scene.camera.orbitTarget);
+            scene.camera.forward = smath::normalize(scene.camera.orbitTarget - scene.camera.pos);
         }
 
         // [If using SDL_MAIN_USE_CALLBACKS: all code below would likely be your SDL_AppIterate() function]

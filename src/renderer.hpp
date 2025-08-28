@@ -81,7 +81,12 @@ class Renderer {
             }
 
             // Used in BlinnPhong shading
-            scene.halfwayVector = smath::normalize(scene.lux + scene.camera.forward);
+            // NOTE: For performance we approximate the per-fragment view vector V with -camera.forward.
+            // This assumes all view rays are parallel (like an orthographic camera).
+            // Works well when the camera is far away or objects are small on screen.
+            // Not physically correct: highlights will "stick" to the camera instead of sliding across
+            // surfaces when moving in perspective, but it’s often a good enough approximation.
+            scene.halfwayVector = smath::normalize(scene.lux - scene.camera.forward);
         }
         
         Rasterizer<FlatEffect> flatRasterizer;
