@@ -201,7 +201,6 @@ int main(int, char**)
         }
 
         // The input scheme is the same as in Descent, the game by Parallax Interactive.
-        // Mouse input is not handled for now.
         bool up = keys[SDLK_UP] || keys[SDLK_KP_8];
         bool down = keys[SDLK_DOWN] || keys[SDLK_KP_2], alt = keys[SDLK_LALT] || keys[SDLK_RALT];
         bool left = keys[SDLK_LEFT] || keys[SDLK_KP_4], rleft = keys[SDLK_Q] || keys[SDLK_KP_7];
