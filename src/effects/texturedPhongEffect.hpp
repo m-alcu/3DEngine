@@ -103,7 +103,7 @@ public:
             float diff = std::max(0.0f, smath::dot(normal,light));
         
             slib::vec3 R = normal * 2.0f * smath::dot(normal,scene.lux) - scene.lux;
-            float specAngle = std::max(0.0f, smath::dot(R, { -scene.camera.forward.x, -scene.camera.forward.y, -scene.camera.forward.z })); // viewer
+            float specAngle = std::max(0.0f, smath::dot(R, scene.forwardNeg)); // viewer
             float spec = std::pow(specAngle, tri.material.Ns);
 
             float w = 1 / vRaster.tex.w;

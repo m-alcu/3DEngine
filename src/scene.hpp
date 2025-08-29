@@ -119,6 +119,7 @@ public:
     slib::vec3 lux;
 	std::vector<Light> lights;
     slib::vec3 halfwayVector;
+	slib::vec3 forwardNeg; // Negative forward vector for lighting calculations
     slib::mat4 projectionMatrix;
 	slib::mat4 viewMatrix;
     std::shared_ptr<ZBuffer> zBuffer; // Use shared_ptr for zBuffer to manage its lifetime automatically.

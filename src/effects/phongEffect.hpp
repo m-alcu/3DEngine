@@ -103,7 +103,7 @@ public:
             // Works well when the camera is far away or objects are small on screen.
             // Not physically correct: highlights will "stick" to the camera instead of sliding across
             // surfaces when moving in perspective, but it’s often a good enough approximation.
-            float specAngle = std::max(0.0f, smath::dot(R, { -scene.camera.forward.x, -scene.camera.forward.y, -scene.camera.forward.z })); // viewer
+            float specAngle = std::max(0.0f, smath::dot(R, scene.forwardNeg)); // viewer
             float spec = std::pow(specAngle, tri.material.Ns);
         
             slib::vec3 color = Ka + Kd * diff + Ks * spec;
