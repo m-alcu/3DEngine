@@ -35,6 +35,12 @@ public:
         tex += v.tex;
         return *this;
     }
+
+    Vertex& hraster(const Vertex& v) {
+        p_z += v.p_z;
+        tex += v.tex;
+        return *this;
+    }
         
 	public:
         int32_t p_x;

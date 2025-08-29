@@ -306,7 +306,7 @@ class Rasterizer {
                     if (scene->zBuffer->TestAndSet(index, vStart.p_z)) {
                         pixels[index] = effect.ps(vStart, *scene, tri);
                     }
-                    vStart += vStep;
+                    vStart.hraster(vStep);
                 }
             }
         

@@ -38,6 +38,12 @@ public:
         color += v.color;
         return *this;
     }
+
+    Vertex& hraster(const Vertex& v) {
+        p_z += v.p_z;
+        color += v.color;
+        return *this;
+    }
         
 	public:
         int32_t p_x;
