@@ -97,7 +97,7 @@ public:
             slib::vec3 normal = smath::normalize(vRaster.normal);
             float diff = std::max(0.0f, smath::dot(normal,light));
         
-            slib::vec3 R = smath::normalize(normal * 2.0f * smath::dot(normal,scene.lux) - scene.lux);
+            slib::vec3 R = normal * 2.0f * smath::dot(normal,scene.lux) - scene.lux;
             // NOTE: For performance we approximate the per-fragment view vector V with -camera.forward.
             // This assumes all view rays are parallel (like an orthographic camera).
             // Works well when the camera is far away or objects are small on screen.
