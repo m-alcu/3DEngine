@@ -107,7 +107,7 @@ public:
             const auto& Ks = tri.material.Ks; // vec3
             // Normalize vectors
             slib::vec3 N = smath::normalize(vRaster.normal); // Normal at the fragment
-            slib::vec3 L = scene.lux; // Light direction
+            slib::vec3 L = scene.light.direction; // Light direction
             //slib::vec3 V = scene.eye; // Viewer direction (you may want to define this differently later)
         
             // Diffuse component

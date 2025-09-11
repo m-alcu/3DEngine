@@ -86,7 +86,7 @@ public:
 
             const auto& Ka = tri.material.Ka; // vec3
             const auto& Kd = tri.material.Kd; // vec3
-            const auto& light = scene.lux;    // vec3
+            const auto& light = scene.light.direction;    // vec3
 
             /*
             All vertex faces are counterwise (cw), so normal is pointing towards the screen,

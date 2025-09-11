@@ -86,7 +86,7 @@ class Renderer {
             // Works well when the camera is far away or objects are small on screen.
             // Not physically correct: highlights will "stick" to the camera instead of sliding across
             // surfaces when moving in perspective, but it’s often a good enough approximation.
-            scene.halfwayVector = smath::normalize(scene.lux - scene.camera.forward);
+            scene.halfwayVector = smath::normalize(scene.light.direction - scene.camera.forward);
 			scene.forwardNeg = { -scene.camera.forward.x, -scene.camera.forward.y, -scene.camera.forward.z };
         }
         

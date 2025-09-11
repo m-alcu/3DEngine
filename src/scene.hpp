@@ -120,8 +120,7 @@ public:
     Screen screen;
     SceneType sceneType = SceneType::TETRAKIS; // Default scene type
    
-    slib::vec3 lux;
-	std::vector<Light> lights;
+	Light light;
     slib::vec3 halfwayVector;
 	slib::vec3 forwardNeg; // Negative forward vector for lighting calculations
     slib::mat4 projectionMatrix;

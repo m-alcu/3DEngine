@@ -105,12 +105,12 @@ public:
             const auto& Ka = tri.material.Ka; // vec3
             const auto& Kd = tri.material.Kd; // vec3
             const auto& Ks = tri.material.Ks; // vec3
-            const auto& light = scene.lux;         // vec3
+            const auto& light = scene.light.direction;         // vec3
 
             slib::vec3 normal = smath::normalize(vRaster.normal);
             float diff = std::max(0.0f, smath::dot(normal,light));
         
-            slib::vec3 R = normal * 2.0f * smath::dot(normal,scene.lux) - scene.lux;
+            slib::vec3 R = normal * 2.0f * smath::dot(normal,scene.light.direction) - scene.light.direction;
             float specAngle = std::max(0.0f, smath::dot(R, scene.forwardNeg)); // viewer
             float spec = std::pow(specAngle, tri.material.Ns);
 
