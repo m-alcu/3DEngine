@@ -86,6 +86,32 @@ void Scene::tetrakisInit() {
 
 }
 
+void Scene::icosahedronInit() {
+
+    clearAllSolids();
+    auto icosahedron = std::make_unique<Icosahedron>();
+
+    icosahedron->position.z = -5000;
+    icosahedron->position.x = 0;
+    icosahedron->position.y = 0;
+    icosahedron->position.zoom = 25;
+    icosahedron->position.xAngle = 90.0f;
+    icosahedron->position.yAngle = 0.0f;
+    icosahedron->position.zAngle = 0.0f;
+    icosahedron->shading = Shading::Flat;
+
+    icosahedron->setup();
+
+    icosahedron->enableCircularOrbit(/*center*/{ icosahedron->position.x,icosahedron->position.y,icosahedron->position.z },
+        /*radius*/1000.0f,
+        /*planeNormal*/{ 0,1,1 },   // orbit in XZ plane
+        /*omega*/(3.14159265f / 3), // 60°/s
+        /*initialPhase*/0.0f);
+
+    addSolid(std::move(icosahedron));
+}
+
+
 void Scene::cubeInit() {
 
     clearAllSolids();
@@ -189,6 +215,9 @@ void Scene::setup() {
         case SceneType::WORLD:
             worldInit();
             break; 
+		case SceneType::ICOSAHEDRON:
+			icosahedronInit();
+			break;
         default:
             tetrakisInit();
             break;

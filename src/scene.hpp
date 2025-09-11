@@ -13,6 +13,7 @@
 #include "objects/cube.hpp"
 #include "objects/ascLoader.hpp"
 #include "objects/objLoader.hpp"
+#include "objects/icosahedron.hpp"
 #include "smath.hpp"
 #include "slib.hpp"
 #include "ZBuffer.hpp"
@@ -24,6 +25,7 @@
 enum class SceneType {
     TORUS,
     TETRAKIS,
+    ICOSAHEDRON,
     CUBE,
     KNOT,
     STAR,
@@ -34,6 +36,7 @@ enum class SceneType {
 static const char* sceneNames[] = {
     "Torus",
     "Tetrakis",
+	"Icosahedron",
     "Cube",
     "Knot",
     "Star",
@@ -90,6 +93,7 @@ public:
     void setup();
     void torusInit();
     void tetrakisInit();
+	void icosahedronInit();
     void cubeInit();
     void knotInit();
     void starInit();
