@@ -44,7 +44,7 @@ public:
     slib::vec3 getDirection(const slib::vec3& surfacePos) const {
         switch (type) {
         case LightType::Directional:
-            return smath::normalize( { -direction.x, -direction.y, -direction.z } );
+            return smath::normalize( { direction.x, direction.y, direction.z } );
         case LightType::Point:
             return smath::normalize(position - surfacePos);
         case LightType::Spot:

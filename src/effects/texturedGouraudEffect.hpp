@@ -68,7 +68,7 @@ public:
             screenPoint.ndc = slib::vec4(screenPoint.point, 1) * scene.projectionMatrix;
             screenPoint.tex = slib::zvec2(vData.texCoord.x, vData.texCoord.y, 1);
             normal = normalTransformMat * slib::vec4(vData.normal, 0);
-            screenPoint.diffuse = std::max(0.0f, smath::dot(normal, scene.light.direction));
+            screenPoint.diffuse = std::max(0.0f, smath::dot(normal, scene.light.getDirection(screenPoint.world)));
             return std::make_unique<Vertex>(screenPoint);
 		}
 

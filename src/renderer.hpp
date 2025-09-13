@@ -85,8 +85,7 @@ class Renderer {
             // This assumes all view rays are parallel (like an orthographic camera).
             // Works well when the camera is far away or objects are small on screen.
             // Not physically correct: highlights will "stick" to the camera instead of sliding across
-            // surfaces when moving in perspective, but it’s often a good enough approximation.
-            scene.halfwayVector = smath::normalize(scene.light.direction - scene.camera.forward);
+            // surfaces when moving in perspective, but it’s often a good enough approximation.d
 			scene.forwardNeg = { -scene.camera.forward.x, -scene.camera.forward.y, -scene.camera.forward.z };
         }
         

@@ -90,9 +90,8 @@ public:
 
             const auto& Ka = tri.material.Ka; // vec3
             const auto& Kd = tri.material.Kd; // vec3
-            const auto& light = scene.light.direction;    // vec3
-
-            tri.flatDiffuse = std::max(0.0f, smath::dot(tri.rotatedFaceNormal,light));
+			const slib::vec3& luxDirection = scene.light.getDirection(tri.points[0].world); // any point aproximately the same
+            tri.flatDiffuse = std::max(0.0f, smath::dot(tri.rotatedFaceNormal, luxDirection));
 		}
 	};
 

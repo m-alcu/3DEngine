@@ -90,15 +90,16 @@ public:
         {
             const auto& Ka = tri.material.Ka; // vec3
             const auto& Kd = tri.material.Kd; // vec3
-            const auto& light = scene.light.direction;    // vec3
+            
         
-            auto computeColor = [&](const slib::vec3& normal) -> Color {
-                float ds = std::max(0.0f, smath::dot(normal, light)); // diffuse scalar
+            auto computeColor = [&](const slib::vec3& normal, const slib::vec3& world) -> Color {
+                const slib::vec3& luxDirection = scene.light.getDirection(world);
+                float ds = std::max(0.0f, smath::dot(normal, luxDirection)); // diffuse scalar
                 return Color(Ka + Kd * ds); // assumes vec3 uses .r/g/b or [0]/[1]/[2]
             };
 
             for(auto& point : tri.points) {
-                point.color = computeColor(point.normal);
+                point.color = computeColor(point.normal, point.world);
             }        
         }
 	};    

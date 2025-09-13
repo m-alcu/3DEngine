@@ -121,7 +121,6 @@ public:
     SceneType sceneType = SceneType::TETRAKIS; // Default scene type
    
 	Light light;
-    slib::vec3 halfwayVector;
 	slib::vec3 forwardNeg; // Negative forward vector for lighting calculations
     slib::mat4 projectionMatrix;
 	slib::mat4 viewMatrix;

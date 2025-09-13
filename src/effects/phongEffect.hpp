@@ -98,12 +98,12 @@ public:
             const auto& Ka = tri.material.Ka; // vec3
             const auto& Kd = tri.material.Kd; // vec3
             const auto& Ks = tri.material.Ks; // vec3
-            const auto& light = scene.light.direction;    // vec3
+            const slib::vec3& luxDirection = scene.light.getDirection(vRaster.world);
 
             slib::vec3 normal = smath::normalize(vRaster.normal);
-            float diff = std::max(0.0f, smath::dot(normal,light));
+            float diff = std::max(0.0f, smath::dot(normal,luxDirection));
         
-            slib::vec3 R = normal * 2.0f * smath::dot(normal,scene.light.direction) - scene.light.direction;
+            slib::vec3 R = normal * 2.0f * smath::dot(normal,luxDirection) - luxDirection;
             // NOTE: For performance we approximate the per-fragment view vector V with -camera.forward.
             // This assumes all view rays are parallel (like an orthographic camera).
             // Works well when the camera is far away or objects are small on screen.

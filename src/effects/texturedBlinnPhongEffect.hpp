@@ -105,9 +105,10 @@ public:
             const auto& Ka = tri.material.Ka; // vec3
             const auto& Kd = tri.material.Kd; // vec3
             const auto& Ks = tri.material.Ks; // vec3
+            const slib::vec3& luxDirection = scene.light.getDirection(vRaster.world);
             // Normalize vectors
             slib::vec3 N = smath::normalize(vRaster.normal); // Normal at the fragment
-            slib::vec3 L = scene.light.direction; // Light direction
+            slib::vec3 L = luxDirection; // Light direction
             //slib::vec3 V = scene.eye; // Viewer direction (you may want to define this differently later)
         
             // Diffuse component
@@ -115,9 +116,10 @@ public:
         
             // Halfway vector H = normalize(L + V)
             //slib::vec3 H = smath::normalize(L + V);
+            const slib::vec3& halfwayVector = smath::normalize(luxDirection - scene.camera.forward);
         
             // Specular component: spec = (N · H)^shininess
-            float specAngle = std::max(0.0f, smath::dot(N,scene.halfwayVector)); // viewer
+            float specAngle = std::max(0.0f, smath::dot(N,halfwayVector)); // viewer
             float spec = std::pow(specAngle, tri.material.Ns); // Blinn Phong shininess needs *4 to be like Phong
         
             float w = 1 / vRaster.tex.w;
