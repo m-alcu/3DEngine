@@ -6,10 +6,7 @@
 #include "slib.hpp"
 #include "smath.hpp"
 #include "polygon.hpp"
-
-enum class ClipPlane {
-    Left, Right, Bottom, Top, Near, Far
-};
+#include "clipping.hpp"
 
 template<class Effect>
 class Rasterizer {
@@ -26,10 +23,6 @@ class Rasterizer {
             DrawFaces();
         }
 
-        void setWireframe(bool wireframeMode) {
-            wireframe = wireframeMode;
-        }
-
     private:
         typedef typename Effect::Vertex vertex;
         std::vector<std::unique_ptr<vertex>> projectedPoints;
@@ -39,7 +32,6 @@ class Rasterizer {
         slib::mat4 normalTransformMat;
         
         Effect effect;
-        bool wireframe = false;
         
         void setRenderable(Solid* solidPtr) {
             projectedPoints.clear();
@@ -80,7 +72,7 @@ class Rasterizer {
 
                 vertex* p1 = projectedPoints[face.vertexIndices[0]].get();
 
-                if (wireframe || Visible(p1->world, rotatedFaceNormal)) {
+                if (solid->shading == Shading::Wireframe || Visible(p1->world, rotatedFaceNormal)) {
 
                     const auto& idx = face.vertexIndices;
 
@@ -101,7 +93,10 @@ class Rasterizer {
                     );
 
                     // For n-gons; rename your function if it isn't triangle-specific anymore
-                    ClipCullDrawPolygonSutherlandHodgman(poly); // must be thread-safe
+                    auto clippedPoly = ClipCullPolygonSutherlandHodgman(poly);
+                    if (!clippedPoly.points.empty()) {
+                        draw(clippedPoly);
+                    }
                 }
 
             }
@@ -125,93 +120,6 @@ class Rasterizer {
             // Return whether the triangle is facing the camera
             return dotResult > 0.0f;
         };
-
-        /*
-        Clipping is done using the Sutherland-Hodgman algorithm (1974) in the ndc space.
-        The Sutherland-Hodgman algorithm is a polygon clipping algorithm that clips a polygon against a convex clipping region.
-        The algorithm works by iterating through each edge of the polygon and checking if the vertices are inside or outside the clipping plane.
-        If a vertex is inside, it is added to the output polygon. If a vertex is outside, the algorithm checks if the previous vertex was inside. If it was, the edge between the two vertices is clipped and the intersection point is added to the output polygon.
-        The algorithm continues until all edges have been processed.
-        https://en.wikipedia.org/wiki/Sutherland%E2%80%93Hodgman_algorithm
-        */
-
-        void ClipCullDrawPolygonSutherlandHodgman(const Polygon<vertex>& t) {
-            std::vector<vertex> polygon = t.points;
-
-            for (ClipPlane plane : {ClipPlane::Left, ClipPlane::Right, ClipPlane::Bottom, 
-                                    ClipPlane::Top, ClipPlane::Near, ClipPlane::Far}) {
-                polygon = ClipAgainstPlane(polygon, plane);
-                if (polygon.empty()) return; // Completely outside
-            }
-
-            Polygon<vertex> tri(polygon, t.face, t.rotatedFaceNormal, t.material);
-            draw(tri);
-        }
-
-        std::vector<vertex> ClipAgainstPlane(const std::vector<vertex>& poly, ClipPlane plane) {
-            std::vector<vertex> output;
-            if (poly.empty()) return output;
-        
-            vertex prev = poly.back();
-            bool prevInside = IsInside(prev, plane);
-        
-            for (const auto& curr : poly) {
-                bool currInside = IsInside(curr, plane);
-        
-                if (currInside != prevInside) {
-                    // from inside to outside, we need to clip the edge always this way
-                    if (prevInside) {
-                        float alpha = ComputeAlpha(prev, curr, plane);
-                        output.push_back(prev + (curr - prev) * alpha);
-                    } else {
-                        float alpha = ComputeAlpha(curr, prev, plane);
-                        output.push_back(curr + (prev - curr) * alpha);
-                    }
-                }
-                if (currInside)
-                    output.push_back(curr);
-                prev = curr;
-                prevInside = currInside;
-            }
-        
-            return output;
-        } 
-        
-        bool IsInside(const vertex& v, ClipPlane plane) {
-            const auto& p = v.ndc;
-            switch (plane) {
-                case ClipPlane::Left:   return p.x >= -p.w;
-                case ClipPlane::Right:  return p.x <=  p.w;
-                case ClipPlane::Bottom: return p.y >= -p.w;
-                case ClipPlane::Top:    return p.y <=  p.w;
-                case ClipPlane::Near:   return p.z >= -p.w;
-                case ClipPlane::Far:    return p.z <=  p.w;
-            }
-            return false;
-        }
-        
-        float ComputeAlpha(const vertex& a, const vertex& b, ClipPlane plane) {
-            const auto& pa = a.ndc;
-            const auto& pb = b.ndc;
-            float num, denom;
-        
-            switch (plane) {
-                case ClipPlane::Left:
-                    num = pa.x + pa.w; denom = (pa.x + pa.w) - (pb.x + pb.w); break;
-                case ClipPlane::Right:
-                    num = pa.x - pa.w; denom = (pa.x - pa.w) - (pb.x - pb.w); break;
-                case ClipPlane::Bottom:
-                    num = pa.y + pa.w; denom = (pa.y + pa.w) - (pb.y + pb.w); break;
-                case ClipPlane::Top:
-                    num = pa.y - pa.w; denom = (pa.y - pa.w) - (pb.y - pb.w); break;
-                case ClipPlane::Near:
-                    num = pa.z + pa.w; denom = (pa.z + pa.w) - (pb.z + pb.w); break;
-                case ClipPlane::Far:
-                    num = pa.z - pa.w; denom = (pa.z - pa.w) - (pb.z - pb.w); break;
-            }
-        
-            return denom != 0.0f ? num / denom : 0.0f;
-        }
         
         /*
         Drawing a triangle with scanline rasterization.
@@ -244,7 +152,7 @@ class Rasterizer {
                 effect.vs.viewProjection(*scene, point);
             }
 
-            if (wireframe) {
+            if (solid->shading == Shading::Wireframe) {
                 drawWireframe(tri, 0xffffffff, pixels);
 				return; // No rasterization in wireframe mode
             }

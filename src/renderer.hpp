@@ -25,11 +25,9 @@ class Renderer {
             for (auto& solidPtr : scene.solids) {
                 switch (solidPtr->shading) {
                     case Shading::Flat: 
-                        flatRasterizer.setWireframe(false);
                         flatRasterizer.drawRenderable(*solidPtr, scene);
                         break;   
                     case Shading::Wireframe: 
-                        flatRasterizer.setWireframe(true);
                         flatRasterizer.drawRenderable(*solidPtr, scene);
                         break;                                              
                     case Shading::TexturedFlat: 
