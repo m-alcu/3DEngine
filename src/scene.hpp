@@ -20,6 +20,7 @@
 #include "backgrounds/background.hpp"
 #include "backgrounds/backgroundFactory.hpp"
 #include "light.hpp"
+#include "camera.hpp"
 
 
 enum class SceneType {
@@ -42,24 +43,6 @@ static const char* sceneNames[] = {
     "Star",
     "Amiga",
     "World"
-};
-
-struct Camera
-{
-    slib::vec3 pos = { 0,0,0 };
-    float pitch = 0.0f;
-    float yaw = 0.0f;
-	float roll = 0.0f; // Roll is not used in FPS view, but can be added if needed.
-    slib::vec3 forward = { 0,0,0 };
-    float eagerness = 0.1f; // 0 = no response, 1 = instant response
-    float sensitivity = 0.05f;
-    float speed = 25.0f;
-
-    // Orbit parameters
-    slib::vec3 orbitTarget{ 0,0,0 };
-    float orbitRadius = 5.0f;
-    float orbitAzimuth = 0.0f;     // around Y (left/right)
-    float orbitElevation = 0.0f;   // up/down, clamp to (-pi/2, pi/2)
 };
 
 typedef struct Screen
@@ -91,7 +74,6 @@ public:
 
     // Called to set up the Scene, including creation of Solids, etc.
     virtual void setup();
-    void drawBackground();
     void cameraSetOrbitFromCurrent(Camera& cam);
     void cameraApplyOrbit(Camera& cam);
 
@@ -100,6 +82,11 @@ public:
     void addSolid(std::unique_ptr<Solid> solid)
     {
         solids.push_back(std::move(solid));
+    }
+
+    void drawBackground() const {
+
+        background->draw(backg, screen.height, screen.width);
     }
 
     // Add a solid to the scene's list of solids.

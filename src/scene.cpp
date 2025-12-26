@@ -3,11 +3,6 @@
 #include "scene.hpp"
 #include "constants.hpp"
 
-void Scene::drawBackground() {
-
-    background->draw(backg, screen.height, screen.width);
-}
-
 void Scene::setup() {
 }
 
