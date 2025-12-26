@@ -107,7 +107,7 @@ int main(int, char**)
         // If you have a centroid method: scene.solids[0]->centroid();
         scene->camera.orbitTarget = { scene->solids[0]->position.x, scene->solids[0]->position.y, scene->solids[0]->position.z }; // or compute one
     }
-    scene->cameraSetOrbitFromCurrent(scene->camera);
+    scene->camera.setOrbitFromCurrent();
 
     // Main loop
     bool closedWindow = false;
@@ -177,7 +177,7 @@ int main(int, char**)
                         if (ev.wheel.y > 0) scene->camera.orbitRadius *= zoomStep;
                         if (ev.wheel.y < 0) scene->camera.orbitRadius /= zoomStep;
                         scene->camera.orbitRadius = std::max(0.1f, scene->camera.orbitRadius);
-                        scene->cameraApplyOrbit(scene->camera);
+						scene->camera.applyOrbit();
                     }
                     break;
                 case SDL_EVENT_MOUSE_MOTION:
@@ -193,7 +193,7 @@ int main(int, char**)
                         scene->camera.orbitAzimuth -= dx * orbitYawSpeed;   // drag right => orbit right
                         scene->camera.orbitElevation -= dy * orbitPitchSpeed; // drag up   => orbit up
                         // Clamp elevation in apply
-                        scene->cameraApplyOrbit(scene->camera);
+                        scene->camera.applyOrbit();
                     }
                     break;
 

@@ -74,8 +74,6 @@ public:
 
     // Called to set up the Scene, including creation of Solids, etc.
     virtual void setup();
-    void cameraSetOrbitFromCurrent(Camera& cam);
-    void cameraApplyOrbit(Camera& cam);
 
     // Add a solid to the scene's list of solids.
     // Using std::unique_ptr is a good practice for ownership.

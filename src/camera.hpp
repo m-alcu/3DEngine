@@ -1,6 +1,8 @@
 #pragma once
 #include "slib.hpp"
 
+inline static float clampf(float v, float a, float b) { return v < a ? a : (v > b ? b : v); }
+
 class Camera {
 public:
     slib::vec3 pos{ 0, 0, 0 };
@@ -19,4 +21,28 @@ public:
     float orbitElevation = 0.0f;
 
     Camera() = default;
+
+    void setOrbitFromCurrent() {
+        slib::vec3 d = pos - orbitTarget;
+        orbitRadius = smath::distance(d);
+        orbitAzimuth = std::atan2(d.x, d.z);
+        orbitElevation = std::asin(d.y / orbitRadius);
+    }
+
+    void applyOrbit() {
+        const float el = clampf(orbitElevation, -1.5533f, 1.5533f); // ~±89°
+        const float ca = std::cos(orbitAzimuth), sa = std::sin(orbitAzimuth);
+        const float ce = std::cos(el), se = std::sin(el);
+
+        slib::vec3 offset{
+            orbitRadius * sa * ce,
+            orbitRadius * se,
+            orbitRadius * ca * ce
+        };
+
+        pos = orbitTarget + offset;
+        forward = smath::normalize(orbitTarget - pos);
+        yaw = std::atan2(forward.x, -forward.z);
+        pitch = std::asin(-forward.y);
+    }
 };
