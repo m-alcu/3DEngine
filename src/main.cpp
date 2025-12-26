@@ -17,6 +17,7 @@
 #include "vendor/imgui/imgui_impl_sdlrenderer3.h"
 #include "renderer.hpp"
 #include "scene.hpp"
+#include "scenes/sceneFactory.hpp"
 
 #ifdef __EMSCRIPTEN__
 #include "../libs/emscripten/emscripten_mainloop_stub.h"
@@ -96,18 +97,17 @@ int main(int, char**)
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != nullptr);
 
-    Scene scene({height, width});
-    scene.sceneType = SceneType::CUBE;
-    scene.setup();
+    auto scene = SceneFactory::createScene(SceneType::TETRAKIS, { height, width });
+    scene->setup();
 
     float lastMouseX = 0, lastMouseY = 0;
 
     // After scene.setup();
-    if (!scene.solids.empty()) {
+    if (!scene->solids.empty()) {
         // If you have a centroid method: scene.solids[0]->centroid();
-        scene.camera.orbitTarget = { scene.solids[0]->position.x, scene.solids[0]->position.y, scene.solids[0]->position.z }; // or compute one
+        scene->camera.orbitTarget = { scene->solids[0]->position.x, scene->solids[0]->position.y, scene->solids[0]->position.z }; // or compute one
     }
-    scene.cameraSetOrbitFromCurrent(scene.camera);
+    scene->cameraSetOrbitFromCurrent(scene->camera);
 
     // Main loop
     bool closedWindow = false;
@@ -145,15 +145,15 @@ int main(int, char**)
                     if (ev.button.button == SDL_BUTTON_RIGHT) {
                         // Respect ImGui focus: do not orbit if ImGui wants the mouse
                         if (!ImGui::GetIO().WantCaptureMouse) {
-                            scene.orbiting = true;
+                            scene->orbiting = true;
                             SDL_GetMouseState(&lastMouseX, &lastMouseY);
                             SDL_SetWindowRelativeMouseMode(window, true); // hide cursor + get relative deltas
                         }
                     }
                     break;
                 case SDL_EVENT_MOUSE_BUTTON_UP:
-                    if (ev.button.button == SDL_BUTTON_RIGHT && scene.orbiting) {
-                        scene.orbiting = false;
+                    if (ev.button.button == SDL_BUTTON_RIGHT && scene->orbiting) {
+                        scene->orbiting = false;
                         SDL_SetWindowRelativeMouseMode(window, false);
                         /*
                         slib::vec3 eye = scene.camera.pos;
@@ -174,14 +174,14 @@ int main(int, char**)
                     // Zoom (wheel.y > 0 => zoom in)
                     if (!ImGui::GetIO().WantCaptureMouse) {
                         float zoomStep = 0.9f; // multiplicative for nicer feel
-                        if (ev.wheel.y > 0) scene.camera.orbitRadius *= zoomStep;
-                        if (ev.wheel.y < 0) scene.camera.orbitRadius /= zoomStep;
-                        scene.camera.orbitRadius = std::max(0.1f, scene.camera.orbitRadius);
-                        scene.cameraApplyOrbit(scene.camera);
+                        if (ev.wheel.y > 0) scene->camera.orbitRadius *= zoomStep;
+                        if (ev.wheel.y < 0) scene->camera.orbitRadius /= zoomStep;
+                        scene->camera.orbitRadius = std::max(0.1f, scene->camera.orbitRadius);
+                        scene->cameraApplyOrbit(scene->camera);
                     }
                     break;
                 case SDL_EVENT_MOUSE_MOTION:
-                    if (scene.orbiting) {
+                    if (scene->orbiting) {
                         // Relative mode gives motion.xrel/yrel directly
                         float dx = static_cast<float>(ev.motion.xrel);
                         float dy = static_cast<float>(ev.motion.yrel);
@@ -190,10 +190,10 @@ int main(int, char**)
                         const float orbitYawSpeed = 0.0035f; // radians per pixel
                         const float orbitPitchSpeed = 0.0035f;
 
-                        scene.camera.orbitAzimuth -= dx * orbitYawSpeed;   // drag right => orbit right
-                        scene.camera.orbitElevation -= dy * orbitPitchSpeed; // drag up   => orbit up
+                        scene->camera.orbitAzimuth -= dx * orbitYawSpeed;   // drag right => orbit right
+                        scene->camera.orbitElevation -= dy * orbitPitchSpeed; // drag up   => orbit up
                         // Clamp elevation in apply
-                        scene.cameraApplyOrbit(scene.camera);
+                        scene->cameraApplyOrbit(scene->camera);
                     }
                     break;
 
@@ -209,40 +209,40 @@ int main(int, char**)
         bool back = keys[SDLK_Z], sdown = keys[SDLK_KP_PLUS], sright = keys[SDLK_KP_3];
 
         // Calculate input deltas
-        float yawInput = scene.camera.sensitivity * (right - left);
-        float pitchInput = scene.camera.sensitivity * (up - down);
-        float rollInput = scene.camera.sensitivity * (rleft - rright);
-        float moveInput = (fwd - back) * scene.camera.speed;
+        float yawInput = scene->camera.sensitivity * (right - left);
+        float pitchInput = scene->camera.sensitivity * (up - down);
+        float rollInput = scene->camera.sensitivity * (rleft - rright);
+        float moveInput = (fwd - back) * scene->camera.speed;
         
-        if (!scene.orbiting) { // No free-fly when orbiting
+        if (!scene->orbiting) { // No free-fly when orbiting
 
             // Update camera using momentum
             // Apply hysteresis to rotation momentum
             // Change the rotation momentum vector (r) with hysteresis: newvalue = oldvalue*(1-eagerness) + input*eagerness
-            scene.rotationMomentum.x = scene.rotationMomentum.x * (1.0f - scene.camera.eagerness) + pitchInput * scene.camera.eagerness;
-            scene.rotationMomentum.y = scene.rotationMomentum.y * (1.0f - scene.camera.eagerness) + yawInput * scene.camera.eagerness;
-            scene.rotationMomentum.z = scene.rotationMomentum.z * (1.0f - scene.camera.eagerness) + rollInput * scene.camera.eagerness;
+            scene->rotationMomentum.x = scene->rotationMomentum.x * (1.0f - scene->camera.eagerness) + pitchInput * scene->camera.eagerness;
+            scene->rotationMomentum.y = scene->rotationMomentum.y * (1.0f - scene->camera.eagerness) + yawInput * scene->camera.eagerness;
+            scene->rotationMomentum.z = scene->rotationMomentum.z * (1.0f - scene->camera.eagerness) + rollInput * scene->camera.eagerness;
 
-            scene.camera.pitch -= scene.rotationMomentum.x;
-            scene.camera.yaw -= scene.rotationMomentum.y;
-            scene.camera.roll += scene.rotationMomentum.z;
-            scene.camera.pos += scene.movementMomentum;
+            scene->camera.pitch -= scene->rotationMomentum.x;
+            scene->camera.yaw -= scene->rotationMomentum.y;
+            scene->camera.roll += scene->rotationMomentum.z;
+            scene->camera.pos += scene->movementMomentum;
 
-            float pitch = scene.camera.pitch;
-            float yaw = scene.camera.yaw;
+            float pitch = scene->camera.pitch;
+            float yaw = scene->camera.yaw;
             float cosPitch = cos(pitch);
             float sinPitch = sin(pitch);
             float cosYaw = cos(yaw);
             float sinYaw = sin(yaw);
             slib::vec3 zaxis = { sinYaw * cosPitch, -sinPitch, -cosPitch * cosYaw };
-            scene.camera.forward = zaxis;
+            scene->camera.forward = zaxis;
 
             // Apply hysteresis to movement momentum
-            scene.movementMomentum = scene.movementMomentum * (1.0f - scene.camera.eagerness) + scene.camera.forward * moveInput * scene.camera.eagerness;
+            scene->movementMomentum = scene->movementMomentum * (1.0f - scene->camera.eagerness) + scene->camera.forward * moveInput * scene->camera.eagerness;
 
         }
         else {
-            scene.camera.forward = smath::normalize(scene.camera.orbitTarget - scene.camera.pos);
+            scene->camera.forward = smath::normalize(scene->camera.orbitTarget - scene->camera.pos);
         }
 
         // [If using SDL_MAIN_USE_CALLBACKS: all code below would likely be your SDL_AppIterate() function]
@@ -265,50 +265,53 @@ int main(int, char**)
             ImGui::Begin("3d params");                         
             ImGui::SliderFloat("rot x angle", &incXangle, 0.0f, 1.0f); 
             ImGui::SliderFloat("rot y angle", &incYangle, 0.0f, 1.0f); 
-            ImGui::SliderFloat("cam speed", &scene.camera.speed, 0.1f, 10.0f);
-            ImGui::SliderFloat("pitch/yaw/roll sens", &scene.camera.sensitivity, 0.0f, 10.0f);
+            ImGui::SliderFloat("cam speed", &scene->camera.speed, 0.1f, 10.0f);
+            ImGui::SliderFloat("pitch/yaw/roll sens", &scene->camera.sensitivity, 0.0f, 10.0f);
 
             // Render combo box in your ImGui window code
-            int currentShading = static_cast<int>(scene.solids[0]->shading);
+            int currentShading = static_cast<int>(scene->solids[0]->shading);
             if (ImGui::Combo("Shading", &currentShading, shadingNames, IM_ARRAYSIZE(shadingNames))) {
                 // Update the enum value when selection changes
-                scene.solids[0]->shading = static_cast<Shading>(currentShading);
+                scene->solids[0]->shading = static_cast<Shading>(currentShading);
             }
             
-            int currentBackground = static_cast<int>(scene.backgroundType);
+            int currentBackground = static_cast<int>(scene->backgroundType);
             if (ImGui::Combo("Background", &currentBackground, backgroundNames, IM_ARRAYSIZE(backgroundNames))) {
                 // Update the enum value when selection changes
-                scene.backgroundType = static_cast<BackgroundType>(currentBackground);
-                scene.background = std::unique_ptr<Background>(BackgroundFactory::createBackground(scene.backgroundType));
+                scene->backgroundType = static_cast<BackgroundType>(currentBackground);
+                scene->background = std::unique_ptr<Background>(BackgroundFactory::createBackground(scene->backgroundType));
             } 
 
-            int currentScene = static_cast<int>(scene.sceneType);
+            int currentScene = static_cast<int>(scene->sceneType);
             if (ImGui::Combo("Scene", &currentScene, sceneNames, IM_ARRAYSIZE(sceneNames))) {
-                // Update the enum value when selection changes
-                scene.sceneType = static_cast<SceneType>(currentScene);
-                scene.setup();
+				// unique_pointer does manage memory, no need to delete
+                scene = SceneFactory::createScene(static_cast<SceneType>(currentScene), { height, width });
+                scene->setup();
+                scene->solids[0]->shading = static_cast<Shading>(currentShading);
+                scene->backgroundType = static_cast<BackgroundType>(currentBackground);
+                scene->background = std::unique_ptr<Background>(BackgroundFactory::createBackground(scene->backgroundType));
             }
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-			ImGui::Text("Camera pos: (%.2f, %.2f, %.2f)", scene.camera.pos.x, scene.camera.pos.y, scene.camera.pos.z);
-			ImGui::Text("Camera for: (%.2f, %.2f, %.2f)", scene.camera.forward.x, scene.camera.forward.y, scene.camera.forward.z);
-			ImGui::Text("OrbitTarget: (%.2f, %.2f, %.2f)", scene.camera.orbitTarget.x, scene.camera.orbitTarget.y, scene.camera.orbitTarget.z);
-            ImGui::Text("Camera Pitch: %.2f, Yaw: %.2f, Roll: %.2f", scene.camera.pitch, scene.camera.yaw, scene.camera.roll);
+			ImGui::Text("Camera pos: (%.2f, %.2f, %.2f)", scene->camera.pos.x, scene->camera.pos.y, scene->camera.pos.z);
+			ImGui::Text("Camera for: (%.2f, %.2f, %.2f)", scene->camera.forward.x, scene->camera.forward.y, scene->camera.forward.z);
+			ImGui::Text("OrbitTarget: (%.2f, %.2f, %.2f)", scene->camera.orbitTarget.x, scene->camera.orbitTarget.y, scene->camera.orbitTarget.z);
+            ImGui::Text("Camera Pitch: %.2f, Yaw: %.2f, Roll: %.2f", scene->camera.pitch, scene->camera.yaw, scene->camera.roll);
             ImGui::End();
         }
 
-        solidRenderer.drawScene(scene, scene.zNear, scene.zFar, scene.viewAngle);
+        solidRenderer.drawScene(*scene, scene->zNear, scene->zFar, scene->viewAngle);
 
         // Rendering
         ImGui::Render();
 
-        SDL_UpdateTexture(texture, nullptr, &scene.pixels[0], 4 * width);
+        SDL_UpdateTexture(texture, nullptr, &scene->pixels[0], 4 * width);
         SDL_RenderTexture(renderer, texture, nullptr, nullptr);
 
         ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
         SDL_RenderPresent(renderer);
 
-        for (auto& solidPtr : scene.solids) {
+        for (auto& solidPtr : scene->solids) {
             // Update the solid's position based on the input angles
             if (solidPtr->rotationEnabled) {
                 // Rotate the solid around its local axes

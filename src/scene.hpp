@@ -90,15 +90,7 @@ public:
     }
 
     // Called to set up the Scene, including creation of Solids, etc.
-    void setup();
-    void torusInit();
-    void tetrakisInit();
-	void icosahedronInit();
-    void cubeInit();
-    void knotInit();
-    void starInit();
-    void amigaInit();
-    void worldInit();
+    virtual void setup();
     void drawBackground();
     void cameraSetOrbitFromCurrent(Camera& cam);
     void cameraApplyOrbit(Camera& cam);

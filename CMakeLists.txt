@@ -5,7 +5,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 
 add_subdirectory(submodules/SDL)
 
-set(SRC_DIRS src src/vendor/imgui src/vendor/lodepng src/objects src/effects src/backgrounds)
+set(SRC_DIRS src src/vendor/imgui src/vendor/lodepng src/objects src/effects src/backgrounds src/scenes)
 
 set(SRC_FILES "")
 foreach(dir ${SRC_DIRS})
