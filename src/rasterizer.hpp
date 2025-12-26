@@ -7,6 +7,7 @@
 #include "smath.hpp"
 #include "polygon.hpp"
 #include "clipping.hpp"
+#include "slope.hpp"
 
 template<class Effect>
 class Rasterizer {
@@ -17,8 +18,8 @@ class Rasterizer {
                         normalTransformMat(smath::identity())
           {}
 
-        void drawRenderable(Solid& solid, Scene& scn) {
-            setRenderable(&solid);
+        void drawRenderable(Solid& sol, Scene& scn) {
+			solid = &sol; // set the current solid
             scene = &scn;
             prepareRenderable();
             ProcessVertex();
@@ -30,16 +31,9 @@ class Rasterizer {
         Solid* solid = nullptr;  // Pointer to the abstract Solid
         Scene* scene = nullptr; // Pointer to the Scene
         slib::mat4 fullTransformMat;
-        slib::mat4 normalTransformMat;
-        
+        slib::mat4 normalTransformMat;        
         Effect effect;
         
-        void setRenderable(Solid* solidPtr) {
-            projectedPoints.clear();
-            projectedPoints.resize(solidPtr->numVertices);
-            solid = solidPtr;
-        }
-
         void prepareRenderable() {
             slib::mat4 rotate = smath::rotation(slib::vec3({solid->position.xAngle, solid->position.yAngle, solid->position.zAngle}));
             slib::mat4 translate = smath::translation(slib::vec3({solid->position.x, solid->position.y, solid->position.z}));
@@ -123,42 +117,26 @@ class Rasterizer {
         };
         
         /*
-        Drawing a triangle with scanline rasterization.
-        The algorithm works by iterating through each scanline of the triangle and determining the left and right edges of the triangle at that scanline.
-        For each scanline, the algorithm calculates the x-coordinates of the left and right edges of the triangle and fills in the pixels between them.
+        Drawing a convex polygon with scanline rasterization.
+        The algorithm works by iterating through each scanline of the polygon and determining the left and right edges at that scanline.
+        For each scanline, the algorithm calculates the x-coordinates of the left and right edges and fills in the pixels between them.
         The algorithm uses a slope to determine the x-coordinates of the left and right edges of the triangle at each scanline.
         */
 
-        class Slope
-        {
-            vertex begin, step;
-        public:
-            Slope() {}
-            Slope(vertex from, vertex to, int num_steps)
-            {
-                float inv_step = 1.f / num_steps;
-                begin = from;                   // Begin here
-                step  = (to - from) * inv_step; // Stepsize = (end-begin) / num_steps
-            }
-            vertex get() const { return begin; }
-            int getx() const { return begin.p_x >> 16; }
-            void advance()    { begin += step; }
-        };
-
-        void draw(Polygon<vertex>& tri) {
+        void draw(Polygon<vertex>& polygon) {
 
             auto* pixels = static_cast<uint32_t*>(scene->pixels);
 
-            for (auto& point : tri.points) {
+            for (auto& point : polygon.points) {
                 effect.vs.viewProjection(*scene, point);
             }
 
             if (solid->shading == Shading::Wireframe) {
-                drawWireframe(tri, 0xffffffff, pixels);
+                drawWireframe(polygon, 0xffffffff, pixels);
 				return; // No rasterization in wireframe mode
             }
 
-            auto begin = std::begin(tri.points), end = std::end(tri.points);
+            auto begin = std::begin(polygon.points), end = std::end(polygon.points);
 
             // Find the point that is topleft-most. Begin both slopes (left & right) from there.
             // Also find the bottomright-most vertex; that’s where the rendering ends.
@@ -170,10 +148,10 @@ class Rasterizer {
             std::array cur { first, first };
             auto gety = [&](int side) -> int { return cur[side]->p_y >> 16; };
 
-            effect.gs(tri, *scene);
+            effect.gs(polygon, *scene);
             
             int forwards = 1;
-            Slope slopes[2] {};
+            Slope<vertex> slopes[2] {};
             for(int side = 0, cury = gety(side), nexty[2] = {cury,cury}, hy = cury * scene->screen.width; cur[side] != last; )
             {
                 // We have reached a bend on either side (or both). "side" indicates which side the next bend is.
@@ -186,20 +164,20 @@ class Rasterizer {
                 else                 cur[side] = std::prev(prev == begin ? end : prev);
 
                 nexty[side]  = gety(side);
-                slopes[side] = Slope(*prev, *cur[side], nexty[side] - cury);
+                slopes[side] = Slope<vertex>(*prev, *cur[side], nexty[side] - cury);
 
                 // Identify which side the next bend is going to be, by choosing the smaller Y coordinate.
                 side = (nexty[0] <= nexty[1]) ? 0 : 1;
                 // Process scanlines until the next bend.
                 for(int limit = nexty[side]; cury < limit; ++cury, hy+= scene->screen.width)
-                    DrawScanline(hy, slopes[0], slopes[1], tri, pixels);
+                    DrawScanline(hy, slopes[0], slopes[1], polygon, pixels);
 
             }                   
 
         };
 
        
-        inline void DrawScanline(const int& hy, Slope& left, Slope& right, Polygon<vertex>& tri, uint32_t* pixels) {
+        inline void DrawScanline(const int& hy, Slope<vertex>& left, Slope<vertex>& right, Polygon<vertex>& polygon, uint32_t* pixels) {
             
             int xStart = left.getx();
             int xEnd = right.getx();
@@ -213,7 +191,7 @@ class Rasterizer {
                 for (int x = xStart; x < xEnd; ++x) {
                     int index = hy + x;
                     if (scene->zBuffer->TestAndSet(index, vStart.p_z)) {
-                        pixels[index] = effect.ps(vStart, *scene, tri);
+                        pixels[index] = effect.ps(vStart, *scene, polygon);
                     }
                     vStart.hraster(vStep);
                 }
@@ -223,14 +201,14 @@ class Rasterizer {
             right.advance();
         } 
 
-        void drawWireframe(Polygon<vertex> tri, uint32_t color, uint32_t* pixels) {
+        void drawWireframe(Polygon<vertex> polygon, uint32_t color, uint32_t* pixels) {
             int width = scene->screen.width;
             int height = scene->screen.height;
 
             // Loop through vertices and chain to the next, including wrap-around
-            for (size_t i = 0; i < tri.points.size(); i++) {
-                auto& v0 = tri.points[i];
-                auto& v1 = tri.points[(i + 1) % tri.points.size()]; // wrap back to first
+            for (size_t i = 0; i < polygon.points.size(); i++) {
+                auto& v0 = polygon.points[i];
+                auto& v1 = polygon.points[(i + 1) % polygon.points.size()]; // wrap back to first
 
                 drawBresenhamLine(v0.p_x >> 16, v0.p_y >> 16, v1.p_x >> 16, v1.p_y >> 16, pixels, width, height, color);
             }
