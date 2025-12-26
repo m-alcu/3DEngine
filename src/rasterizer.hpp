@@ -11,6 +11,8 @@
 template<class Effect>
 class Rasterizer {
     public:
+        using vertex = typename Effect::Vertex;
+
         Rasterizer() :  fullTransformMat(smath::identity()), 
                         normalTransformMat(smath::identity())
           {}
@@ -24,10 +26,9 @@ class Rasterizer {
         }
 
     private:
-        typedef typename Effect::Vertex vertex;
         std::vector<std::unique_ptr<vertex>> projectedPoints;
-        Solid* solid;  // Pointer to the abstract Solid
-        Scene* scene; // Pointer to the Scene
+        Solid* solid = nullptr;  // Pointer to the abstract Solid
+        Scene* scene = nullptr; // Pointer to the Scene
         slib::mat4 fullTransformMat;
         slib::mat4 normalTransformMat;
         

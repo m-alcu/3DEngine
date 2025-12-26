@@ -42,8 +42,15 @@ std::vector<Vertex> ClipAgainstPlane(const std::vector<Vertex>& poly, ClipPlane 
         bool currInside = IsInside(curr, plane);
 
         if (currInside != prevInside) {
-            float alpha = ComputeAlpha(prev, curr, plane);
-            output.push_back(prev + (curr - prev) * alpha);
+            // from inside to outside, we need to clip the edge always this way
+            if (prevInside) {
+                float alpha = ComputeAlpha(prev, curr, plane);
+                output.push_back(prev + (curr - prev) * alpha);
+            }
+            else {
+                float alpha = ComputeAlpha(curr, prev, plane);
+                output.push_back(curr + (prev - curr) * alpha);
+            }
         }
         if (currInside)
             output.push_back(curr);
