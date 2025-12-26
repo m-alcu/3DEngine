@@ -73,7 +73,10 @@ public:
     }
 
     // Called to set up the Scene, including creation of Solids, etc.
-    virtual void setup();
+	virtual void setup() {
+		// Default implementation does nothing.
+		// Derived classes should override this method.
+	}
 
     // Add a solid to the scene's list of solids.
     // Using std::unique_ptr is a good practice for ownership.
