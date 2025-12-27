@@ -69,16 +69,11 @@ class Rasterizer {
 
                 if (solid->shading == Shading::Wireframe || faceIsVisible(p1->world, rotatedFaceNormal)) {
 
-                    const auto& idx = face.vertexIndices;
-
-                    // Build the vertex list for the polygon
+                    // Build the polygon from projected vertices
                     std::vector<vertex> polyVerts;
-                    polyVerts.reserve(idx.size());
-
-                    for (int i : idx) {
-                        const vertex& v = *projectedPoints[i];
-                        polyVerts.push_back(v);
-                    }
+                    polyVerts.reserve(face.vertexIndices.size());
+                    for (int i : face.vertexIndices)
+                        polyVerts.push_back(*projectedPoints[i]);
 
                     Polygon<vertex> poly(
                         std::move(polyVerts),
@@ -132,7 +127,7 @@ class Rasterizer {
             }
 
             if (solid->shading == Shading::Wireframe) {
-                drawWireframe(polygon, 0xffffffff, pixels);
+                drawWireframePolygon(polygon, 0xffffffff, pixels);
 				return; // No rasterization in wireframe mode
             }
 
@@ -201,7 +196,7 @@ class Rasterizer {
             right.advance();
         } 
 
-        void drawWireframe(Polygon<vertex> polygon, uint32_t color, uint32_t* pixels) {
+        void drawWireframePolygon(Polygon<vertex> polygon, uint32_t color, uint32_t* pixels) {
             int width = scene->screen.width;
             int height = scene->screen.height;
 
