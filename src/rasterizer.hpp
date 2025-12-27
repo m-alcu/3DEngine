@@ -8,6 +8,7 @@
 #include "polygon.hpp"
 #include "clipping.hpp"
 #include "slope.hpp"
+#include "projection.hpp"
 
 template<class Effect>
 class Rasterizer {
@@ -33,6 +34,7 @@ class Rasterizer {
         slib::mat4 fullTransformMat;
         slib::mat4 normalTransformMat;        
         Effect effect;
+		Projection<vertex> projection;
         
         void calculateTransformMat() {
             slib::mat4 rotate = smath::rotation(slib::vec3({solid->position.xAngle, solid->position.yAngle, solid->position.zAngle}));
@@ -117,7 +119,7 @@ class Rasterizer {
             auto* pixels = static_cast<uint32_t*>(scene->pixels);
 
             for (auto& point : polygon.points) {
-                effect.vs.viewProjection(*scene, point);
+                projection.view(*scene, point);
             }
 
             if (solid->shading == Shading::Wireframe) {
