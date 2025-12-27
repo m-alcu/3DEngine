@@ -21,9 +21,9 @@ class Rasterizer {
         void drawRenderable(Solid& sol, Scene& scn) {
 			solid = &sol; // set the current solid
             scene = &scn;
-            prepareRenderable();
-            ProcessVertex();
-            DrawFaces();
+            calculateTransformMat();
+            processVertices();
+            drawFaces();
         }
 
     private:
@@ -34,7 +34,7 @@ class Rasterizer {
         slib::mat4 normalTransformMat;        
         Effect effect;
         
-        void prepareRenderable() {
+        void calculateTransformMat() {
             slib::mat4 rotate = smath::rotation(slib::vec3({solid->position.xAngle, solid->position.yAngle, solid->position.zAngle}));
             slib::mat4 translate = smath::translation(slib::vec3({solid->position.x, solid->position.y, solid->position.z}));
             slib::mat4 scale = smath::scale(slib::vec3({solid->position.zoom, solid->position.zoom, solid->position.zoom}));
@@ -42,7 +42,7 @@ class Rasterizer {
             normalTransformMat = rotate;
         }
 
-        void ProcessVertex()
+        void processVertices()
         {
             projectedPoints.resize(solid->numVertices);
         
@@ -56,7 +56,7 @@ class Rasterizer {
             );
         }
 
-        void DrawFaces() {
+        void drawFaces() {
 
             //#pragma omp parallel for
             for (int i = 0; i < static_cast<int>(solid->faceData.size()); ++i) {
@@ -67,7 +67,7 @@ class Rasterizer {
 
                 vertex* p1 = projectedPoints[face.vertexIndices[0]].get();
 
-                if (solid->shading == Shading::Wireframe || Visible(p1->world, rotatedFaceNormal)) {
+                if (solid->shading == Shading::Wireframe || faceIsVisible(p1->world, rotatedFaceNormal)) {
 
                     const auto& idx = face.vertexIndices;
 
@@ -90,7 +90,7 @@ class Rasterizer {
                     // For n-gons; rename your function if it isn't triangle-specific anymore
                     auto clippedPoly = ClipCullPolygonSutherlandHodgman(poly);
                     if (!clippedPoly.points.empty()) {
-                        draw(clippedPoly);
+                        drawPolygon(clippedPoly);
                     }
                 }
 
@@ -108,7 +108,7 @@ class Rasterizer {
         The backface culling algorithm is used to determine if a triangle is facing the camera or not.
         If the triangle is facing away from the camera, we can skip the rasterization process.
         */
-        bool Visible(const slib::vec3& world, const slib::vec3& faceNormal) {
+        bool faceIsVisible(const slib::vec3& world, const slib::vec3& faceNormal) {
 
             slib::vec3 viewDir = scene->camera.pos - world;
             float dotResult = smath::dot(faceNormal, viewDir);
@@ -123,7 +123,7 @@ class Rasterizer {
         The algorithm uses a slope to determine the x-coordinates of the left and right edges of the triangle at each scanline.
         */
 
-        void draw(Polygon<vertex>& polygon) {
+        void drawPolygon(Polygon<vertex>& polygon) {
 
             auto* pixels = static_cast<uint32_t*>(scene->pixels);
 
@@ -170,14 +170,14 @@ class Rasterizer {
                 side = (nexty[0] <= nexty[1]) ? 0 : 1;
                 // Process scanlines until the next bend.
                 for(int limit = nexty[side]; cury < limit; ++cury, hy+= scene->screen.width)
-                    DrawScanline(hy, slopes[0], slopes[1], polygon, pixels);
+                    drawScanline(hy, slopes[0], slopes[1], polygon, pixels);
 
             }                   
 
         };
 
        
-        inline void DrawScanline(const int& hy, Slope<vertex>& left, Slope<vertex>& right, Polygon<vertex>& polygon, uint32_t* pixels) {
+        inline void drawScanline(const int& hy, Slope<vertex>& left, Slope<vertex>& right, Polygon<vertex>& polygon, uint32_t* pixels) {
             
             int xStart = left.getx();
             int xEnd = right.getx();
