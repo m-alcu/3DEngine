@@ -93,21 +93,15 @@ class Rasterizer {
         }
 
         /*
-        Check if triangle is visible.
-        If the triangle is visible, we can proceed with the rasterization process.
-        The calculation is based on the cross product of the edges of the triangle.
-        - If the result is positive, the triangle is visible.
-        - If the result is negative, the triangle is not visible.edeeee
-        - If the result is zero, the triangle is coplanar with the screen.
+        Check if face is visible.
         This is a simplified version of the backface culling algorithm.
-        The backface culling algorithm is used to determine if a triangle is facing the camera or not.
-        If the triangle is facing away from the camera, we can skip the rasterization process.
+		If the dot product of the face normal and the view direction is positive,
+		the face is visible.
         */
         bool faceIsVisible(const slib::vec3& world, const slib::vec3& faceNormal) {
 
             slib::vec3 viewDir = scene->camera.pos - world;
             float dotResult = smath::dot(faceNormal, viewDir);
-            // Return whether the triangle is facing the camera
             return dotResult > 0.0f;
         };
         
