@@ -63,28 +63,26 @@ class Rasterizer {
             //#pragma omp parallel for
             for (int i = 0; i < static_cast<int>(solid->faceData.size()); ++i) {
                 const auto& faceDataEntry = solid->faceData[i];
-                const auto& face = faceDataEntry.face;
                 slib::vec3 rotatedFaceNormal;
                 rotatedFaceNormal = normalTransformMat * slib::vec4(faceDataEntry.faceNormal, 0);
 
-                vertex* p1 = projectedPoints[face.vertexIndices[0]].get();
+                vertex* p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]].get();
 
                 if (solid->shading == Shading::Wireframe || faceIsVisible(p1->world, rotatedFaceNormal)) {
 
                     // Build the polygon from projected vertices
                     std::vector<vertex> polyVerts;
-                    polyVerts.reserve(face.vertexIndices.size());
-                    for (int i : face.vertexIndices)
+                    polyVerts.reserve(faceDataEntry.face.vertexIndices.size());
+                    for (int i : faceDataEntry.face.vertexIndices)
                         polyVerts.push_back(*projectedPoints[i]);
 
                     Polygon<vertex> poly(
                         std::move(polyVerts),
-                        face,
+                        faceDataEntry.face,
                         rotatedFaceNormal,
-                        solid->materials.at(face.materialKey)
+                        solid->materials.at(faceDataEntry.face.materialKey)
                     );
 
-                    // For n-gons; rename your function if it isn't triangle-specific anymore
                     auto clippedPoly = ClipCullPolygonSutherlandHodgman(poly);
                     if (!clippedPoly.points.empty()) {
                         drawPolygon(clippedPoly);
