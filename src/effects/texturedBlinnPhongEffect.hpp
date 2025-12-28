@@ -2,6 +2,7 @@
 #include <cmath>
 #include "../slib.hpp"
 #include "../color.hpp"
+#include "../textureSampler.hpp"
 
 // solid color attribute not interpolated
 class TexturedBlinnPhongEffect
@@ -107,24 +108,8 @@ public:
             float specAngle = std::max(0.0f, smath::dot(N,halfwayVector)); // viewer
             float spec = std::pow(specAngle, tri.material.Ns); // Blinn Phong shininess needs *4 to be like Phong
         
-            float w = 1 / vRaster.tex.w;
-            if (tri.material.map_Kd.textureFilter == slib::TextureFilter::BILINEAR) {
-                float r, g, b;
-                smath::sampleBilinear(tri.material.map_Kd, vRaster.tex.x * w, vRaster.tex.y * w, r, g, b);
-
-                return Color(
-                    r * diff + Ks.x * spec,
-                    g * diff + Ks.y * spec,
-                    b * diff + Ks.z * spec).toBgra(); // assumes vec3 uses .r/g/b or [0]/[1]/[2]     
-            }  else {
-                int r, g, b;
-                smath::sampleNearest(tri.material.map_Kd, vRaster.tex.x * w, vRaster.tex.y * w, r, g, b);
-
-                return Color(
-                    r * diff + Ks.x * spec,
-                    g * diff + Ks.y * spec,
-                    b * diff + Ks.z * spec).toBgra(); // assumes vec3 uses .r/g/b or [0]/[1]/[2]
-            }
+            TextureSampler<Vertex> sampler(vRaster, tri.material.map_Kd, tri.material.map_Kd.textureFilter);
+            return sampler.sample(diff, Ks.x * spec, Ks.y * spec, Ks.z * spec).toBgra();
 
 
         }

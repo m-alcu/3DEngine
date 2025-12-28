@@ -2,6 +2,7 @@
 #include <algorithm>
 #include "../slib.hpp"
 #include "../color.hpp"
+#include "../textureSampler.hpp"
 
 // solid color attribute not interpolated
 class TexturedGouraudEffect
@@ -88,23 +89,8 @@ public:
 		uint32_t operator()(Vertex& vRaster, const Scene& scene, Polygon<Vertex>& tri) const
 		{
 
-            float w = 1 / vRaster.tex.w;
-            if (tri.material.map_Kd.textureFilter == slib::TextureFilter::BILINEAR) {
-                float r, g, b;
-                smath::sampleBilinear(tri.material.map_Kd, vRaster.tex.x * w, vRaster.tex.y * w, r, g, b);
-                return Color(
-                    r * vRaster.diffuse,
-                    g * vRaster.diffuse,
-                    b * vRaster.diffuse).toBgra(); // assumes vec3 uses .r/g/b or [0]/[1]/[2]     
-            }  else {
-                int r, g, b;
-                smath::sampleNearest(tri.material.map_Kd, vRaster.tex.x * w, vRaster.tex.y * w, r, g, b);
-                return Color(
-                    r * vRaster.diffuse,
-                    g * vRaster.diffuse,
-                    b * vRaster.diffuse).toBgra(); // assumes vec3 uses .r/g/b or [0]/[1]/[2]
-            }
-
+            TextureSampler<Vertex> sampler(vRaster, tri.material.map_Kd, tri.material.map_Kd.textureFilter);
+            return sampler.sample(vRaster.diffuse, 0, 0, 0).toBgra();
 		}
 	};
 public:
