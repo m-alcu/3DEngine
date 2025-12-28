@@ -28,7 +28,7 @@ class Rasterizer {
         }
 
     private:
-        std::vector<std::unique_ptr<vertex>> projectedPoints;
+        std::vector<vertex> projectedPoints;
         Solid* solid = nullptr;  // Pointer to the abstract Solid
         Scene* scene = nullptr; // Pointer to the Scene
         slib::mat4 fullTransformMat;
@@ -66,15 +66,15 @@ class Rasterizer {
                 slib::vec3 rotatedFaceNormal;
                 rotatedFaceNormal = normalTransformMat * slib::vec4(faceDataEntry.faceNormal, 0);
 
-                vertex* p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]].get();
+                vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];
 
-                if (solid->shading == Shading::Wireframe || faceIsVisible(p1->world, rotatedFaceNormal)) {
+                if (solid->shading == Shading::Wireframe || faceIsVisible(p1.world, rotatedFaceNormal)) {
 
                     // Build the polygon from projected vertices
                     std::vector<vertex> polyVerts;
                     polyVerts.reserve(faceDataEntry.face.vertexIndices.size());
                     for (int i : faceDataEntry.face.vertexIndices)
-                        polyVerts.push_back(*projectedPoints[i]);
+                        polyVerts.push_back(projectedPoints[i]);
 
                     Polygon<vertex> poly(
                         std::move(polyVerts),

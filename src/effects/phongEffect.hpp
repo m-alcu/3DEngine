@@ -57,14 +57,14 @@ public:
 	class VertexShader
 	{
 	public:
-        std::unique_ptr<Vertex> operator()(const VertexData& vData, const slib::mat4& fullTransformMat, const slib::mat4& normalTransformMat, const Scene& scene) const
+        Vertex operator()(const VertexData& vData, const slib::mat4& fullTransformMat, const slib::mat4& normalTransformMat, const Scene& scene) const
 		{
             Vertex screenPoint;
             screenPoint.world = fullTransformMat * slib::vec4(vData.vertex, 1);
             screenPoint.point =  slib::vec4(screenPoint.world, 1) * scene.viewMatrix;
             screenPoint.ndc = slib::vec4(screenPoint.point, 1) * scene.projectionMatrix;
             screenPoint.normal = normalTransformMat * slib::vec4(vData.normal, 0);
-            return std::make_unique<Vertex>(screenPoint);
+            return screenPoint;
 		}       
 	};
 
