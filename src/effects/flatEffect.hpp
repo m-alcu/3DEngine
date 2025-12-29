@@ -46,7 +46,6 @@ public:
         int32_t p_y;
         float p_z; 
         slib::vec3 world;
-        slib::vec3 point;
         slib::vec4 ndc;
 	};
 
@@ -57,8 +56,7 @@ public:
 		{
             Vertex vertex;
             vertex.world = fullTransformMat * slib::vec4(vData.vertex, 1);
-            vertex.point =  slib::vec4(vertex.world, 1) * scene.viewMatrix;
-            vertex.ndc = slib::vec4(vertex.point, 1) * scene.projectionMatrix;
+            vertex.ndc = slib::vec4(vertex.world, 1) * scene.viewMatrix * scene.projectionMatrix;
             return vertex;
 		}
 	};
