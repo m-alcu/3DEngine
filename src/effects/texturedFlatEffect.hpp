@@ -58,12 +58,12 @@ public:
 	public:
         Vertex operator()(const VertexData& vData, const slib::mat4& fullTransformMat, const slib::mat4& normalTransformMat, const Scene& scene) const
 		{
-            Vertex screenPoint;
-            screenPoint.world = fullTransformMat * slib::vec4(vData.vertex, 1);
-            screenPoint.point =  slib::vec4(screenPoint.world, 1) * scene.viewMatrix;
-            screenPoint.ndc = slib::vec4(screenPoint.point, 1) * scene.projectionMatrix;
-            screenPoint.tex = slib::zvec2(vData.texCoord.x, vData.texCoord.y, 1);
-            return screenPoint;
+            Vertex vertex;
+            vertex.world = fullTransformMat * slib::vec4(vData.vertex, 1);
+            vertex.point =  slib::vec4(vertex.world, 1) * scene.viewMatrix;
+            vertex.ndc = slib::vec4(vertex.point, 1) * scene.projectionMatrix;
+            vertex.tex = slib::zvec2(vData.texCoord.x, vData.texCoord.y, 1);
+            return vertex;
 		}
 	};
 

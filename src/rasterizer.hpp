@@ -73,8 +73,8 @@ class Rasterizer {
                     // Build the polygon from projected vertices
                     std::vector<vertex> polyVerts;
                     polyVerts.reserve(faceDataEntry.face.vertexIndices.size());
-                    for (int i : faceDataEntry.face.vertexIndices)
-                        polyVerts.push_back(projectedPoints[i]);
+                    for (int j : faceDataEntry.face.vertexIndices)
+                        polyVerts.push_back(projectedPoints[j]);
 
                     Polygon<vertex> poly(
                         std::move(polyVerts),
