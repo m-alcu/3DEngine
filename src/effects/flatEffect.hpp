@@ -55,8 +55,10 @@ public:
         Vertex operator()(const VertexData& vData, const slib::mat4& fullTransformMat, const slib::mat4& normalTransformMat, const Scene& scene) const
 		{
             Vertex vertex;
+            Projection<Vertex> projection;
             vertex.world = fullTransformMat * slib::vec4(vData.vertex, 1);
             vertex.ndc = slib::vec4(vertex.world, 1) * scene.viewMatrix * scene.projectionMatrix;
+            projection.view(scene, vertex);
             return vertex;
 		}
 	};

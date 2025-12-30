@@ -83,7 +83,7 @@ class Rasterizer {
                         solid->materials.at(faceDataEntry.face.materialKey)
                     );
 
-                    auto clippedPoly = ClipCullPolygonSutherlandHodgman(poly);
+                    auto clippedPoly = ClipCullPolygonSutherlandHodgman(poly, *scene);
                     if (!clippedPoly.points.empty()) {
                         drawPolygon(clippedPoly);
                     }
@@ -115,10 +115,6 @@ class Rasterizer {
         void drawPolygon(Polygon<vertex>& polygon) {
 
             auto* pixels = static_cast<uint32_t*>(scene->pixels);
-
-            for (auto& point : polygon.points) {
-                projection.view(*scene, point);
-            }
 
             if (solid->shading == Shading::Wireframe) {
                 drawWireframePolygon(polygon, 0xffffffff, pixels);

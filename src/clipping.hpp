@@ -2,6 +2,7 @@
 #include <vector>
 #include "polygon.hpp"
 #include "scene.hpp" // If needed for material, etc.
+#include "projection.hpp"
 
 enum class ClipPlane {
     Left, Right, Bottom, Top, Near, Far
@@ -18,12 +19,12 @@ https://en.wikipedia.org/wiki/Sutherland%E2%80%93Hodgman_algorithm
 
 
 template<typename Vertex>
-Polygon<Vertex> ClipCullPolygonSutherlandHodgman(const Polygon<Vertex>& t) {
+Polygon<Vertex> ClipCullPolygonSutherlandHodgman(const Polygon<Vertex>& t, const Scene& scene) {
     std::vector<Vertex> polygon = t.points;
 
     for (ClipPlane plane : {ClipPlane::Left, ClipPlane::Right, ClipPlane::Bottom,
         ClipPlane::Top, ClipPlane::Near, ClipPlane::Far}) {
-        polygon = ClipAgainstPlane(polygon, plane);
+        polygon = ClipAgainstPlane(polygon, plane, scene);
         if (polygon.empty()) return Polygon<Vertex>(polygon, t.face, t.rotatedFaceNormal, t.material); // Completely outside
     }
 
@@ -31,7 +32,7 @@ Polygon<Vertex> ClipCullPolygonSutherlandHodgman(const Polygon<Vertex>& t) {
 }
 
 template<typename Vertex>
-std::vector<Vertex> ClipAgainstPlane(const std::vector<Vertex>& poly, ClipPlane plane) {
+std::vector<Vertex> ClipAgainstPlane(const std::vector<Vertex>& poly, ClipPlane plane, const Scene& scene) {
     std::vector<Vertex> output;
     if (poly.empty()) return output;
 
@@ -45,11 +46,13 @@ std::vector<Vertex> ClipAgainstPlane(const std::vector<Vertex>& poly, ClipPlane 
             // from inside to outside, we need to clip the edge always this way
             if (prevInside) {
                 float alpha = ComputeAlpha(prev, curr, plane);
-                output.push_back(prev + (curr - prev) * alpha);
+				Vertex v = InterpolateVertex(prev, curr, alpha, scene);
+                output.push_back(v);
             }
             else {
                 float alpha = ComputeAlpha(curr, prev, plane);
-                output.push_back(curr + (prev - curr) * alpha);
+				Vertex v = InterpolateVertex(curr, prev, alpha, scene);
+                output.push_back(v);
             }
         }
         if (currInside)
@@ -97,4 +100,22 @@ float ComputeAlpha(const Vertex& a, const Vertex& b, ClipPlane plane) {
     }
 
     return denom != 0.0f ? num / denom : 0.0f;
+}
+
+template<typename Vertex>
+Vertex InterpolateVertex(const Vertex& a, const Vertex& b, float alpha, const Scene& scene) {
+	Vertex result;
+    Projection<Vertex> projection;
+	result = a + (b - a) * alpha;
+
+    if constexpr (has_tex<Vertex>) {
+		result.tex.x = (a.tex.x * a.ndc.w) + ((b.tex.x * b.ndc.w) - (a.tex.x * a.ndc.w)) * alpha;
+		result.tex.y = (a.tex.y * a.ndc.w) + ((b.tex.y * b.ndc.w) - (a.tex.y * a.ndc.w)) * alpha;
+        result.tex.w = 1.0f;
+    }
+
+    projection.view(scene, result);
+
+	// Interpolate other attributes as needed (e.g., color, texture coordinates)
+	return result;
 }

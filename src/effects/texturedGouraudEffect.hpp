@@ -63,11 +63,13 @@ public:
 		{
             Vertex vertex;
             slib::vec3 normal;
+            Projection<Vertex> projection;
             vertex.world = fullTransformMat * slib::vec4(vData.vertex, 1);
             vertex.ndc = slib::vec4(vertex.world, 1) * scene.viewMatrix * scene.projectionMatrix;
             vertex.tex = slib::zvec2(vData.texCoord.x, vData.texCoord.y, 1);
             normal = normalTransformMat * slib::vec4(vData.normal, 0);
             vertex.diffuse = std::max(0.0f, smath::dot(normal, scene.light.getDirection(vertex.world)));
+            projection.view(scene, vertex);
             return vertex;
 		} 
 	};
