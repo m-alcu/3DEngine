@@ -17,20 +17,19 @@ public:
     p_x(px), p_y(py), p_z(pz), normal(n), ndc(vp) {}
 
     Vertex operator+(const Vertex &v) const {
-        return Vertex(p_x + v.p_x, p_y + v.p_y, p_z + v.p_z, normal + v.normal, ndc + v.ndc);
+        return Vertex(p_x + v.p_x, p_y, p_z + v.p_z, normal + v.normal, ndc + v.ndc);
     }
 
     Vertex operator-(const Vertex &v) const {
-        return Vertex(p_x - v.p_x, p_y - v.p_y, p_z - v.p_z, normal - v.normal, ndc - v.ndc);
+        return Vertex(p_x - v.p_x, p_y, p_z - v.p_z, normal - v.normal, ndc - v.ndc);
     }
 
     Vertex operator*(const float &rhs) const {
-        return Vertex(p_x * rhs, p_y * rhs, p_z * rhs, normal * rhs, ndc * rhs);
+        return Vertex(p_x * rhs, p_y, p_z * rhs, normal * rhs, ndc * rhs);
     }
 
     Vertex& operator+=(const Vertex &v) {
         p_x += v.p_x;
-        p_y += v.p_y;
         p_z += v.p_z;
         normal += v.normal;
         ndc += v.ndc;
