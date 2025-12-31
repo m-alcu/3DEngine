@@ -58,7 +58,7 @@ public:
             Projection<Vertex> projection;
             vertex.world = fullTransformMat * slib::vec4(vData.vertex, 1);
             vertex.ndc = slib::vec4(vertex.world, 1) * scene.viewMatrix * scene.projectionMatrix;
-            projection.view(scene, vertex);
+            projection.view(scene, vertex, true);
             return vertex;
 		}
 	};

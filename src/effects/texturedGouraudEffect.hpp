@@ -70,7 +70,7 @@ public:
             vertex.tex = slib::zvec2(vData.texCoord.x, vData.texCoord.y, 1);
             normal = normalTransformMat * slib::vec4(vData.normal, 0);
             vertex.diffuse = std::max(0.0f, smath::dot(normal, scene.light.getDirection(vertex.world)));
-            projection.view(scene, vertex);
+            projection.view(scene, vertex, true);
             return vertex;
 		} 
 	};
