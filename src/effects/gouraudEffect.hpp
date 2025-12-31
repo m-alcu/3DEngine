@@ -13,19 +13,19 @@ public:
 	public:
     Vertex() {}
 
-    Vertex(int32_t px, int32_t py, float pz, slib::vec3 n, slib::vec4 vp, Color _color, bool _broken) :
-    p_x(px), p_y(py), p_z(pz), normal(n), ndc(vp), color(_color), broken(_broken) {}
+    Vertex(int32_t px, int32_t py, float pz, slib::vec3 n, slib::vec4 vp, float _diffuse, bool _broken) :
+    p_x(px), p_y(py), p_z(pz), normal(n), ndc(vp), diffuse(_diffuse), broken(_broken) {}
 
     Vertex operator+(const Vertex &v) const {
-        return Vertex(p_x + v.p_x, p_y, p_z + v.p_z, normal + v.normal, ndc + v.ndc, color + v.color, true);
+        return Vertex(p_x + v.p_x, p_y, p_z + v.p_z, normal + v.normal, ndc + v.ndc, diffuse + v.diffuse, true);
     }
 
     Vertex operator-(const Vertex &v) const {
-        return Vertex(p_x - v.p_x, p_y, p_z - v.p_z, normal - v.normal, ndc - v.ndc, color - v.color, true);
+        return Vertex(p_x - v.p_x, p_y, p_z - v.p_z, normal - v.normal, ndc - v.ndc, diffuse - v.diffuse, true);
     }
 
     Vertex operator*(const float &rhs) const {
-        return Vertex(p_x * rhs, p_y, p_z * rhs, normal * rhs, ndc * rhs, color * rhs, true);
+        return Vertex(p_x * rhs, p_y, p_z * rhs, normal * rhs, ndc * rhs, diffuse * rhs, true);
     }
 
 
@@ -34,13 +34,13 @@ public:
         p_z += v.p_z;
         normal += v.normal;
         ndc += v.ndc;
-        color += v.color;
+        diffuse += v.diffuse;
         return *this;
     }
 
     Vertex& hraster(const Vertex& v) {
         p_z += v.p_z;
-        color += v.color;
+        diffuse += v.diffuse;
         return *this;
     }
         
@@ -51,7 +51,7 @@ public:
         slib::vec3 world;
         slib::vec3 normal;
         slib::vec4 ndc;
-        Color color;
+        float diffuse;
         bool broken = false;
 	};
 
@@ -76,18 +76,9 @@ public:
     
         void operator()(Polygon<Vertex>& tri, const Scene& scene) const
         {
-            const auto& Ka = tri.material.Ka; // vec3
-            const auto& Kd = tri.material.Kd; // vec3
-            
-        
-            auto computeColor = [&](const slib::vec3& normal, const slib::vec3& world) -> Color {
-                const slib::vec3& luxDirection = scene.light.getDirection(world);
-                float ds = std::max(0.0f, smath::dot(normal, luxDirection)); // diffuse scalar
-                return Color(Ka + Kd * ds); // assumes vec3 uses .r/g/b or [0]/[1]/[2]
-            };
-
             for(auto& point : tri.points) {
-                point.color = computeColor(point.normal, point.world);
+                const slib::vec3& luxDirection = scene.light.getDirection(point.world);
+                point.diffuse = std::max(0.0f, smath::dot(point.normal, luxDirection)); // diffuse scalar
             }        
         }
 	};    
@@ -97,7 +88,7 @@ public:
 	public:
 		uint32_t operator()(Vertex& vRaster, const Scene& scene, Polygon<Vertex>& tri) const
 		{
-			return vRaster.color.toBgra();
+			return Color(tri.material.Ka + tri.material.Kd * vRaster.diffuse).toBgra();
 		}
 	};
 public:
