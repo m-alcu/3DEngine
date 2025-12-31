@@ -14,19 +14,19 @@ public:
 	public:
     Vertex() {}
 
-    Vertex(int32_t px, int32_t py, float pz, slib::vec4 vp, slib::zvec2 _tex, float _diffuse) :
-    p_x(px), p_y(py), p_z(pz), ndc(vp), tex(_tex), diffuse(_diffuse) {}
+    Vertex(int32_t px, int32_t py, float pz, slib::vec4 vp, slib::zvec2 _tex, float _diffuse, bool _broken) :
+    p_x(px), p_y(py), p_z(pz), ndc(vp), tex(_tex), diffuse(_diffuse), broken(_broken) {}
 
     Vertex operator+(const Vertex &v) const {
-        return Vertex(p_x + v.p_x, p_y, p_z + v.p_z, ndc + v.ndc, tex + v.tex, diffuse + v.diffuse);
+        return Vertex(p_x + v.p_x, p_y, p_z + v.p_z, ndc + v.ndc, tex + v.tex, diffuse + v.diffuse, true);
     }
 
     Vertex operator-(const Vertex &v) const {
-        return Vertex(p_x - v.p_x, p_y, p_z - v.p_z, ndc - v.ndc, tex - v.tex, diffuse - v.diffuse);
+        return Vertex(p_x - v.p_x, p_y, p_z - v.p_z, ndc - v.ndc, tex - v.tex, diffuse - v.diffuse, true);
     }
 
     Vertex operator*(const float &rhs) const {
-        return Vertex(p_x * rhs, p_y, p_z * rhs, ndc * rhs, tex * rhs, diffuse * rhs);
+        return Vertex(p_x * rhs, p_y, p_z * rhs, ndc * rhs, tex * rhs, diffuse * rhs, true);
     }
 
     Vertex& operator+=(const Vertex &v) {
@@ -53,6 +53,8 @@ public:
         slib::vec4 ndc;
         slib::zvec2 tex; // Texture coordinates
         float diffuse; // Diffuse color
+        slib::zvec2 texOverW;
+        bool broken = false;
 	};
 
     class VertexShader
@@ -62,11 +64,13 @@ public:
 		{
             Vertex vertex;
             slib::vec3 normal{};
+            Projection<Vertex> projection;
             vertex.world = fullTransformMat * slib::vec4(vData.vertex, 1);
             vertex.ndc = slib::vec4(vertex.world, 1) * scene.viewMatrix * scene.projectionMatrix;
             vertex.tex = slib::zvec2(vData.texCoord.x, vData.texCoord.y, 1);
             normal = normalTransformMat * slib::vec4(vData.normal, 0);
             vertex.diffuse = std::max(0.0f, smath::dot(normal, scene.light.getDirection(vertex.world)));
+            projection.view(scene, vertex);
             return vertex;
 		} 
 	};

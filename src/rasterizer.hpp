@@ -117,7 +117,7 @@ class Rasterizer {
             auto* pixels = static_cast<uint32_t*>(scene->pixels);
 
             for (auto& point : polygon.points) {
-                projection.view(*scene, point);
+                projection.viewConditionalBroken(*scene, point);
             }
 
             if (solid->shading == Shading::Wireframe) {

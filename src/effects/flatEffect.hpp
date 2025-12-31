@@ -12,19 +12,19 @@ public:
 	public:
     Vertex() {}
 
-    Vertex(int32_t px, int32_t py, float pz, slib::vec4 vp) :
-    p_x(px), p_y(py), p_z(pz), ndc(vp) {}
+    Vertex(int32_t px, int32_t py, float pz, slib::vec4 vp, bool _broken) :
+    p_x(px), p_y(py), p_z(pz), ndc(vp), broken(_broken) {}
 
     Vertex operator+(const Vertex &v) const {
-        return Vertex(p_x + v.p_x, p_y, p_z + v.p_z, ndc + v.ndc);
+        return Vertex(p_x + v.p_x, p_y, p_z + v.p_z, ndc + v.ndc, true);
     }
 
     Vertex operator-(const Vertex &v) const {
-        return Vertex(p_x - v.p_x, p_y, p_z - v.p_z, ndc - v.ndc);
+        return Vertex(p_x - v.p_x, p_y, p_z - v.p_z, ndc - v.ndc, true);
     }
 
     Vertex operator*(const float &rhs) const {
-        return Vertex(p_x * rhs, p_y, p_z * rhs, ndc * rhs);
+        return Vertex(p_x * rhs, p_y, p_z * rhs, ndc * rhs, true);
     }
 
 
@@ -46,6 +46,7 @@ public:
         float p_z; 
         slib::vec3 world;
         slib::vec4 ndc;
+        bool broken = false;
 	};
 
 	class VertexShader
@@ -54,8 +55,10 @@ public:
         Vertex operator()(const VertexData& vData, const slib::mat4& fullTransformMat, const slib::mat4& normalTransformMat, const Scene& scene) const
 		{
             Vertex vertex;
+            Projection<Vertex> projection;
             vertex.world = fullTransformMat * slib::vec4(vData.vertex, 1);
             vertex.ndc = slib::vec4(vertex.world, 1) * scene.viewMatrix * scene.projectionMatrix;
+            projection.view(scene, vertex);
             return vertex;
 		}
 	};
