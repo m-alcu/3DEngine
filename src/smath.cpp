@@ -164,7 +164,7 @@ namespace smath
 
 		//we assume always bpp = 4 (RGBA)
 
-        const uint32_t* row32 = reinterpret_cast<const uint32_t*>(&tex.data[ty * tex.rowStride]);
+        const uint32_t* row32 = reinterpret_cast<const uint32_t*>(&tex.data[static_cast<size_t>(ty) * static_cast<size_t>(tex.rowStride)]);
         uint32_t px = row32[tx];
 
         r = (px) & 0xFF;

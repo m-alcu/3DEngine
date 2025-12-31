@@ -63,7 +63,7 @@ class Rasterizer {
             //#pragma omp parallel for
             for (int i = 0; i < static_cast<int>(solid->faceData.size()); ++i) {
                 const auto& faceDataEntry = solid->faceData[i];
-                slib::vec3 rotatedFaceNormal;
+                slib::vec3 rotatedFaceNormal{};
                 rotatedFaceNormal = normalTransformMat * slib::vec4(faceDataEntry.faceNormal, 0);
 
                 vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];
