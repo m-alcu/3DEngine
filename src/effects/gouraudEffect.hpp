@@ -74,9 +74,9 @@ public:
 	{
 	public:
     
-        void operator()(Polygon<Vertex>& tri, const Scene& scene) const
+        void operator()(Polygon<Vertex>& poly, const Scene& scene) const
         {
-            for(auto& point : tri.points) {
+            for(auto& point : poly.points) {
                 const slib::vec3& luxDirection = scene.light.getDirection(point.world);
                 point.diffuse = std::max(0.0f, smath::dot(point.normal, luxDirection)); // diffuse scalar
             }        
@@ -86,9 +86,9 @@ public:
 	class PixelShader
 	{
 	public:
-		uint32_t operator()(Vertex& vRaster, const Scene& scene, Polygon<Vertex>& tri) const
+		uint32_t operator()(Vertex& vRaster, const Scene& scene, Polygon<Vertex>& poly) const
 		{
-			return Color(tri.material.Ka + tri.material.Kd * vRaster.diffuse).toBgra();
+			return Color(poly.material.Ka + poly.material.Kd * vRaster.diffuse).toBgra();
 		}
 	};
 public:

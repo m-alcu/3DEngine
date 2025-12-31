@@ -79,7 +79,7 @@ public:
 	{
 	public:
     
-        void operator()(Polygon<Vertex>& tri, const Scene& scene) const
+        void operator()(Polygon<Vertex>& poly, const Scene& scene) const
         {
         }
 	};    
@@ -87,10 +87,10 @@ public:
 	class PixelShader
 	{
 	public:
-		uint32_t operator()(Vertex& vRaster, const Scene& scene, Polygon<Vertex>& tri) const
+		uint32_t operator()(Vertex& vRaster, const Scene& scene, Polygon<Vertex>& poly) const
 		{
 
-            TextureSampler<Vertex> sampler(vRaster, tri.material.map_Kd, tri.material.map_Kd.textureFilter);
+            TextureSampler<Vertex> sampler(vRaster, poly.material.map_Kd, poly.material.map_Kd.textureFilter);
             return sampler.sample(vRaster.diffuse, 0, 0, 0).toBgra();
 		}
 	};

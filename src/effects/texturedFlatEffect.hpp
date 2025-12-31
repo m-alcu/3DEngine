@@ -73,23 +73,23 @@ public:
 	{
 	public:
     
-        void operator()(Polygon<Vertex>& tri, const Scene& scene) const
+        void operator()(Polygon<Vertex>& poly, const Scene& scene) const
 		{
 
-            const auto& Ka = tri.material.Ka; // vec3
-            const auto& Kd = tri.material.Kd; // vec3
-			const slib::vec3& luxDirection = scene.light.getDirection(tri.points[0].world); // any point aproximately the same
-            tri.flatDiffuse = std::max(0.0f, smath::dot(tri.rotatedFaceNormal, luxDirection));
+            const auto& Ka = poly.material.Ka; // vec3
+            const auto& Kd = poly.material.Kd; // vec3
+			const slib::vec3& luxDirection = scene.light.getDirection(poly.points[0].world); // any point aproximately the same
+            poly.flatDiffuse = std::max(0.0f, smath::dot(poly.rotatedFaceNormal, luxDirection));
 		}
 	};
 
 	class PixelShader
 	{
 	public:
-		uint32_t operator()(Vertex& vRaster, const Scene& scene, Polygon<Vertex>& tri) const
+		uint32_t operator()(Vertex& vRaster, const Scene& scene, Polygon<Vertex>& poly) const
 		{
-			TextureSampler<Vertex> sampler(vRaster, tri.material.map_Kd, tri.material.map_Kd.textureFilter);
-            return sampler.sample(tri.flatDiffuse, 0, 0, 0).toBgra();
+			TextureSampler<Vertex> sampler(vRaster, poly.material.map_Kd, poly.material.map_Kd.textureFilter);
+            return sampler.sample(poly.flatDiffuse, 0, 0, 0).toBgra();
 		}
 	};
 public:

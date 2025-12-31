@@ -67,12 +67,12 @@ public:
 	{
 	public:
     
-        void operator()(Polygon<Vertex>& tri, const Scene& scene) const
+        void operator()(Polygon<Vertex>& poly, const Scene& scene) const
 		{
 
-            const auto& Ka = tri.material.Ka; // vec3
-            const auto& Kd = tri.material.Kd; // vec3
-			const slib::vec3& luxDirection = scene.light.getDirection(tri.points[0].world); // any point aproximately the same
+            const auto& Ka = poly.material.Ka; // vec3
+            const auto& Kd = poly.material.Kd; // vec3
+			const slib::vec3& luxDirection = scene.light.getDirection(poly.points[0].world); // any point aproximately the same
 
             /*
             All vertex faces are counterwise (cw), so normal is pointing towards the screen,
@@ -80,18 +80,18 @@ public:
 			So, it's resulting in a positive dot product.
             */
 
-            tri.flatDiffuse = std::max(0.0f, smath::dot(tri.rotatedFaceNormal, luxDirection));
-            slib::vec3 color = Ka + Kd * tri.flatDiffuse;
-            tri.flatColor = Color(color).toBgra(); // assumes vec3 uses .r/g/b or [0]/[1]/[2]
+            poly.flatDiffuse = std::max(0.0f, smath::dot(poly.rotatedFaceNormal, luxDirection));
+            slib::vec3 color = Ka + Kd * poly.flatDiffuse;
+            poly.flatColor = Color(color).toBgra(); // assumes vec3 uses .r/g/b or [0]/[1]/[2]
 		}
 	};
 
 	class PixelShader
 	{
 	public:
-		uint32_t operator()(Vertex& vRaster, const Scene& scene, Polygon<Vertex>& tri) const
+		uint32_t operator()(Vertex& vRaster, const Scene& scene, Polygon<Vertex>& poly) const
 		{
-            return tri.flatColor;
+            return poly.flatColor;
 		}
 	};
 public:

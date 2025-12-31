@@ -72,7 +72,7 @@ public:
 	{
 	public:
     
-        void operator()(Polygon<Vertex>& tri, const Scene& scene) const
+        void operator()(Polygon<Vertex>& poly, const Scene& scene) const
 		{
 		}
 	};  
@@ -80,12 +80,12 @@ public:
 	class PixelShader
 	{
 	public:
-		uint32_t operator()(Vertex& vRaster, const Scene& scene, Polygon<Vertex>& tri) const
+		uint32_t operator()(Vertex& vRaster, const Scene& scene, Polygon<Vertex>& poly) const
 		{
 
-            const auto& Ka = tri.material.Ka; // vec3
-            const auto& Kd = tri.material.Kd; // vec3
-            const auto& Ks = tri.material.Ks; // vec3
+            const auto& Ka = poly.material.Ka; // vec3
+            const auto& Kd = poly.material.Kd; // vec3
+            const auto& Ks = poly.material.Ks; // vec3
             const slib::vec3& luxDirection = scene.light.getDirection(vRaster.world);
 
             slib::vec3 normal = smath::normalize(vRaster.normal);
@@ -98,7 +98,7 @@ public:
             // Not physically correct: highlights will "stick" to the camera instead of sliding across
             // surfaces when moving in perspective, but it’s often a good enough approximation.
             float specAngle = std::max(0.0f, smath::dot(R, scene.forwardNeg)); // viewer
-            float spec = std::pow(specAngle, tri.material.Ns);
+            float spec = std::pow(specAngle, poly.material.Ns);
         
             slib::vec3 color = Ka + Kd * diff + Ks * spec;
             return Color(color).toBgra(); // assumes vec3 uses .r/g/b or [0]/[1]/[2]

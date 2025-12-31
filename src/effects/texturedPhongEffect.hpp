@@ -78,7 +78,7 @@ public:
 	{
 	public:
     
-        void operator()(Polygon<Vertex>& tri, const Scene& scene) const
+        void operator()(Polygon<Vertex>& poly, const Scene& scene) const
 		{
 		}
 	};  
@@ -86,12 +86,12 @@ public:
 	class PixelShader
 	{
 	public:
-		uint32_t operator()(Vertex& vRaster, const Scene& scene, Polygon<Vertex>& tri) const
+		uint32_t operator()(Vertex& vRaster, const Scene& scene, Polygon<Vertex>& poly) const
 		{
 
-            const auto& Ka = tri.material.Ka; // vec3
-            const auto& Kd = tri.material.Kd; // vec3
-            const auto& Ks = tri.material.Ks; // vec3
+            const auto& Ka = poly.material.Ka; // vec3
+            const auto& Kd = poly.material.Kd; // vec3
+            const auto& Ks = poly.material.Ks; // vec3
             const slib::vec3& luxDirection = scene.light.getDirection(vRaster.world);
 
             slib::vec3 normal = smath::normalize(vRaster.normal);
@@ -99,9 +99,9 @@ public:
         
             slib::vec3 R = normal * 2.0f * smath::dot(normal,luxDirection) - luxDirection;
             float specAngle = std::max(0.0f, smath::dot(R, scene.forwardNeg)); // viewer
-            float spec = std::pow(specAngle, tri.material.Ns);
+            float spec = std::pow(specAngle, poly.material.Ns);
 
-            TextureSampler<Vertex> sampler(vRaster, tri.material.map_Kd, tri.material.map_Kd.textureFilter);
+            TextureSampler<Vertex> sampler(vRaster, poly.material.map_Kd, poly.material.map_Kd.textureFilter);
             return sampler.sample(diff, Ks.x * spec, Ks.y * spec, Ks.z * spec).toBgra();
 		}
 	};

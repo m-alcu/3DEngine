@@ -78,7 +78,7 @@ public:
 	{
 	public:
     
-        void operator()(Polygon<Vertex>& tri, const Scene& scene) const
+        void operator()(Polygon<Vertex>& poly, const Scene& scene) const
 		{
 		}
 	};      
@@ -86,12 +86,12 @@ public:
 	class PixelShader
 	{
 	public:
-		uint32_t operator()(Vertex& vRaster, const Scene& scene, Polygon<Vertex>& tri) const
+		uint32_t operator()(Vertex& vRaster, const Scene& scene, Polygon<Vertex>& poly) const
 		{
 
-            const auto& Ka = tri.material.Ka; // vec3
-            const auto& Kd = tri.material.Kd; // vec3
-            const auto& Ks = tri.material.Ks; // vec3
+            const auto& Ka = poly.material.Ka; // vec3
+            const auto& Kd = poly.material.Kd; // vec3
+            const auto& Ks = poly.material.Ks; // vec3
             const slib::vec3& luxDirection = scene.light.getDirection(vRaster.world);
             // Normalize vectors
             slib::vec3 N = smath::normalize(vRaster.normal); // Normal at the fragment
@@ -107,9 +107,9 @@ public:
         
             // Specular component: spec = (N · H)^shininess
             float specAngle = std::max(0.0f, smath::dot(N,halfwayVector)); // viewer
-            float spec = std::pow(specAngle, tri.material.Ns); // Blinn Phong shininess needs *4 to be like Phong
+            float spec = std::pow(specAngle, poly.material.Ns); // Blinn Phong shininess needs *4 to be like Phong
         
-            TextureSampler<Vertex> sampler(vRaster, tri.material.map_Kd, tri.material.map_Kd.textureFilter);
+            TextureSampler<Vertex> sampler(vRaster, poly.material.map_Kd, poly.material.map_Kd.textureFilter);
             return sampler.sample(diff, Ks.x * spec, Ks.y * spec, Ks.z * spec).toBgra();
 
 
