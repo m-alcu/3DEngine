@@ -80,6 +80,10 @@ public:
     
         void operator()(Polygon<Vertex>& poly, const Scene& scene) const
 		{
+            Projection<Vertex> projection;
+            for (auto& point : poly.points) {
+                projection.view(scene, point, false);
+            }
 		}
 	};      
 

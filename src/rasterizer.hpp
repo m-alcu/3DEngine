@@ -116,9 +116,7 @@ class Rasterizer {
 
             auto* pixels = static_cast<uint32_t*>(scene->pixels);
 
-            for (auto& point : polygon.points) {
-                projection.view(*scene, point, false);
-            }
+            effect.gs(polygon, *scene);
 
             if (solid->shading == Shading::Wireframe) {
                 drawWireframePolygon(polygon, 0xffffffff, pixels);
@@ -136,8 +134,6 @@ class Rasterizer {
 
             std::array cur { first, first };
             auto gety = [&](int side) -> int { return cur[side]->p_y >> 16; };
-
-            effect.gs(polygon, *scene);
             
             int forwards = 1;
             Slope<vertex> slopes[2] {};

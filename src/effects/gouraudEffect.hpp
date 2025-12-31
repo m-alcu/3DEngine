@@ -76,9 +76,11 @@ public:
     
         void operator()(Polygon<Vertex>& poly, const Scene& scene) const
         {
+            Projection<Vertex> projection;
             for(auto& point : poly.points) {
                 const slib::vec3& luxDirection = scene.light.getDirection(point.world);
                 point.diffuse = std::max(0.0f, smath::dot(point.normal, luxDirection)); // diffuse scalar
+                projection.view(scene, point, false);
             }        
         }
 	};    
