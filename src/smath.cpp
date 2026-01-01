@@ -129,13 +129,12 @@ namespace smath
         const float azc = std::cos(zrad);
         const float azs = -std::sin(zrad);
 
-        slib::mat4 rotateX({{1, 0, 0, 0}, {0, axc, axs, 0}, {0, -axs, axc, 0}, {0, 0, 0, 1}});
-
-        slib::mat4 rotateY({{ayc, 0, -ays, 0}, {0, 1, 0, 0}, {ays, 0, ayc, 0}, {0, 0, 0, 1}});
-
-        slib::mat4 rotateZ({{azc, azs, 0, 0}, {-azs, azc, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}});
-
-        return rotateZ * rotateX * rotateY;
+        return slib::mat4({
+            { azc * ayc + azs * axs * ays, azs * axc, -azc * ays + azs * axs * ayc, 0 },
+            { -azs * ayc + azc * axs * ays, azc * axc, azs * ays + azc * axs * ayc, 0 },
+            { axc * ays, -axs, axc * ayc, 0 },
+            { 0, 0, 0, 1 }
+        });
     }
 
     slib::mat4 scale(const slib::vec3& scale)

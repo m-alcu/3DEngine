@@ -35,10 +35,15 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     $<TARGET_FILE_DIR:${PROJECT_NAME}>/resources
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3)
+find_package(OpenMP REQUIRED)
 
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3 OpenMP::OpenMP_CXX)
+
+# Optimization flags for Release builds
 target_compile_options(${PROJECT_NAME} PRIVATE
     $<$<CONFIG:Release>:-O3>
+    $<$<CONFIG:Release>:-march=native>
+    $<$<CONFIG:Release>:-ffast-math>
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 23 CXX_STANDARD_REQUIRED on)
