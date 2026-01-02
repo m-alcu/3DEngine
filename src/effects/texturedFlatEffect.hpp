@@ -37,6 +37,13 @@ public:
         return *this;
     }
 
+    Vertex& vraster(const Vertex& v) {
+		p_x += v.p_x;
+        p_z += v.p_z;
+        tex += v.tex;
+        return *this;
+    }
+
     Vertex& hraster(const Vertex& v) {
         p_z += v.p_z;
         tex += v.tex;

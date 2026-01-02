@@ -14,19 +14,19 @@ public:
 	public:
     Vertex() {}
 
-    Vertex(int32_t px, int32_t py, float pz, slib::vec3 n, slib::vec4 vp, slib::zvec2 _tex, bool _broken) :
-    p_x(px), p_y(py), p_z(pz), normal(n), ndc(vp), tex(_tex), broken(_broken) {}
+    Vertex(int32_t px, int32_t py, float pz, slib::vec3 n, slib::vec4 vp, slib::vec3 _world, slib::zvec2 _tex, bool _broken) :
+    p_x(px), p_y(py), p_z(pz), normal(n), ndc(vp), world(_world), tex(_tex), broken(_broken) {}
 
     Vertex operator+(const Vertex &v) const {
-        return Vertex(p_x + v.p_x, p_y, p_z + v.p_z, normal + v.normal, ndc + v.ndc, tex + v.tex, true);
+        return Vertex(p_x + v.p_x, p_y, p_z + v.p_z, normal + v.normal, ndc + v.ndc, world + v.world, tex + v.tex, true);
     }
 
     Vertex operator-(const Vertex &v) const {
-        return Vertex(p_x - v.p_x, p_y, p_z - v.p_z, normal - v.normal, ndc - v.ndc, tex - v.tex, true);
+        return Vertex(p_x - v.p_x, p_y, p_z - v.p_z, normal - v.normal, ndc - v.ndc, world - v.world, tex - v.tex, true);
     }
 
     Vertex operator*(const float &rhs) const {
-        return Vertex(p_x * rhs, p_y, p_z * rhs, normal * rhs, ndc * rhs, tex * rhs, true);
+        return Vertex(p_x * rhs, p_y, p_z * rhs, normal * rhs, ndc * rhs, world * rhs, tex * rhs, true);
     }
 
 
@@ -35,6 +35,16 @@ public:
         p_z += v.p_z;
         normal += v.normal;
         ndc += v.ndc;
+		world += v.world;
+        tex += v.tex;
+        return *this;
+    }
+
+    Vertex& vraster(const Vertex& v) {
+		p_x += v.p_x;
+        p_z += v.p_z;
+        normal += v.normal;
+        world += v.world;
         tex += v.tex;
         return *this;
     }
@@ -42,6 +52,7 @@ public:
     Vertex& hraster(const Vertex& v) {
         p_z += v.p_z;
         normal += v.normal;
+		world += v.world;
         tex += v.tex;
         return *this;
     }

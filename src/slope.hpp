@@ -15,5 +15,5 @@ public:
    }  
    vertex get() const { return begin; }
    int getx() const { return begin.p_x >> 16; }  
-   void advance() { begin += step; }  
+   void advance() { begin.vraster(step); }
 };
