@@ -181,8 +181,8 @@ class Rasterizer {
                 }
             }
         
-            left.advance();
-            right.advance();
+            left.down();
+            right.down();
         } 
 
         void drawWireframePolygon(Polygon<vertex> polygon, uint32_t color, uint32_t* pixels) {
