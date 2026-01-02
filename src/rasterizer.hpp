@@ -173,10 +173,9 @@ class Rasterizer {
                 vertex vStart = left.get();
                 vertex vStep = (right.get() - vStart) * invDx;
         
-                for (int x = xStart; x < xEnd; ++x) {
-                    int index = hy + x;
-                    if (scene->zBuffer->TestAndSet(index, vStart.p_z)) {
-                        pixels[index] = effect.ps(vStart, *scene, polygon);
+                for (int x = xStart + hy; x < xEnd + hy; ++x) {
+                    if (scene->zBuffer->TestAndSet(x, vStart.p_z)) {
+                        pixels[x] = effect.ps(vStart, *scene, polygon);
                     }
                     vStart.hraster(vStep);
                 }
