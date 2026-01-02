@@ -164,8 +164,8 @@ class Rasterizer {
        
         inline void drawScanline(const int& hy, Slope<vertex>& left, Slope<vertex>& right, Polygon<vertex>& polygon, uint32_t* pixels) {
             
-            int xStart = left.getx();
-            int xEnd = right.getx();
+            int xStart = left.getx() + hy;
+            int xEnd = right.getx() + hy;
             int dx = xEnd - xStart;
         
             if (dx != 0) {
@@ -173,7 +173,7 @@ class Rasterizer {
                 vertex vStart = left.get();
                 vertex vStep = (right.get() - vStart) * invDx;
         
-                for (int x = xStart + hy; x < xEnd + hy; ++x) {
+                for (int x = xStart; x < xEnd; ++x) {
                     if (scene->zBuffer->TestAndSet(x, vStart.p_z)) {
                         pixels[x] = effect.ps(vStart, *scene, polygon);
                     }
