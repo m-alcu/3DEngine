@@ -132,7 +132,7 @@ class Rasterizer {
             };
             auto [first, last] = std::minmax_element(begin, end, cmp_top_left);
 
-            std::array cur { first, first };
+            std::array<decltype(first), 2> cur{ first, first };
             auto gety = [&](int side) -> int { return cur[side]->p_y >> 16; };
             
             int forwards = 1;
