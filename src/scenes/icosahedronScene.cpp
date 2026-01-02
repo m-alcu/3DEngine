@@ -19,6 +19,7 @@ void IcosahedronScene::setup() {
     icosahedron->position.yAngle = 0.0f;
     icosahedron->position.zAngle = 0.0f;
     icosahedron->shading = Shading::Flat;
+	sceneType = SceneType::ICOSAHEDRON;
 
     icosahedron->setup();
 

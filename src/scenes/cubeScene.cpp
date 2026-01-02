@@ -20,5 +20,6 @@ void CubeScene::setup() {
     cube->position.yAngle = 0.0f;
     cube->position.zAngle = 0.0f;
     cube->shading = Shading::TexturedFlat;
+	sceneType = SceneType::CUBE;
     addSolid(std::move(cube));
 }

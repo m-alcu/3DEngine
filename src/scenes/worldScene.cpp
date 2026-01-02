@@ -20,6 +20,7 @@ void WorldScene::setup() {
     world->position.yAngle = 0.0f;
     world->position.zAngle = 0.0f;
     world->shading = Shading::TexturedGouraud;
+	sceneType = SceneType::WORLD;
 
     addSolid(std::move(world));
 }

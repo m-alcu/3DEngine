@@ -20,6 +20,7 @@ void TorusScene::setup() {
     torus->position.yAngle = 0.0f;
     torus->position.zAngle = 0.0f;
     torus->shading = Shading::TexturedGouraud;
+	sceneType = SceneType::TORUS;
 
     addSolid(std::move(torus));
 }

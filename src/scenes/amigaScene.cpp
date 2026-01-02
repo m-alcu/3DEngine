@@ -20,6 +20,7 @@ void AmigaScene::setup() {
     amiga->position.yAngle = 0.0f;
     amiga->position.zAngle = 0.0f;
     amiga->shading = Shading::Flat;
+	sceneType = SceneType::AMIGA;
 
     addSolid(std::move(amiga));
 }

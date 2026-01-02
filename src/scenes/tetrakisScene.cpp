@@ -19,6 +19,7 @@ void TetrakisScene::setup() {
     tetrakis->position.yAngle = 0.0f;
     tetrakis->position.zAngle = 0.0f;
     tetrakis->shading = Shading::Flat;
+	sceneType = SceneType::TETRAKIS;
 
     tetrakis->setup();
 
