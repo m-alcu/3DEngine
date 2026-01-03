@@ -4,7 +4,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "slib.hpp"
 
 namespace slib
 {
