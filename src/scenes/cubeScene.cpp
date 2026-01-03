@@ -3,10 +3,9 @@
 void CubeScene::setup() {
 
     // Light comming from origin towards far y and z
-    light.type = LightType::Directional;
+    light.type = LightType::Point;
     light.color = { 1.0f, 1.0f, 1.0f };
-    light.intensity = 1.0f;
-    light.direction = smath::normalize(slib::vec3{ 1, 1, 1 });
+    light.intensity = 10.0f;
 
     clearAllSolids();
 

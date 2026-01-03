@@ -106,7 +106,7 @@ public:
             //slib::vec3 V = scene.eye; // Viewer direction (you may want to define this differently later)
         
             // Diffuse component
-            float diff = std::max(0.0f, smath::dot(N,L));
+            float diff = std::max(0.0f, smath::dot(N,L)) * scene.light.intensity;
         
             // Halfway vector H = normalize(L + V)
             //slib::vec3 H = smath::normalize(L + V);

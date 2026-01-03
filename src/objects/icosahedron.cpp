@@ -41,7 +41,7 @@ void Icosahedron::loadVertices() {
 void Icosahedron::loadFaces() {
     std::vector<FaceData> faces;
 
-    MaterialProperties props = getMaterialProperties(MaterialType::Metal);
+    MaterialProperties props = getMaterialProperties(MaterialType::Light);
     std::string mtlPath = "checker-map_tho.png";
 
     slib::material mat{};

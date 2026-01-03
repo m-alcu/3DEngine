@@ -65,7 +65,8 @@ enum class MaterialType {
     Marble,
     Glass,
     Metal,
-    Mirror 
+    Mirror,
+    Light
 };
 
 // Struct to hold k_s, k_a, and k_d values
@@ -96,6 +97,7 @@ public:
 
     int numVertices;
     int numFaces;
+	bool lightSourceEnabled = false;
 
     // Orthonormal basis of the orbit plane
     slib::vec3 orbitU{ 1,0,0 };

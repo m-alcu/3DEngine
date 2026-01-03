@@ -97,7 +97,7 @@ int main(int, char**)
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != nullptr);
 
-    auto scene = SceneFactory::createScene(SceneType::TETRAKIS, { height, width });
+    auto scene = SceneFactory::createScene(SceneType::TORUS, { height, width });
     scene->setup();
 
     float lastMouseX = 0, lastMouseY = 0;
@@ -258,8 +258,8 @@ int main(int, char**)
         ImGui::NewFrame();
         ImGui::SetNextWindowBgAlpha(0.3f);
 
-        static float incXangle = 0.0f;
-        static float incYangle = 0.0f;
+        static float incXangle = 0.5f;
+        static float incYangle = 0.25f;
         // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
         {
             ImGui::Begin("3d params");                         

@@ -103,7 +103,7 @@ public:
             const slib::vec3& luxDirection = scene.light.getDirection(vRaster.world);
 
             slib::vec3 normal = smath::normalize(vRaster.normal);
-            float diff = std::max(0.0f, smath::dot(normal,luxDirection));
+            float diff = std::max(0.0f, smath::dot(normal,luxDirection)) * scene.light.intensity;
         
             slib::vec3 R = normal * 2.0f * smath::dot(normal,luxDirection) - luxDirection;
             // NOTE: For performance we approximate the per-fragment view vector V with -camera.forward.

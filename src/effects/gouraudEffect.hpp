@@ -86,7 +86,7 @@ public:
             Projection<Vertex> projection;
             for(auto& point : poly.points) {
                 const slib::vec3& luxDirection = scene.light.getDirection(point.world);
-                point.diffuse = std::max(0.0f, smath::dot(point.normal, luxDirection)); // diffuse scalar
+                point.diffuse = std::max(0.0f, smath::dot(point.normal, luxDirection)) * scene.light.intensity; // diffuse scalar
                 projection.view(scene, point, false);
             }        
         }

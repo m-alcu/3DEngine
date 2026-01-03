@@ -23,6 +23,13 @@ class Rasterizer {
 			solid = &sol; // set the current solid
             scene = &scn;
             calculateTransformMat();
+
+			if (solid->lightSourceEnabled) {
+				scene->light.position = slib::vec3{ solid->position.x, solid->position.y, solid->position.z };
+				scene->light.type = LightType::Point;
+				scene->light.intensity = 1.5f;
+			}
+
             processVertices();
             drawFaces();
         }
