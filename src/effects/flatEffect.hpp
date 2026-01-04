@@ -13,36 +13,39 @@ public:
   public:
     Vertex() {}
 
-    Vertex(int32_t px, int32_t py, float pz, slib::vec4 vp, bool _broken)
-        : p_x(px), p_y(py), p_z(pz), ndc(vp), broken(_broken) {}
+    Vertex(int32_t px, int32_t py, float pz, slib::vec4 vp, slib::vec3 _world, bool _broken)
+        : p_x(px), p_y(py), p_z(pz), ndc(vp), world(_world), broken(_broken) {}
 
     Vertex operator+(const Vertex &v) const {
-      return Vertex(p_x + v.p_x, p_y, p_z + v.p_z, ndc + v.ndc, true);
+      return Vertex(p_x + v.p_x, p_y, p_z + v.p_z, ndc + v.ndc, world + v.world, true);
     }
 
     Vertex operator-(const Vertex &v) const {
-      return Vertex(p_x - v.p_x, p_y, p_z - v.p_z, ndc - v.ndc, true);
+      return Vertex(p_x - v.p_x, p_y, p_z - v.p_z, ndc - v.ndc, world - v.world, true);
     }
 
     Vertex operator*(const float &rhs) const {
-      return Vertex(p_x * rhs, p_y, p_z * rhs, ndc * rhs, true);
+      return Vertex(p_x * rhs, p_y, p_z * rhs, ndc * rhs, world * rhs, true);
     }
 
     Vertex &operator+=(const Vertex &v) {
       p_x += v.p_x;
       p_z += v.p_z;
       ndc += v.ndc;
+      world += v.world;
       return *this;
     }
 
     Vertex &vraster(const Vertex &v) {
       p_x += v.p_x;
       p_z += v.p_z;
+      world += v.world;
       return *this;
     }
 
     Vertex &hraster(const Vertex &v) {
       p_z += v.p_z;
+      world += v.world;
       return *this;
     }
 
@@ -104,7 +107,22 @@ public:
   public:
     uint32_t operator()(Vertex &vRaster, const Scene &scene,
                         Polygon<Vertex> &poly) const {
-      return poly.flatColor;
+      // Shadow calculation
+      float shadow = 1.0f;
+      if (scene.shadowMap && scene.shadowsEnabled) {
+        shadow = scene.shadowMap->sampleShadow(vRaster.world);
+      }
+
+      // If no shadow, return precomputed flat color
+      if (shadow >= 1.0f) {
+        return poly.flatColor;
+      }
+
+      // Recompute color with shadow applied to diffuse only
+      const auto &Ka = poly.material.Ka;
+      const auto &Kd = poly.material.Kd;
+      slib::vec3 color = Ka + Kd * poly.flatDiffuse * shadow;
+      return Color(color).toBgra();
     }
   };
 

@@ -21,6 +21,7 @@
 #include "backgrounds/backgroundFactory.hpp"
 #include "light.hpp"
 #include "camera.hpp"
+#include "ShadowMap.hpp"
 
 
 enum class SceneType {
@@ -58,6 +59,7 @@ public:
     Scene(const Screen& scr)
         : screen(scr),
           zBuffer( std::make_shared<ZBuffer>( scr.width,scr.height )),
+          shadowMap( std::make_shared<ShadowMap>(512, 512)),
           projectionMatrix(smath::identity()),
 		  viewMatrix(smath::identity())
     {
@@ -105,6 +107,7 @@ public:
     slib::mat4 projectionMatrix;
 	slib::mat4 viewMatrix;
     std::shared_ptr<ZBuffer> zBuffer; // Use shared_ptr for zBuffer to manage its lifetime automatically.
+    std::shared_ptr<ShadowMap> shadowMap; // Shadow map for shadow rendering
     uint32_t* pixels = nullptr; // Pointer to the pixel data.
 
     slib::vec3 rotationMomentum{ 0.f, 0.f, 0.f }; // Rotation momentum vector (nonzero indicates view is still rotating)
@@ -118,6 +121,7 @@ public:
     // Store solids in a vector of unique_ptr to handle memory automatically.
     std::vector<std::unique_ptr<Solid>> solids;
     bool orbiting = false;
+    bool shadowsEnabled = true; // Enable/disable shadow rendering
 
     BackgroundType backgroundType = BackgroundType::DESERT;
     uint32_t* backg = nullptr;

@@ -116,12 +116,19 @@ public:
       // orthographic camera). Works well when the camera is far away or objects
       // are small on screen. Not physically correct: highlights will "stick" to
       // the camera instead of sliding across surfaces when moving in
-      // perspective, but it�s often a good enough approximation.
+      // perspective, but it's often a good enough approximation.
       float specAngle =
           std::max(0.0f, smath::dot(R, scene.forwardNeg)); // viewer
       float spec = std::pow(specAngle, poly.material.Ns);
 
-      slib::vec3 color = Ka + Kd * diff + Ks * spec;
+      // Shadow calculation
+      float shadow = 1.0f;
+      if (scene.shadowMap && scene.shadowsEnabled) {
+        shadow = scene.shadowMap->sampleShadow(vRaster.world);
+      }
+
+      // Shadow affects diffuse and specular, not ambient
+      slib::vec3 color = Ka + (Kd * diff + Ks * spec) * shadow;
       return Color(color).toBgra(); // assumes vec3 uses .r/g/b or [0]/[1]/[2]
     }
   };

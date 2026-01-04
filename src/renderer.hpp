@@ -4,6 +4,7 @@
 #include <cstdint>
 #include "objects/solid.hpp"
 #include "rasterizer.hpp"
+#include "ShadowRasterizer.hpp"
 #include "effects/flatEffect.hpp"
 #include "effects/gouraudEffect.hpp"
 #include "effects/blinnPhongEffect.hpp"
@@ -19,39 +20,63 @@ class Renderer {
 
         void drawScene(Scene& scene, float zNear, float zFar, float viewAngle) {
 
+            // Shadow pass - render depth from light's perspective
+            if (scene.shadowMap && scene.shadowsEnabled) {
+                renderShadowPass(scene);
+            }
+
             scene.drawBackground();
 
             prepareFrame(scene, zNear, zFar, viewAngle);
             for (auto& solidPtr : scene.solids) {
                 switch (solidPtr->shading) {
-                    case Shading::Flat: 
+                    case Shading::Flat:
                         flatRasterizer.drawRenderable(*solidPtr, scene);
-                        break;   
-                    case Shading::Wireframe: 
+                        break;
+                    case Shading::Wireframe:
                         flatRasterizer.drawRenderable(*solidPtr, scene);
-                        break;                                              
-                    case Shading::TexturedFlat: 
+                        break;
+                    case Shading::TexturedFlat:
                         texturedFlatRasterizer.drawRenderable(*solidPtr, scene);
-                        break;                             
-                    case Shading::Gouraud: 
+                        break;
+                    case Shading::Gouraud:
                         gouraudRasterizer.drawRenderable(*solidPtr, scene);
                         break;
-                    case Shading::TexturedGouraud: 
+                    case Shading::TexturedGouraud:
                         texturedGouraudRasterizer.drawRenderable(*solidPtr, scene);
-                        break;                        
+                        break;
                     case Shading::BlinnPhong:
                         blinnPhongRasterizer.drawRenderable(*solidPtr, scene);
-                        break;  
+                        break;
                     case Shading::TexturedBlinnPhong:
                         texturedBlinnPhongRasterizer.drawRenderable(*solidPtr, scene);
-                        break;                                                       
+                        break;
                     case Shading::Phong:
                         phongRasterizer.drawRenderable(*solidPtr, scene);
-                        break;      
+                        break;
                     case Shading::TexturedPhong:
                         texturedPhongRasterizer.drawRenderable(*solidPtr, scene);
-                        break;                                             
+                        break;
                     default: flatRasterizer.drawRenderable(*solidPtr, scene);
+                }
+            }
+        }
+
+        void renderShadowPass(Scene& scene) {
+            scene.shadowMap->clear();
+
+            // Calculate scene bounds for shadow map (adjust these based on your scene)
+            slib::vec3 sceneCenter = {0.0f, 0.0f, -1000.0f};
+            float sceneRadius = 1500.0f;
+
+            // Build light matrices
+            scene.shadowMap->buildLightMatrices(scene.light, sceneCenter, sceneRadius);
+
+            // Render all shadow-casting solids to the shadow map
+            for (auto& solidPtr : scene.solids) {
+                // Skip light sources - they don't cast shadows on themselves
+                if (!solidPtr->lightSourceEnabled) {
+                    shadowRasterizer.renderSolid(*solidPtr, *scene.shadowMap);
                 }
             }
         }
@@ -83,7 +108,7 @@ class Renderer {
             // This assumes all view rays are parallel (like an orthographic camera).
             // Works well when the camera is far away or objects are small on screen.
             // Not physically correct: highlights will "stick" to the camera instead of sliding across
-            // surfaces when moving in perspective, but it’s often a good enough approximation.d
+            // surfaces when moving in perspective, but itï¿½s often a good enough approximation.d
 			scene.forwardNeg = { -scene.camera.forward.x, -scene.camera.forward.y, -scene.camera.forward.z };
         }
         
@@ -95,6 +120,7 @@ class Renderer {
         Rasterizer<TexturedGouraudEffect> texturedGouraudRasterizer;
         Rasterizer<TexturedPhongEffect> texturedPhongRasterizer;
         Rasterizer<TexturedBlinnPhongEffect> texturedBlinnPhongRasterizer;
+        ShadowRasterizer shadowRasterizer;
 };
 
 

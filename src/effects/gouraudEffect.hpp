@@ -15,23 +15,23 @@ public:
     Vertex() {}
 
     Vertex(int32_t px, int32_t py, float pz, slib::vec3 n, slib::vec4 vp,
-           float _diffuse, bool _broken)
-        : p_x(px), p_y(py), p_z(pz), normal(n), ndc(vp), diffuse(_diffuse),
-          broken(_broken) {}
+           slib::vec3 _world, float _diffuse, bool _broken)
+        : p_x(px), p_y(py), p_z(pz), normal(n), ndc(vp), world(_world),
+          diffuse(_diffuse), broken(_broken) {}
 
     Vertex operator+(const Vertex &v) const {
       return Vertex(p_x + v.p_x, p_y, p_z + v.p_z, normal + v.normal,
-                    ndc + v.ndc, diffuse + v.diffuse, true);
+                    ndc + v.ndc, world + v.world, diffuse + v.diffuse, true);
     }
 
     Vertex operator-(const Vertex &v) const {
       return Vertex(p_x - v.p_x, p_y, p_z - v.p_z, normal - v.normal,
-                    ndc - v.ndc, diffuse - v.diffuse, true);
+                    ndc - v.ndc, world - v.world, diffuse - v.diffuse, true);
     }
 
     Vertex operator*(const float &rhs) const {
       return Vertex(p_x * rhs, p_y, p_z * rhs, normal * rhs, ndc * rhs,
-                    diffuse * rhs, true);
+                    world * rhs, diffuse * rhs, true);
     }
 
     Vertex &operator+=(const Vertex &v) {
@@ -39,6 +39,7 @@ public:
       p_z += v.p_z;
       normal += v.normal;
       ndc += v.ndc;
+      world += v.world;
       diffuse += v.diffuse;
       return *this;
     }
@@ -46,12 +47,14 @@ public:
     Vertex &vraster(const Vertex &v) {
       p_x += v.p_x;
       p_z += v.p_z;
+      world += v.world;
       diffuse += v.diffuse;
       return *this;
     }
 
     Vertex &hraster(const Vertex &v) {
       p_z += v.p_z;
+      world += v.world;
       diffuse += v.diffuse;
       return *this;
     }
@@ -101,8 +104,15 @@ public:
   public:
     uint32_t operator()(Vertex &vRaster, const Scene &scene,
                         Polygon<Vertex> &poly) const {
-      return Color(poly.material.Ka + poly.material.Kd * vRaster.diffuse)
-          .toBgra();
+      // Shadow calculation
+      float shadow = 1.0f;
+      if (scene.shadowMap && scene.shadowsEnabled) {
+        shadow = scene.shadowMap->sampleShadow(vRaster.world);
+      }
+
+      // Shadow affects diffuse, not ambient
+      slib::vec3 color = poly.material.Ka + poly.material.Kd * vRaster.diffuse * shadow;
+      return Color(color).toBgra();
     }
   };
 
