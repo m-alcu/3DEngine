@@ -10,6 +10,7 @@
 #include "effects/shadowEffect.hpp"
 #include "objects/solid.hpp"
 #include "slope.hpp"
+#include "clipping.hpp"
 
 // Simplified polygon for shadow pass (no material needed)
 template<typename Vertex>
@@ -96,8 +97,6 @@ private:
         }
     }
 
-    enum class ClipPlane { Left, Right, Bottom, Top, Near, Far };
-
     // Project vertex from clip space to shadow map pixel coordinates
     void projectToShadowMap(Vertex& v) {
         if (std::abs(v.ndc.w) < 0.0001f) return;
@@ -117,84 +116,19 @@ private:
         v.p_z = v.ndc.z * oneOverW;
     }
 
-    // Sutherland-Hodgman clipping for shadow polygons
+    // Sutherland-Hodgman clipping for shadow polygons (reuses clipping.hpp)
     ShadowPolygon<Vertex> clipPolygon(const ShadowPolygon<Vertex>& poly) {
         std::vector<Vertex> polygon = poly.points;
 
         for (ClipPlane plane : {ClipPlane::Left, ClipPlane::Right, ClipPlane::Bottom,
                                 ClipPlane::Top, ClipPlane::Near, ClipPlane::Far}) {
-            polygon = clipAgainstPlane(polygon, plane);
+            polygon = ClipAgainstPlane(polygon, plane);
             if (polygon.empty()) {
                 return ShadowPolygon<Vertex>({}, poly.rotatedFaceNormal);
             }
         }
 
         return ShadowPolygon<Vertex>(polygon, poly.rotatedFaceNormal);
-    }
-
-    std::vector<Vertex> clipAgainstPlane(const std::vector<Vertex>& poly, ClipPlane plane) {
-        std::vector<Vertex> output;
-        if (poly.empty()) return output;
-
-        Vertex prev = poly.back();
-        bool prevInside = isInside(prev, plane);
-
-        for (const auto& curr : poly) {
-            bool currInside = isInside(curr, plane);
-
-            if (currInside != prevInside) {
-                if (prevInside) {
-                    float alpha = computeAlpha(prev, curr, plane);
-                    output.push_back(prev + (curr - prev) * alpha);
-                } else {
-                    float alpha = computeAlpha(curr, prev, plane);
-                    output.push_back(curr + (prev - curr) * alpha);
-                }
-            }
-            if (currInside) {
-                output.push_back(curr);
-            }
-            prev = curr;
-            prevInside = currInside;
-        }
-
-        return output;
-    }
-
-    bool isInside(const Vertex& v, ClipPlane plane) {
-        const auto& p = v.ndc;
-        switch (plane) {
-            case ClipPlane::Left:   return p.x >= -p.w;
-            case ClipPlane::Right:  return p.x <= p.w;
-            case ClipPlane::Bottom: return p.y >= -p.w;
-            case ClipPlane::Top:    return p.y <= p.w;
-            case ClipPlane::Near:   return p.z >= -p.w;
-            case ClipPlane::Far:    return p.z <= p.w;
-        }
-        return false;
-    }
-
-    float computeAlpha(const Vertex& a, const Vertex& b, ClipPlane plane) {
-        const auto& pa = a.ndc;
-        const auto& pb = b.ndc;
-        float num = 0, denom = 1;
-
-        switch (plane) {
-            case ClipPlane::Left:
-                num = pa.x + pa.w; denom = (pa.x + pa.w) - (pb.x + pb.w); break;
-            case ClipPlane::Right:
-                num = pa.x - pa.w; denom = (pa.x - pa.w) - (pb.x - pb.w); break;
-            case ClipPlane::Bottom:
-                num = pa.y + pa.w; denom = (pa.y + pa.w) - (pb.y + pb.w); break;
-            case ClipPlane::Top:
-                num = pa.y - pa.w; denom = (pa.y - pa.w) - (pb.y - pb.w); break;
-            case ClipPlane::Near:
-                num = pa.z + pa.w; denom = (pa.z + pa.w) - (pb.z + pb.w); break;
-            case ClipPlane::Far:
-                num = pa.z - pa.w; denom = (pa.z - pa.w) - (pb.z - pb.w); break;
-        }
-
-        return denom != 0.0f ? num / denom : 0.0f;
     }
 
     void drawPolygon(ShadowPolygon<Vertex>& polygon) {

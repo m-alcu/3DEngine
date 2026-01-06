@@ -301,6 +301,7 @@ int main(int, char**)
         }
 
         solidRenderer.drawScene(*scene, scene->zNear, scene->zFar, scene->viewAngle);
+        solidRenderer.drawShadowMapOverlay(*scene);
 
         // Rendering
         ImGui::Render();

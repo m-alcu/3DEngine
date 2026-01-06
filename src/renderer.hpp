@@ -66,7 +66,7 @@ class Renderer {
             scene.shadowMap->clear();
 
             // Calculate scene bounds for shadow map (adjust these based on your scene)
-            slib::vec3 sceneCenter = {0.0f, 0.0f, -1000.0f};
+            slib::vec3 sceneCenter = {0.0f, 0.0f, -500.0f};
             float sceneRadius = 1500.0f;
 
             // Build light matrices
@@ -112,6 +112,95 @@ class Renderer {
 			scene.forwardNeg = { -scene.camera.forward.x, -scene.camera.forward.y, -scene.camera.forward.z };
         }
         
+        // Draw the shadow map as a small overlay in the corner of the screen
+        void drawShadowMapOverlay(Scene& scene, int overlaySize = 200, int margin = 10) {
+            if (!scene.shadowMap || !scene.shadowsEnabled) return;
+
+            const ShadowMap& sm = *scene.shadowMap;
+
+            // Position in bottom-left corner
+            int startX = margin;
+            int startY = scene.screen.height - overlaySize - margin;
+
+            // Find min/max depth for normalization (excluding max float values)
+            float minDepth = std::numeric_limits<float>::max();
+            float maxDepth = -std::numeric_limits<float>::max();
+
+            for (int i = 0; i < sm.width * sm.height; ++i) {
+                float d = sm.depthBuffer[i];
+                if (d < std::numeric_limits<float>::max() * 0.5f) {
+                    minDepth = std::min(minDepth, d);
+                    maxDepth = std::max(maxDepth, d);
+                }
+            }
+
+            // Avoid division by zero
+            float depthRange = maxDepth - minDepth;
+            if (depthRange < 0.0001f) depthRange = 1.0f;
+
+            // Scale factors for sampling the shadow map
+            float scaleX = static_cast<float>(sm.width) / overlaySize;
+            float scaleY = static_cast<float>(sm.height) / overlaySize;
+
+            for (int y = 0; y < overlaySize; ++y) {
+                for (int x = 0; x < overlaySize; ++x) {
+                    int screenX = startX + x;
+                    int screenY = startY + y;
+
+                    // Bounds check
+                    if (screenX < 0 || screenX >= scene.screen.width ||
+                        screenY < 0 || screenY >= scene.screen.height) {
+                        continue;
+                    }
+
+                    // Sample from shadow map
+                    int smX = static_cast<int>(x * scaleX);
+                    int smY = static_cast<int>(y * scaleY);
+                    smX = std::clamp(smX, 0, sm.width - 1);
+                    smY = std::clamp(smY, 0, sm.height - 1);
+
+                    float depth = sm.depthBuffer[smY * sm.width + smX];
+
+                    uint8_t gray;
+                    if (depth >= std::numeric_limits<float>::max() * 0.5f) {
+                        // No geometry - show as black
+                        gray = 0;
+                    } else {
+                        // Normalize depth to 0-255
+                        float normalized = (depth - minDepth) / depthRange;
+                        gray = static_cast<uint8_t>(std::clamp(normalized * 255.0f, 0.0f, 255.0f));
+                    }
+
+                    // ARGB format
+                    uint32_t color = (255 << 24) | (gray << 16) | (gray << 8) | gray;
+                    scene.pixels[screenY * scene.screen.width + screenX] = color;
+                }
+            }
+
+            // Draw border around the overlay
+            uint32_t borderColor = (255 << 24) | (255 << 16) | (255 << 8) | 255; // White border
+            for (int x = 0; x < overlaySize; ++x) {
+                int topY = startY;
+                int bottomY = startY + overlaySize - 1;
+                if (startX + x >= 0 && startX + x < scene.screen.width) {
+                    if (topY >= 0 && topY < scene.screen.height)
+                        scene.pixels[topY * scene.screen.width + startX + x] = borderColor;
+                    if (bottomY >= 0 && bottomY < scene.screen.height)
+                        scene.pixels[bottomY * scene.screen.width + startX + x] = borderColor;
+                }
+            }
+            for (int y = 0; y < overlaySize; ++y) {
+                int leftX = startX;
+                int rightX = startX + overlaySize - 1;
+                if (startY + y >= 0 && startY + y < scene.screen.height) {
+                    if (leftX >= 0 && leftX < scene.screen.width)
+                        scene.pixels[(startY + y) * scene.screen.width + leftX] = borderColor;
+                    if (rightX >= 0 && rightX < scene.screen.width)
+                        scene.pixels[(startY + y) * scene.screen.width + rightX] = borderColor;
+                }
+            }
+        }
+
         Rasterizer<FlatEffect> flatRasterizer;
         Rasterizer<GouraudEffect> gouraudRasterizer;
         Rasterizer<PhongEffect> phongRasterizer;
