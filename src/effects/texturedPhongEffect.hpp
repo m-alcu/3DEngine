@@ -120,6 +120,14 @@ public:
           std::max(0.0f, smath::dot(R, scene.forwardNeg)); // viewer
       float spec = std::pow(specAngle, poly.material.Ns);
 
+      // Shadow calculation
+      float shadow = 1.0f;
+      if (scene.shadowMap && scene.shadowsEnabled) {
+        shadow = scene.shadowMap->sampleShadow(vRaster.world, diff);
+        diff *= shadow;
+        spec *= shadow;
+      }       
+
       TextureSampler<Vertex> sampler(vRaster, poly.material.map_Kd,
                                      poly.material.map_Kd.textureFilter);
       return sampler.sample(diff, Ks.x * spec, Ks.y * spec, Ks.z * spec)

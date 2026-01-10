@@ -14,22 +14,22 @@ public:
   public:
     Vertex() {}
 
-    Vertex(int32_t px, int32_t py, float pz, slib::vec4 vp, slib::zvec2 _tex,
+    Vertex(int32_t px, int32_t py, float pz, slib::vec4 vp, slib::zvec2 _tex, slib::vec3 _world,
            bool _broken)
-        : p_x(px), p_y(py), p_z(pz), ndc(vp), tex(_tex), broken(_broken) {}
+        : p_x(px), p_y(py), p_z(pz), ndc(vp), tex(_tex), world(_world), broken(_broken) {}
 
     Vertex operator+(const Vertex &v) const {
-      return Vertex(p_x + v.p_x, p_y, p_z + v.p_z, ndc + v.ndc, tex + v.tex,
+      return Vertex(p_x + v.p_x, p_y, p_z + v.p_z, ndc + v.ndc, tex + v.tex, world + v.world,
                     true);
     }
 
     Vertex operator-(const Vertex &v) const {
-      return Vertex(p_x - v.p_x, p_y, p_z - v.p_z, ndc - v.ndc, tex - v.tex,
+      return Vertex(p_x - v.p_x, p_y, p_z - v.p_z, ndc - v.ndc, tex - v.tex, world - v.world,
                     true);
     }
 
     Vertex operator*(const float &rhs) const {
-      return Vertex(p_x * rhs, p_y, p_z * rhs, ndc * rhs, tex * rhs, true);
+      return Vertex(p_x * rhs, p_y, p_z * rhs, ndc * rhs, tex * rhs, world * rhs, true);
     }
 
     Vertex &operator+=(const Vertex &v) {
@@ -37,6 +37,7 @@ public:
       p_z += v.p_z;
       ndc += v.ndc;
       tex += v.tex;
+      world += v.world;
       broken = true;
       return *this;
     }
@@ -45,12 +46,14 @@ public:
       p_x += v.p_x;
       p_z += v.p_z;
       tex += v.tex;
+      world += v.world;
       return *this;
     }
 
     Vertex &hraster(const Vertex &v) {
       p_z += v.p_z;
       tex += v.tex;
+      world += v.world;
       return *this;
     }
 

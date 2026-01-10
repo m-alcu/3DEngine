@@ -16,23 +16,23 @@ public:
     Vertex() {}
 
     Vertex(int32_t px, int32_t py, float pz, slib::vec4 vp, slib::zvec2 _tex,
-           float _diffuse, bool _broken)
-        : p_x(px), p_y(py), p_z(pz), ndc(vp), tex(_tex), diffuse(_diffuse),
+           float _diffuse, slib::vec3 _world, bool _broken)
+        : p_x(px), p_y(py), p_z(pz), ndc(vp), tex(_tex), diffuse(_diffuse), world(_world),
           broken(_broken) {}
 
     Vertex operator+(const Vertex &v) const {
-      return Vertex(p_x + v.p_x, p_y, p_z + v.p_z, ndc + v.ndc, tex + v.tex,
-                    diffuse + v.diffuse, true);
+      return Vertex(p_x + v.p_x, p_y, p_z + v.p_z, ndc + v.ndc, tex + v.tex, 
+                    diffuse + v.diffuse, world + v.world, true);
     }
 
     Vertex operator-(const Vertex &v) const {
-      return Vertex(p_x - v.p_x, p_y, p_z - v.p_z, ndc - v.ndc, tex - v.tex,
-                    diffuse - v.diffuse, true);
+      return Vertex(p_x - v.p_x, p_y, p_z - v.p_z, ndc - v.ndc, tex - v.tex, 
+                    diffuse - v.diffuse, world - v.world, true);
     }
 
     Vertex operator*(const float &rhs) const {
       return Vertex(p_x * rhs, p_y, p_z * rhs, ndc * rhs, tex * rhs,
-                    diffuse * rhs, true);
+                    diffuse * rhs, world * rhs, true);
     }
 
     Vertex &operator+=(const Vertex &v) {
@@ -41,6 +41,7 @@ public:
       ndc += v.ndc;
       tex += v.tex;
       diffuse += v.diffuse;
+      world += v.world;
       return *this;
     }
 
@@ -49,6 +50,7 @@ public:
       p_z += v.p_z;
       tex += v.tex;
       diffuse += v.diffuse;
+      world += v.world;
       return *this;
     }
 
@@ -56,6 +58,7 @@ public:
       p_z += v.p_z;
       tex += v.tex;
       diffuse += v.diffuse;
+      world += v.world;
       return *this;
     }
 
@@ -109,7 +112,14 @@ public:
 
       TextureSampler<Vertex> sampler(vRaster, poly.material.map_Kd,
                                      poly.material.map_Kd.textureFilter);
-      return sampler.sample(vRaster.diffuse, 0, 0, 0).toBgra();
+
+      // Shadow calculation
+      float shadow = 1.0f;
+      if (scene.shadowMap && scene.shadowsEnabled) {
+        shadow = scene.shadowMap->sampleShadow(vRaster.world, vRaster.diffuse);
+      }
+                                     
+      return sampler.sample(vRaster.diffuse * shadow, 0, 0, 0).toBgra();
     }
   };
 
