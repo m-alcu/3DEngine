@@ -106,7 +106,7 @@ public:
       // Shadow calculation
       float shadow = 1.0f;
       if (scene.shadowMap && scene.shadowsEnabled) {
-        shadow = scene.shadowMap->sampleShadow(vRaster.world);
+        shadow = scene.shadowMap->sampleShadow(vRaster.world, vRaster.diffuse);
       }
 
       // Shadow affects diffuse, not ambient
