@@ -93,8 +93,7 @@ public:
       Projection<Vertex> projection;
       for (auto &point : poly.points) {
         const slib::vec3 &luxDirection = scene.light.getDirection(point.world);
-        point.diffuse = std::max(0.0f, smath::dot(point.normal, luxDirection)) *
-                        scene.light.intensity; // diffuse scalar
+        point.diffuse = std::max(0.0f, smath::dot(point.normal, luxDirection)); // diffuse scalar
         projection.view(scene, point, false);
       }
     }
@@ -111,7 +110,7 @@ public:
       }
 
       // Shadow affects diffuse, not ambient
-      slib::vec3 color = poly.material.Ka + poly.material.Kd * vRaster.diffuse * shadow;
+      slib::vec3 color = poly.material.Ka + poly.material.Kd * vRaster.diffuse * scene.light.intensity * shadow;
       return Color(color).toBgra();
     }
   };

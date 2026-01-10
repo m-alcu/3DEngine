@@ -91,9 +91,8 @@ public:
       */
 
       poly.flatDiffuse =
-          std::max(0.0f, smath::dot(poly.rotatedFaceNormal, luxDirection)) *
-          scene.light.intensity;
-      slib::vec3 color = Ka + Kd * poly.flatDiffuse;
+          std::max(0.0f, smath::dot(poly.rotatedFaceNormal, luxDirection));
+      slib::vec3 color = Ka + Kd * poly.flatDiffuse * scene.light.intensity;
       poly.flatColor =
           Color(color).toBgra(); // assumes vec3 uses .r/g/b or [0]/[1]/[2]
 
@@ -110,18 +109,13 @@ public:
       // Shadow calculation
       float shadow = 1.0f;
       if (scene.shadowMap && scene.shadowsEnabled) {
-        shadow = scene.shadowMap->sampleShadow(vRaster.world);
-      }
-
-      // If no shadow, return precomputed flat color
-      if (shadow >= 1.0f) {
-        return poly.flatColor;
+        shadow = scene.shadowMap->sampleShadow(vRaster.world, poly.flatDiffuse);
       }
 
       // Recompute color with shadow applied to diffuse only
       const auto &Ka = poly.material.Ka;
       const auto &Kd = poly.material.Kd;
-      slib::vec3 color = Ka + Kd * poly.flatDiffuse * shadow;
+      slib::vec3 color = Ka + Kd * poly.flatDiffuse * scene.light.intensity * shadow;
       return Color(color).toBgra();
     }
   };

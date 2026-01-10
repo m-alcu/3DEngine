@@ -109,7 +109,7 @@ public:
       slib::vec3 L = luxDirection;                     // Light direction
 
       // Diffuse component
-      float diff = std::max(0.0f, smath::dot(N, L)) * scene.light.intensity;
+      float diff = std::max(0.0f, smath::dot(N, L));
 
       // Halfway vector H = normalize(L + V)
       const slib::vec3 &halfwayVector =
@@ -124,11 +124,11 @@ public:
       // Shadow calculation
       float shadow = 1.0f;
       if (scene.shadowMap && scene.shadowsEnabled) {
-        shadow = scene.shadowMap->sampleShadow(vRaster.world);
+        shadow = scene.shadowMap->sampleShadow(vRaster.world, diff);
       }
 
       // Shadow affects diffuse and specular, not ambient
-      slib::vec3 color = Ka + (Kd * diff + Ks * spec) * shadow;
+      slib::vec3 color = Ka + (Kd * diff * scene.light.intensity + Ks * spec) * shadow;
       return Color(color).toBgra();
     }
   };

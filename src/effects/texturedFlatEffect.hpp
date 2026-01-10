@@ -105,7 +105,15 @@ public:
                         Polygon<Vertex> &poly) const {
       TextureSampler<Vertex> sampler(vRaster, poly.material.map_Kd,
                                      poly.material.map_Kd.textureFilter);
-      return sampler.sample(poly.flatDiffuse, 0, 0, 0).toBgra();
+
+      // Shadow calculation
+      float shadow = 1.0f;
+      
+      if (scene.shadowMap && scene.shadowsEnabled) {
+        shadow = scene.shadowMap->sampleShadow(vRaster.world, poly.flatDiffuse);
+      }
+
+      return sampler.sample(poly.flatDiffuse * shadow, 0, 0, 0).toBgra();
     }
   };
 

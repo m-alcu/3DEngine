@@ -106,8 +106,7 @@ public:
       const slib::vec3 &luxDirection = scene.light.getDirection(vRaster.world);
 
       slib::vec3 normal = smath::normalize(vRaster.normal);
-      float diff = std::max(0.0f, smath::dot(normal, luxDirection)) *
-                   scene.light.intensity;
+      float diff = std::max(0.0f, smath::dot(normal, luxDirection));
 
       slib::vec3 R =
           normal * 2.0f * smath::dot(normal, luxDirection) - luxDirection;
@@ -124,11 +123,11 @@ public:
       // Shadow calculation
       float shadow = 1.0f;
       if (scene.shadowMap && scene.shadowsEnabled) {
-        shadow = scene.shadowMap->sampleShadow(vRaster.world);
+        shadow = scene.shadowMap->sampleShadow(vRaster.world, diff);
       }
 
       // Shadow affects diffuse and specular, not ambient
-      slib::vec3 color = Ka + (Kd * diff + Ks * spec) * shadow;
+      slib::vec3 color = Ka + (Kd * diff * scene.light.intensity + Ks * spec) * shadow;
       return Color(color).toBgra(); // assumes vec3 uses .r/g/b or [0]/[1]/[2]
     }
   };

@@ -20,7 +20,7 @@ public:
     slib::mat4 lightSpaceMatrix;
 
     // Shadow bias parameters for slope-scaled bias
-    float minBias = 0.005f;  // Minimum bias (surfaces facing the light)
+    float minBias = 0.025f;  // Minimum bias (surfaces facing the light)
     float maxBias = 0.05f;   // Maximum bias (surfaces at grazing angles)
 
     // PCF kernel size (1 = no filtering, 2 = 5x5, etc.)
@@ -94,10 +94,7 @@ public:
     // Calculate dynamic slope-scaled bias based on surface angle to light
     // normal: surface normal (normalized)
     // lightDir: direction TO the light (normalized)
-    float calculateBias(const slib::vec3& normal, const slib::vec3& lightDir) const {
-        // cosTheta = dot(N, L), clamped to avoid negative values
-        float cosTheta = std::max(smath::dot(normal, lightDir), 0.0f);
-
+    float calculateBias(float cosTheta) const {
         // Slope scale: when surface is perpendicular to light (cosTheta=1), use minBias
         // When surface is at grazing angle (cosTheta~0), use maxBias
         // Using tan(acos(x)) = sqrt(1-x²)/x for slope factor
@@ -113,7 +110,15 @@ public:
     // Sample shadow at a world position with dynamic bias
     // Returns: 1.0 = fully lit, 0.0 = fully shadowed
     float sampleShadow(const slib::vec3& worldPos, const slib::vec3& normal, const slib::vec3& lightDir) const {
-        float dynamicBias = calculateBias(normal, lightDir);
+        float cosTheta = std::max(smath::dot(normal, lightDir), 0.0f);
+        float dynamicBias = calculateBias(cosTheta);
+        return sampleShadowInternal(worldPos, dynamicBias);
+    }
+
+    // Sample shadow at a world position and cosTheta in case is available
+    // Returns: 1.0 = fully lit, 0.0 = fully shadowed
+    float sampleShadow(const slib::vec3& worldPos, float cosTheta) const {
+        float dynamicBias = calculateBias(cosTheta);
         return sampleShadowInternal(worldPos, dynamicBias);
     }
 
