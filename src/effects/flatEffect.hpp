@@ -79,8 +79,6 @@ public:
     void operator()(Polygon<Vertex> &poly, const Scene &scene) const {
 
       Projection<Vertex> projection;
-      const auto &Ka = poly.material.Ka; // vec3
-      const auto &Kd = poly.material.Kd; // vec3
       const slib::vec3 &luxDirection = scene.light.getDirection(
           poly.points[0].world); // any point aproximately the same
 
@@ -89,13 +87,8 @@ public:
       screen, Light is also set to point towards the screen. So, it's resulting
       in a positive dot product.
       */
-
       poly.flatDiffuse =
           std::max(0.0f, smath::dot(poly.rotatedFaceNormal, luxDirection));
-      slib::vec3 color = Ka + Kd * poly.flatDiffuse * scene.light.intensity;
-      poly.flatColor =
-          Color(color).toBgra(); // assumes vec3 uses .r/g/b or [0]/[1]/[2]
-
       for (auto &point : poly.points) {
         projection.view(scene, point, false);
       }
