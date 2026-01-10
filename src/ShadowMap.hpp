@@ -19,8 +19,9 @@ public:
     // Combined matrix for transforming world coords to light clip space
     slib::mat4 lightSpaceMatrix;
 
-    // Shadow bias to prevent acne (adjust based on scene scale)
-    float bias = 0.05f;
+    // Shadow bias parameters for slope-scaled bias
+    float minBias = 0.005f;  // Minimum bias (surfaces facing the light)
+    float maxBias = 0.05f;   // Maximum bias (surfaces at grazing angles)
 
     // PCF kernel size (1 = no filtering, 2 = 5x5, etc.)
     int pcfRadius = 1;
@@ -90,9 +91,40 @@ public:
         lightSpaceMatrix = lightViewMatrix * lightProjMatrix;
     }
 
-    // Sample shadow at a world position
+    // Calculate dynamic slope-scaled bias based on surface angle to light
+    // normal: surface normal (normalized)
+    // lightDir: direction TO the light (normalized)
+    float calculateBias(const slib::vec3& normal, const slib::vec3& lightDir) const {
+        // cosTheta = dot(N, L), clamped to avoid negative values
+        float cosTheta = std::max(smath::dot(normal, lightDir), 0.0f);
+
+        // Slope scale: when surface is perpendicular to light (cosTheta=1), use minBias
+        // When surface is at grazing angle (cosTheta~0), use maxBias
+        // Using tan(acos(x)) = sqrt(1-x²)/x for slope factor
+        float slopeFactor = 1.0f;
+        if (cosTheta > 0.001f) {
+            slopeFactor = std::sqrt(1.0f - cosTheta * cosTheta) / cosTheta;
+            slopeFactor = std::min(slopeFactor, 10.0f); // Clamp to avoid extreme values
+        }
+
+        return std::clamp(minBias + minBias * slopeFactor, minBias, maxBias);
+    }
+
+    // Sample shadow at a world position with dynamic bias
+    // Returns: 1.0 = fully lit, 0.0 = fully shadowed
+    float sampleShadow(const slib::vec3& worldPos, const slib::vec3& normal, const slib::vec3& lightDir) const {
+        float dynamicBias = calculateBias(normal, lightDir);
+        return sampleShadowInternal(worldPos, dynamicBias);
+    }
+
+    // Sample shadow at a world position (legacy, uses average of min/max bias)
     // Returns: 1.0 = fully lit, 0.0 = fully shadowed
     float sampleShadow(const slib::vec3& worldPos) const {
+        return sampleShadowInternal(worldPos, (minBias + maxBias) * 0.5f);
+    }
+
+private:
+    float sampleShadowInternal(const slib::vec3& worldPos, float bias) const {
         // Transform world position to light clip space
         slib::vec4 lightSpacePos = slib::vec4(worldPos, 1.0f) * lightSpaceMatrix;
 
@@ -120,15 +152,14 @@ public:
         }
 
         if (pcfRadius <= 1) {
-            return sampleShadowSingle(u, v, currentDepth);
+            return sampleShadowSingle(u, v, currentDepth, bias);
         } else {
-            return sampleShadowPCF(u, v, currentDepth);
+            return sampleShadowPCF(u, v, currentDepth, bias);
         }
     }
 
-private:
     // Single sample shadow test
-    float sampleShadowSingle(float u, float v, float currentDepth) const {
+    float sampleShadowSingle(float u, float v, float currentDepth, float bias) const {
         int sx = static_cast<int>(u * width);
         int sy = static_cast<int>(v * height);
 
@@ -143,7 +174,7 @@ private:
     }
 
     // PCF (Percentage Closer Filtering) for soft shadow edges
-    float sampleShadowPCF(float u, float v, float currentDepth) const {
+    float sampleShadowPCF(float u, float v, float currentDepth, float bias) const {
         float shadow = 0.0f;
         int samples = 0;
 
