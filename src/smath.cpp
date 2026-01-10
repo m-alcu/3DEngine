@@ -74,10 +74,12 @@ namespace smath
 
     slib::mat4 ortho(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar)
     {
+        const float nearmfar = zNear - zFar;
+
         slib::mat4 mat(
             {{2.0f / (right - left), 0, 0, 0},
              {0, 2.0f / (top - bottom), 0, 0},
-             {0, 0, -2.0f / (zFar - zNear), 0},
+             {0, 0, 2.0f / nearmfar, 0},
              {-(right + left) / (right - left), -(top + bottom) / (top - bottom), -(zFar + zNear) / (zFar - zNear), 1}});
         return mat;
     }

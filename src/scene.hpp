@@ -32,7 +32,8 @@ enum class SceneType {
     KNOT,
     STAR,
     AMIGA,
-    WORLD
+    WORLD,
+    SHADOWTEST
 };
 
 static const char* sceneNames[] = {
@@ -43,7 +44,8 @@ static const char* sceneNames[] = {
     "Knot",
     "Star",
     "Amiga",
-    "World"
+    "World",
+    "Shadow Test"
 };
 
 typedef struct Screen

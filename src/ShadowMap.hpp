@@ -20,7 +20,7 @@ public:
     slib::mat4 lightSpaceMatrix;
 
     // Shadow bias to prevent acne (adjust based on scene scale)
-    float bias = 0.005f;
+    float bias = 0.05f;
 
     // PCF kernel size (1 = no filtering, 2 = 5x5, etc.)
     int pcfRadius = 1;
@@ -31,11 +31,11 @@ public:
           lightProjMatrix(smath::identity()),
           lightSpaceMatrix(smath::identity())
     {
-        depthBuffer.resize(static_cast<size_t>(w) * h, std::numeric_limits<float>::max());
+        depthBuffer.resize(static_cast<size_t>(w) * h, -std::numeric_limits<float>::max());
     }
 
     void clear() {
-        std::fill(depthBuffer.begin(), depthBuffer.end(), std::numeric_limits<float>::max());
+        std::fill(depthBuffer.begin(), depthBuffer.end(), -std::numeric_limits<float>::max());
     }
 
     void resize(int w, int h) {
@@ -56,7 +56,7 @@ public:
     bool testAndSetDepth(int x, int y, float depth) {
         if (x >= 0 && x < width && y >= 0 && y < height) {
             size_t idx = static_cast<size_t>(y) * width + x;
-            if (depth < depthBuffer[idx]) {
+            if (depth > depthBuffer[idx]) {
                 depthBuffer[idx] = depth;
                 return true;
             }
@@ -139,7 +139,7 @@ private:
         float storedDepth = getDepth(sx, sy);
 
         // If current depth (with bias) is greater than stored depth, we're in shadow
-        return (currentDepth - bias > storedDepth) ? 0.0f : 1.0f;
+        return (currentDepth + bias > storedDepth) ? 1.0f : 0.0f;
     }
 
     // PCF (Percentage Closer Filtering) for soft shadow edges
@@ -164,7 +164,7 @@ private:
                     sy = std::clamp(sy, 0, height - 1);
 
                     float storedDepth = getDepth(sx, sy);
-                    shadow += (currentDepth - bias > storedDepth) ? 0.0f : 1.0f;
+                    shadow += (currentDepth + bias > storedDepth) ? 1.0f : 0.0f;
                     samples++;
                 }
             }

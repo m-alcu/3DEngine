@@ -7,6 +7,7 @@
 #include "tetrakisScene.hpp"
 #include "torusScene.hpp"
 #include "worldScene.hpp"
+#include "shadowTestScene.hpp"
 
 std::unique_ptr<Scene> SceneFactory::createScene(SceneType type, Screen scr) {
     switch (type) {
@@ -26,6 +27,8 @@ std::unique_ptr<Scene> SceneFactory::createScene(SceneType type, Screen scr) {
 			return std::make_unique<TorusScene>(scr);
 		case SceneType::WORLD:
 			return std::make_unique<WorldScene>(scr);
+		case SceneType::SHADOWTEST:
+			return std::make_unique<ShadowTestScene>(scr);
         default:
             return nullptr;
     }
