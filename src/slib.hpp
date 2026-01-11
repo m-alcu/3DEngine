@@ -4,6 +4,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include "texture.hpp"
 
 namespace slib
 {
@@ -14,20 +15,8 @@ namespace slib
 
     struct material;
 
-    enum class TextureFilter
-    {
-        NEIGHBOUR,
-        BILINEAR
-    };
-
-    struct texture
-    {
-        int w, h;
-        std::vector<unsigned char> data;
-        unsigned int bpp;
-        unsigned int rowStride; // == w * bpp (set once)
-        TextureFilter textureFilter;
-    };
+    // Alias for backwards compatibility
+    using texture = Texture;
 
     struct zvec2
     {

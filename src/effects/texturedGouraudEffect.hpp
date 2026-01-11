@@ -3,7 +3,6 @@
 #include "../polygon.hpp"
 #include "../projection.hpp"
 #include "../slib.hpp"
-#include "../textureSampler.hpp"
 #include <algorithm>
 
 
@@ -109,17 +108,17 @@ public:
   public:
     uint32_t operator()(Vertex &vRaster, const Scene &scene,
                         Polygon<Vertex> &poly) const {
-
-      TextureSampler<Vertex> sampler(vRaster, poly.material.map_Kd,
-                                     poly.material.map_Kd.textureFilter);
-
       // Shadow calculation
       float shadow = 1.0f;
       if (scene.shadowMap && scene.shadowsEnabled) {
         shadow = scene.shadowMap->sampleShadow(vRaster.world, vRaster.diffuse);
       }
-                                     
-      return sampler.sample(vRaster.diffuse * shadow, 0, 0, 0).toBgra();
+
+      float diff = vRaster.diffuse * shadow;
+      float w = 1.0f / vRaster.tex.w;
+      float r, g, b;
+      poly.material.map_Kd.sample(vRaster.tex.x * w, vRaster.tex.y * w, r, g, b);
+      return Color(r * diff, g * diff, b * diff).toBgra();
     }
   };
 

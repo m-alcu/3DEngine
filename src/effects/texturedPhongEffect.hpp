@@ -3,7 +3,6 @@
 #include "../polygon.hpp"
 #include "../projection.hpp"
 #include "../slib.hpp"
-#include "../textureSampler.hpp"
 #include <cmath>
 
 // solid color attribute not interpolated
@@ -106,8 +105,6 @@ public:
     uint32_t operator()(Vertex &vRaster, const Scene &scene,
                         Polygon<Vertex> &poly) const {
 
-      const auto &Ka = poly.material.Ka; // vec3
-      const auto &Kd = poly.material.Kd; // vec3
       const auto &Ks = poly.material.Ks; // vec3
       const slib::vec3 &luxDirection = scene.light.getDirection(vRaster.world);
 
@@ -121,16 +118,16 @@ public:
       float spec = std::pow(specAngle, poly.material.Ns);
 
       // Shadow calculation
-      float shadow = 1.0f;
       if (scene.shadowMap && scene.shadowsEnabled) {
-        shadow = scene.shadowMap->sampleShadow(vRaster.world, diff);
+        float shadow = scene.shadowMap->sampleShadow(vRaster.world, diff);
         diff *= shadow;
         spec *= shadow;
-      }       
+      }
 
-      TextureSampler<Vertex> sampler(vRaster, poly.material.map_Kd,
-                                     poly.material.map_Kd.textureFilter);
-      return sampler.sample(diff, Ks.x * spec, Ks.y * spec, Ks.z * spec)
+      float w = 1.0f / vRaster.tex.w;
+      float r, g, b;
+      poly.material.map_Kd.sample(vRaster.tex.x * w, vRaster.tex.y * w, r, g, b);
+      return Color(r * diff + Ks.x * spec, g * diff + Ks.y * spec, b * diff + Ks.z * spec)
           .toBgra();
     }
   };
