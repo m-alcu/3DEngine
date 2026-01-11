@@ -129,7 +129,7 @@ public:
 
     virtual int getColorFromMaterial(const float color);
 
-    slib::texture DecodePng(const char* filename);
+    Texture DecodePng(const char* filename);
 
     virtual void rotate(float xAngle, float yAngle, float zAngle);
 

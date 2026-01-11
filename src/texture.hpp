@@ -3,8 +3,6 @@
 #include <cstdint>
 #include <cmath>
 
-namespace slib {
-
 enum class TextureFilter {
     NEIGHBOUR,
     BILINEAR
@@ -104,4 +102,3 @@ public:
     }
 };
 
-} // namespace slib

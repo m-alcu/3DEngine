@@ -59,7 +59,7 @@ int Solid::getColorFromMaterial(const float color) {
     return (static_cast<int>(kaR * 255));
 }
 
-slib::texture Solid::DecodePng(const char* filename)
+Texture Solid::DecodePng(const char* filename)
 {
     std::vector<unsigned char> buffer;
     std::vector<unsigned char> image; // the raw pixels

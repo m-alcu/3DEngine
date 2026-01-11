@@ -17,6 +17,7 @@ namespace slib
 
     // Alias for backwards compatibility
     using texture = Texture;
+    using TextureFilter = ::TextureFilter;
 
     struct zvec2
     {

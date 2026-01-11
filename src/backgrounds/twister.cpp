@@ -3,7 +3,7 @@
 #include "twister.hpp"
 
 
-slib::texture Twister::DecodePng(const char* filename)
+Texture Twister::DecodePng(const char* filename)
 {
     std::vector<unsigned char> buffer;
     std::vector<unsigned char> image; // the raw pixels
@@ -29,7 +29,7 @@ slib::texture Twister::DecodePng(const char* filename)
 }
 
 
-void Twister::texLine(uint32_t* pixels, int pitch, int x1, int x2, int v, int l, const slib::texture& tex, int width) {
+void Twister::texLine(uint32_t* pixels, int pitch, int x1, int x2, int v, int l, const Texture& tex, int width) {
     int dx = std::abs(x2 - x1);
     if (dx == 0) return;
 
@@ -51,7 +51,7 @@ void Twister::texLine(uint32_t* pixels, int pitch, int x1, int x2, int v, int l,
     }
 }
 
-void Twister::rasterScan(uint32_t* pixels, int pitch, int v, float* x, const slib::texture& tex, int width) {
+void Twister::rasterScan(uint32_t* pixels, int pitch, int v, float* x, const Texture& tex, int width) {
     float lum[4];
     for (int i = 0; i < 4; ++i) {
         float len = 0.25f + std::abs(x[i] - x[(i + 1) % 4]);
