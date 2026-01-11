@@ -2,6 +2,7 @@
 #include <math.h>
 #include <cstdint>
 #include "icosahedron.hpp"
+#include "../material.hpp"
 
 void Icosahedron::loadVertices() {
     const float half = 50.f;
@@ -44,7 +45,7 @@ void Icosahedron::loadFaces() {
     MaterialProperties props = getMaterialProperties(MaterialType::Light);
     std::string mtlPath = "checker-map_tho.png";
 
-    slib::material mat{};
+    slib::Material mat{};
     mat.Ka = { props.k_a * 0xff, props.k_a * 0xff, props.k_a * 0xff };
     mat.Kd = { props.k_d * 0xff, props.k_d * 0xff, props.k_d * 0xff };
     mat.Ks = { props.k_s * 0xff, props.k_s * 0xff, props.k_s * 0xff };

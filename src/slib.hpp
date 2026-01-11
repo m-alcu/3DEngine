@@ -13,7 +13,7 @@ namespace slib
     struct vec4;
     struct mat4;
 
-    struct material;
+    class Material;
 
     // Alias for backwards compatibility
     using texture = Texture;
@@ -102,18 +102,4 @@ namespace slib
         vec4 operator*(const vec4& rhs) const;
     };
 
-    struct material
-    {
-        float Ns{};
-        vec3 Ka{};
-        vec3 Kd{};
-        vec3 Ks{};
-        vec3 Ke{};
-        float Ni{};
-        float d{};
-        int illum{};
-        texture map_Kd;
-        texture map_Ks;
-        texture map_Ns;
-    };
 } // namespace slib

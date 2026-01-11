@@ -2,6 +2,7 @@
 #include <math.h>
 #include <cstdint>
 #include "test.hpp"
+#include "../material.hpp"
 
 
 void Test::loadVertices() {
@@ -30,7 +31,7 @@ void Test::loadFaces() {
     std::vector<FaceData> faces;
 
     // Create and store the material
-    slib::material material{};
+    slib::Material material{};
     material.Ka = { properties.k_a * 0x00, properties.k_a * 0x58, properties.k_a * 0xfc };
     material.Kd = { properties.k_d * 0x00, properties.k_d * 0x58, properties.k_d * 0xfc }; 
     material.Ks = { properties.k_s * 0x00, properties.k_s * 0x58, properties.k_s * 0xfc };

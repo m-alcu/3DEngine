@@ -2,6 +2,7 @@
 #include <math.h>
 #include <cstdint>
 #include "tetrakis.hpp"
+#include "../material.hpp"
 
 void Tetrakis::loadVertices() {
     const float half = 50.f;
@@ -45,7 +46,7 @@ void Tetrakis::loadFaces() {
 
     std::string mtlPath = "checker-map_tho.png";
     // Create and store the material
-    slib::material material{};
+    slib::Material material{};
     material.Ka = { properties.k_a * 0x00, properties.k_a * 0x58, properties.k_a * 0xfc };
     material.Kd = { properties.k_d * 0x00, properties.k_d * 0x58, properties.k_d * 0xfc }; 
     material.Ks = { properties.k_s * 0x00, properties.k_s * 0x58, properties.k_s * 0xfc };

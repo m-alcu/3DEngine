@@ -3,6 +3,7 @@
 #include <vector>
 #include <map>
 #include "../slib.hpp"
+#include "../material.hpp"
 #include "../constants.hpp"
 
 enum class Shading {
@@ -93,7 +94,7 @@ public:
     Shading shading;
     Position position;
 	bool rotationEnabled = true;
-    std::map<std::string, slib::material> materials;
+    std::map<std::string, slib::Material> materials;
 
     int numVertices;
     int numFaces;
