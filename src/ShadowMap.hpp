@@ -24,7 +24,7 @@ public:
     float maxBias = 0.05f;   // Maximum bias (surfaces at grazing angles)
 
     // PCF kernel size (1 = no filtering, 2 = 5x5, etc.)
-    int pcfRadius = 1;
+    int pcfRadius = 2;
 
     ShadowMap(int w = 512, int h = 512)
         : width(w), height(h),
@@ -89,6 +89,39 @@ public:
 
         // Pre-compute combined matrix
         lightSpaceMatrix = lightViewMatrix * lightProjMatrix;
+
+        // Auto-calculate bias based on scene parameters
+        calculateOptimalBias(sceneRadius);
+    }
+
+    // Calculate optimal bias values based on shadow map resolution and scene scale
+    // Depth is stored in NDC space [-1, 1] after perspective divide (z/w)
+    void calculateOptimalBias(float sceneRadius) {
+        // Since depth is in NDC [-1, 1], the total depth range is 2.0
+        // The bias needs to account for:
+        // 1. Shadow map resolution (lower res = larger texels = more error)
+        // 2. Depth quantization in NDC space
+
+        // NDC depth range is always 2.0 (from -1 to 1)
+        constexpr float ndcDepthRange = 2.0f;
+
+        // A single texel spans this much in UV space: 1/width
+        // The depth error per texel is roughly: ndcDepthRange / width
+        // This represents the minimum depth difference we can reliably detect
+        float depthPerTexel = ndcDepthRange / static_cast<float>(width);
+
+        // minBias: for surfaces perpendicular to light (cosTheta ≈ 1)
+        // Need enough bias to overcome depth precision issues (~1 texel)
+        minBias = depthPerTexel * 0.5f;
+
+        // maxBias: for surfaces at grazing angles (cosTheta ≈ 0)
+        // Slope causes projected depth error, need more bias (~2-4 texels)
+        maxBias = depthPerTexel * 2.0f;
+
+        // Clamp to reasonable NDC values
+        minBias = std::clamp(minBias, 0.01f, 0.025f);
+        maxBias = std::clamp(maxBias, minBias * 2.0f, 0.10f);
+
     }
 
     // Calculate dynamic slope-scaled bias based on surface angle to light
