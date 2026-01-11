@@ -97,8 +97,8 @@ public:
 
   class PixelShader {
   public:
-    uint32_t operator()(Vertex &vRaster, const Scene &scene,
-                        Polygon<Vertex> &poly) const {
+    uint32_t operator()(const Vertex &vRaster, const Scene &scene,
+                        const Polygon<Vertex> &poly) const {
       // Shadow calculation
       float shadow = 1.0f;
       if (scene.shadowMap && scene.shadowsEnabled) {

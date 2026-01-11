@@ -103,8 +103,8 @@ public:
 
   class PixelShader {
   public:
-    uint32_t operator()(Vertex &vRaster, const Scene &scene,
-                        Polygon<Vertex> &poly) const {
+    uint32_t operator()(const Vertex &vRaster, const Scene &scene,
+                        const Polygon<Vertex> &poly) const {
 
       const auto &Ks = poly.material.Ks; // vec3
       const slib::vec3 &luxDirection = scene.light.getDirection(vRaster.world);

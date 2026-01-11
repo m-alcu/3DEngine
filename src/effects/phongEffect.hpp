@@ -97,8 +97,8 @@ public:
 
   class PixelShader {
   public:
-    uint32_t operator()(Vertex &vRaster, const Scene &scene,
-                        Polygon<Vertex> &poly) const {
+    uint32_t operator()(const Vertex &vRaster, const Scene &scene,
+                        const Polygon<Vertex> &poly) const {
 
       const auto &Ka = poly.material.Ka; // vec3
       const auto &Kd = poly.material.Kd; // vec3
