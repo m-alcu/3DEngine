@@ -13,7 +13,7 @@ namespace slib
     struct vec4;
     struct mat4;
 
-    class Material;
+    // Material moved to global namespace; keep no forward here
 
     // Alias for backwards compatibility
     using texture = Texture;

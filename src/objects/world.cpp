@@ -72,7 +72,7 @@ void World::loadFaces(int lat, int lon) {
 
     std::string mtlPath = "earth_texture.png";
 
-    slib::Material material{};
+    Material material{};
     material.Ka = { properties.k_a * 0x00, properties.k_a * 0x00, properties.k_a * 0x00 };
     material.Kd = { properties.k_d * 0xff, properties.k_d * 0x00, properties.k_d * 0x00 }; 
     material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };

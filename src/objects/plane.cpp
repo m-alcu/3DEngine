@@ -22,7 +22,7 @@ void Plane::loadFaces() {
 
     std::string materialKey = "planeMaterial";
 
-    slib::Material material{};
+    Material material{};
     material.Ka = { properties.k_a * 0x40, properties.k_a * 0x40, properties.k_a * 0x40 };
     material.Kd = { properties.k_d * 0xaa, properties.k_d * 0xaa, properties.k_d * 0xaa };
     material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };

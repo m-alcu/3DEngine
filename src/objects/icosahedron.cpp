@@ -45,7 +45,7 @@ void Icosahedron::loadFaces() {
     MaterialProperties props = getMaterialProperties(MaterialType::Light);
     std::string mtlPath = "checker-map_tho.png";
 
-    slib::Material mat{};
+    Material mat{};
     mat.Ka = { props.k_a * 0xff, props.k_a * 0xff, props.k_a * 0xff };
     mat.Kd = { props.k_d * 0xff, props.k_d * 0xff, props.k_d * 0xff };
     mat.Ks = { props.k_s * 0xff, props.k_s * 0xff, props.k_s * 0xff };

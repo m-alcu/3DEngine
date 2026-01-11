@@ -94,7 +94,7 @@ public:
     Shading shading;
     Position position;
 	bool rotationEnabled = true;
-    std::map<std::string, slib::Material> materials;
+    std::map<std::string, Material> materials;
 
     int numVertices;
     int numFaces;

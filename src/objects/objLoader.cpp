@@ -36,7 +36,7 @@ void ObjLoader::loadVertices(const std::string& filename) {
 
     std::string mtlPath = "checker-map_tho.png";
 
-    slib::Material material{};
+    Material material{};
     material.Ka = { properties.k_a * 0x00, properties.k_a * 0x00, properties.k_a * 0x00 };
     material.Kd = { properties.k_d * 0x00, properties.k_d * 0x58, properties.k_d * 0xfc }; 
     material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };

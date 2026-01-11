@@ -3,15 +3,13 @@
 #include "texture.hpp"
 #include "slib.hpp"
 
-namespace slib {
-
 class Material {
 public:
     float Ns{};
-    vec3 Ka{};
-    vec3 Kd{};
-    vec3 Ks{};
-    vec3 Ke{};
+    slib::vec3 Ka{};
+    slib::vec3 Kd{};
+    slib::vec3 Ks{};
+    slib::vec3 Ke{};
     float Ni{};
     float d{};
     int illum{};
@@ -19,5 +17,3 @@ public:
     Texture map_Ks;
     Texture map_Ns;
 };
-
-} // namespace slib

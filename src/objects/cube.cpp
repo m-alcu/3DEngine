@@ -58,7 +58,7 @@ void Cube::loadFaces() {
     std::string mtlPath = "checker-map_tho.png";
 
     // Create and store the material
-    slib::Material material{};
+    Material material{};
 
     material.Ka = { properties.k_a * 0x00, properties.k_a * 0x00, properties.k_a * 0x00 };
     material.Kd = { properties.k_d * 0xff, properties.k_d * 0xff, properties.k_d * 0xff };
