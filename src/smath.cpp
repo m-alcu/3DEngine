@@ -79,8 +79,8 @@ namespace smath
         slib::mat4 mat(
             {{2.0f / (right - left), 0, 0, 0},
              {0, 2.0f / (top - bottom), 0, 0},
-             {0, 0, -2.0f / nearmfar, 0},
-             {-(right + left) / (right - left), -(top + bottom) / (top - bottom), -(zFar + zNear) / nearmfar, 1}});
+             {0, 0, 2.0f / nearmfar, 0},
+             {-(right + left) / (right - left), -(top + bottom) / (top - bottom), (zFar + zNear) / nearmfar, 1}});
         return mat;
     }
 

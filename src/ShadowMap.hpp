@@ -244,8 +244,10 @@ private:
 
     void buildDirectionalLightMatrices(const Light& light, const slib::vec3& sceneCenter, float sceneRadius) {
         // Position the "light camera" far enough back along the light direction
+        // Note: light.direction points FROM the light source (inverted convention),
+        // so we ADD to move back toward where the light originates
         slib::vec3 lightDir = smath::normalize(light.direction);
-        slib::vec3 lightPos = sceneCenter - lightDir * sceneRadius * 2.0f;
+        slib::vec3 lightPos = sceneCenter + lightDir * sceneRadius * 2.0f;
 
         // Choose an up vector that isn't parallel to light direction
         slib::vec3 up = {0.0f, 1.0f, 0.0f};
