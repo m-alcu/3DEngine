@@ -23,8 +23,8 @@ public:
     float minBias = 0.025f;  // Minimum bias (surfaces facing the light)
     float maxBias = 0.05f;   // Maximum bias (surfaces at grazing angles)
 
-    // PCF kernel size (1 = no filtering, 2 = 5x5, etc.)
-    int pcfRadius = 2;
+    // PCF kernel size (0 = no filtering, 1 = 3x3, 2 = 5x5, etc.)
+    int pcfRadius = 1;
 
     ShadowMap(int w = 512, int h = 512)
         : width(w), height(h),
@@ -32,11 +32,11 @@ public:
           lightProjMatrix(smath::identity()),
           lightSpaceMatrix(smath::identity())
     {
-        depthBuffer.resize(static_cast<size_t>(w) * h, std::numeric_limits<float>::max());
+        depthBuffer.resize(static_cast<size_t>(w) * h, 1.0f);
     }
 
     void clear() {
-        std::fill(depthBuffer.begin(), depthBuffer.end(), std::numeric_limits<float>::max());
+        std::fill(depthBuffer.begin(), depthBuffer.end(), 1.0f);
     }
 
     void resize(int w, int h) {
@@ -189,7 +189,7 @@ private:
             return 1.0f;
         }
 
-        if (pcfRadius <= 1) {
+        if (pcfRadius < 1) {
             return sampleShadowSingle(u, v, currentDepth, bias);
         } else {
             return sampleShadowPCF(u, v, currentDepth, bias);

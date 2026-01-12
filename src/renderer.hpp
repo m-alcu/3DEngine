@@ -179,15 +179,13 @@ public:
     int startY = scene.screen.height - overlaySize - margin;
 
     // Find min/max depth for normalization (excluding max float values)
-    float minDepth = std::numeric_limits<float>::max();
-    float maxDepth = -std::numeric_limits<float>::max();
+    float minDepth = 1.0f;
+    float maxDepth = -1.0f;
 
     for (int i = 0; i < sm.width * sm.height; ++i) {
       float d = sm.depthBuffer[i];
-      if (d > -std::numeric_limits<float>::max() * 0.5f) {
-        minDepth = std::min(minDepth, d);
-        maxDepth = std::max(maxDepth, d);
-      }
+      minDepth = std::min(minDepth, d);
+      maxDepth = std::max(maxDepth, d);
     }
 
     // Avoid division by zero
@@ -219,12 +217,12 @@ public:
         float depth = sm.depthBuffer[smY * sm.width + smX];
 
         uint8_t gray;
-        if (depth >= std::numeric_limits<float>::max() * 0.5f) {
+        if (depth == 1.0f) {
           // No geometry - show as black
           gray = 0;
         } else {
-          // Normalize depth to 0-255
-          float normalized = (depth - minDepth) / depthRange;
+          // Normalize depth to 255-0 (inverse: closer = brighter)
+          float normalized = (maxDepth - depth) / depthRange;
           gray = static_cast<uint8_t>(
               std::clamp(normalized * 255.0f, 0.0f, 255.0f));
         }
