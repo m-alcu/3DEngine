@@ -136,7 +136,7 @@ public:
               scene.pixels);
     scene.zBuffer->Clear(); // Clear the zBuffer
 
-    zNear = 100.0f;    // Near plane distance
+    zNear = 10.0f;    // Near plane distance
     zFar = 10000.0f;   // Far plane distance
     viewAngle = 45.0f; // Field of view angle in degrees
 

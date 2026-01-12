@@ -105,14 +105,13 @@ public:
   public:
     uint32_t operator()(const Vertex &vRaster, const Scene &scene,
                         const Polygon<Vertex> &poly) const {
-      // Shadow calculation
-      float shadow = 1.0f;
+      float diff = poly.flatDiffuse;
 
       if (scene.shadowMap && scene.shadowsEnabled) {
-        shadow = scene.shadowMap->sampleShadow(vRaster.world, poly.flatDiffuse);
+        float shadow = scene.shadowMap->sampleShadow(vRaster.world, poly.flatDiffuse);
+        diff *= shadow;
       }
 
-      float diff = poly.flatDiffuse * shadow;
       float w = 1.0f / vRaster.tex.w;
       float r, g, b;
       poly.material.map_Kd.sample(vRaster.tex.x * w, vRaster.tex.y * w, r, g, b);
