@@ -130,7 +130,6 @@ public:
 
   void prepareFrame(Scene &scene, float zNear, float zFar, float viewAngle) {
 
-    slib::mat4 viewMatrix = smath::identity();
     // std::fill_n(scene.pixels, scene.screen.width * scene.screen.height, 0);
     std::copy(scene.backg,
               scene.backg + scene.screen.width * scene.screen.height,
@@ -148,14 +147,10 @@ public:
     slib::mat4 projectionMatrix =
         smath::perspective(zFar, zNear, aspectRatio, fovRadians);
 
-    if (scene.orbiting) {
-      viewMatrix =
-          smath::lookAt(scene.camera.pos, scene.camera.orbitTarget, {0, 1, 0});
-    } else {
-      viewMatrix = smath::fpsview(scene.camera.pos, scene.camera.pitch,
+    slib::mat4 viewMatrix = scene.orbiting ? 
+        smath::lookAt(scene.camera.pos, scene.camera.orbitTarget, {0, 1, 0}) :
+        smath::fpsview(scene.camera.pos, scene.camera.pitch,
                                         scene.camera.yaw, scene.camera.roll);
-    }
-
     scene.spaceMatrix = viewMatrix * projectionMatrix;
 
     // Used in BlinnPhong shading
