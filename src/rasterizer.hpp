@@ -15,8 +15,8 @@ class Rasterizer {
     public:
         using vertex = typename Effect::Vertex;
 
-        Rasterizer() :  fullTransformMat(smath::identity()), 
-                        normalTransformMat(smath::identity())
+        Rasterizer() :  modelMatrix(smath::identity()), 
+                        normalMatrix(smath::identity())
           {}
 
         void drawRenderable(Solid& sol, Scene& scn) {
@@ -38,8 +38,8 @@ class Rasterizer {
         std::vector<vertex> projectedPoints;
         Solid* solid = nullptr;  // Pointer to the abstract Solid
         Scene* scene = nullptr; // Pointer to the Scene
-        slib::mat4 fullTransformMat;
-        slib::mat4 normalTransformMat;        
+        slib::mat4 modelMatrix;
+        slib::mat4 normalMatrix;        
         Effect effect;
 		Projection<vertex> projection;
         
@@ -47,8 +47,8 @@ class Rasterizer {
             slib::mat4 rotate = smath::rotation(slib::vec3({solid->position.xAngle, solid->position.yAngle, solid->position.zAngle}));
             slib::mat4 translate = smath::translation(slib::vec3({solid->position.x, solid->position.y, solid->position.z}));
             slib::mat4 scale = smath::scale(slib::vec3({solid->position.zoom, solid->position.zoom, solid->position.zoom}));
-            fullTransformMat = translate * rotate * scale;
-            normalTransformMat = rotate;
+            modelMatrix = translate * rotate * scale;
+            normalMatrix = rotate;
         }
 
         void processVertices()
@@ -60,7 +60,7 @@ class Rasterizer {
                 solid->vertexData.end(),
                 projectedPoints.begin(),
                 [&](const auto& vData) {
-                    return effect.vs(vData, fullTransformMat, normalTransformMat, *scene);
+                    return effect.vs(vData, modelMatrix, normalMatrix, *scene);
                 }
             );
         }
@@ -71,7 +71,7 @@ class Rasterizer {
             for (int i = 0; i < static_cast<int>(solid->faceData.size()); ++i) {
                 const auto& faceDataEntry = solid->faceData[i];
                 slib::vec3 rotatedFaceNormal{};
-                rotatedFaceNormal = normalTransformMat * slib::vec4(faceDataEntry.faceNormal, 0);
+                rotatedFaceNormal = normalMatrix * slib::vec4(faceDataEntry.faceNormal, 0);
 
                 vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];
 
