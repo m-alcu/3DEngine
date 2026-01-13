@@ -125,29 +125,10 @@ public:
         return std::clamp(minBias + minBias * slopeFactor, minBias, maxBias);
     }
 
-    // Sample shadow at a world position with dynamic bias
-    // Returns: 1.0 = fully lit, 0.0 = fully shadowed
-    float sampleShadow(const slib::vec3& worldPos, const slib::vec3& normal, const slib::vec3& lightDir) const {
-        float cosTheta = std::max(smath::dot(normal, lightDir), 0.0f);
-        float dynamicBias = calculateBias(cosTheta);
-        return sampleShadowInternal(worldPos, dynamicBias);
-    }
-
     // Sample shadow at a world position and cosTheta in case is available
     // Returns: 1.0 = fully lit, 0.0 = fully shadowed
     float sampleShadow(const slib::vec3& worldPos, float cosTheta) const {
         float dynamicBias = calculateBias(cosTheta);
-        return sampleShadowInternal(worldPos, dynamicBias);
-    }
-
-    // Sample shadow at a world position (legacy, uses average of min/max bias)
-    // Returns: 1.0 = fully lit, 0.0 = fully shadowed
-    float sampleShadow(const slib::vec3& worldPos) const {
-        return sampleShadowInternal(worldPos, (minBias + maxBias) * 0.5f);
-    }
-
-private:
-    float sampleShadowInternal(const slib::vec3& worldPos, float bias) const {
         // Transform world position to light clip space
         slib::vec4 lightSpacePos = slib::vec4(worldPos, 1.0f) * lightSpaceMatrix;
 
@@ -175,11 +156,13 @@ private:
         }
 
         if (pcfRadius < 1) {
-            return sampleShadowSingle(u, v, currentDepth, bias);
+            return sampleShadowSingle(u, v, currentDepth, dynamicBias);
         } else {
-            return sampleShadowPCF(u, v, currentDepth, bias);
+            return sampleShadowPCF(u, v, currentDepth, dynamicBias);
         }
     }
+
+private:
 
     // Single sample shadow test
     float sampleShadowSingle(float u, float v, float currentDepth, float bias) const {
