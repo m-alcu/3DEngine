@@ -1,5 +1,4 @@
 #pragma once  
-#include "scene.hpp"
 
 template<typename vertex>
 concept has_tex = requires(vertex v) {
@@ -12,12 +11,12 @@ class Projection
 public:  
    Projection() {}  
    
-   void view(const Scene& scene, vertex& p, bool init) {
+   void view(const int32_t width, const int32_t height, vertex& p, bool init) {
 
        if (p.broken || init) {
            float oneOverW = 1.0f / p.ndc.w;
-           float sx = (p.ndc.x * oneOverW + 1.0f) * (scene.screen.width / 2.0f) + 0.5f; // Convert from NDC to screen coordinates
-           float sy = (p.ndc.y * oneOverW + 1.0f) * (scene.screen.height / 2.0f) + 0.5f; // Convert from NDC to screen coordinates
+           float sx = (p.ndc.x * oneOverW + 1.0f) * (width / 2.0f) + 0.5f; // Convert from NDC to screen coordinates
+           float sy = (p.ndc.y * oneOverW + 1.0f) * (height / 2.0f) + 0.5f; // Convert from NDC to screen coordinates
 
            // Keep subpixel precision: 16.16 fixed-point
            constexpr float FP = 65536.0f; // 1<<16

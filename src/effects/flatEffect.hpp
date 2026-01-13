@@ -69,7 +69,7 @@ public:
       vertex.world = fullTransformMat * slib::vec4(vData.vertex, 1);
       vertex.ndc = slib::vec4(vertex.world, 1) * scene.viewMatrix *
                    scene.projectionMatrix;
-      projection.view(scene, vertex, true);
+      projection.view(scene.screen.width, scene.screen.height, vertex, true);
       return vertex;
     }
   };
@@ -90,7 +90,7 @@ public:
       poly.flatDiffuse =
           std::max(0.0f, smath::dot(poly.rotatedFaceNormal, luxDirection));
       for (auto &point : poly.points) {
-        projection.view(scene, point, false);
+        projection.view(scene.screen.width, scene.screen.height, point, false);
       }
     }
   };

@@ -85,7 +85,7 @@ public:
                    scene.projectionMatrix;
       vertex.tex = slib::zvec2(vData.texCoord.x, vData.texCoord.y, 1);
       vertex.normal = normalTransformMat * slib::vec4(vData.normal, 0);
-      projection.view(scene, vertex, true);
+      projection.view(scene.screen.width, scene.screen.height, vertex, true);
       return vertex;
     }
   };
@@ -95,7 +95,7 @@ public:
     void operator()(Polygon<Vertex> &poly, const Scene &scene) const {
       Projection<Vertex> projection;
       for (auto &point : poly.points) {
-        projection.view(scene, point, false);
+        projection.view(scene.screen.width, scene.screen.height, point, false);
       }
     }
   };

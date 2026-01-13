@@ -82,7 +82,7 @@ public:
       vertex.ndc = slib::vec4(vertex.world, 1) * scene.viewMatrix *
                    scene.projectionMatrix;
       vertex.normal = normalTransformMat * slib::vec4(vData.normal, 0);
-      projection.view(scene, vertex, true);
+      projection.view(scene.screen.width, scene.screen.height, vertex, true);
       return vertex;
     }
   };
@@ -94,7 +94,7 @@ public:
       for (auto &point : poly.points) {
         const slib::vec3 &luxDirection = scene.light.getDirection(point.world);
         point.diffuse = std::max(0.0f, smath::dot(point.normal, luxDirection)); // diffuse scalar
-        projection.view(scene, point, false);
+        projection.view(scene.screen.width, scene.screen.height, point, false);
       }
     }
   };

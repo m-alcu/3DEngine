@@ -89,7 +89,7 @@ public:
       normal = normalTransformMat * slib::vec4(vData.normal, 0);
       vertex.diffuse = std::max(
           0.0f, smath::dot(normal, scene.light.getDirection(vertex.world)));
-      projection.view(scene, vertex, true);
+      projection.view(scene.screen.width, scene.screen.height, vertex, true);
       return vertex;
     }
   };
@@ -99,7 +99,7 @@ public:
     void operator()(Polygon<Vertex> &poly, const Scene &scene) const {
       Projection<Vertex> projection;
       for (auto &point : poly.points) {
-        projection.view(scene, point, false);
+        projection.view(scene.screen.width, scene.screen.height, point, false);
       }
     }
   };
