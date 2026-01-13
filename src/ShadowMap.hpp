@@ -1,18 +1,18 @@
 #pragma once
 
-#include <vector>
 #include <limits>
 #include <cmath>
 #include <algorithm>
 #include "slib.hpp"
 #include "smath.hpp"
 #include "light.hpp"
+#include "ZBuffer.hpp"
 
 class ShadowMap {
 public:
     int width;
     int height;
-    std::vector<float> depthBuffer;
+    ZBuffer zbuffer;
     slib::mat4 lightViewMatrix;
     slib::mat4 lightProjMatrix;
 
@@ -28,49 +28,34 @@ public:
 
     ShadowMap(int w = 512, int h = 512)
         : width(w), height(h),
+          zbuffer(w, h),
           lightViewMatrix(smath::identity()),
           lightProjMatrix(smath::identity()),
           lightSpaceMatrix(smath::identity())
     {
-        depthBuffer.resize(static_cast<size_t>(w) * h, 1.0f);
+        zbuffer.Clear();
     }
 
     void clear() {
-        std::fill(depthBuffer.begin(), depthBuffer.end(), 1.0f);
+        zbuffer.Clear();
     }
 
     void resize(int w, int h) {
         width = w;
         height = h;
-        depthBuffer.resize(static_cast<size_t>(w) * h);
+        zbuffer.Resize(w, h);
         clear();
     }
 
-    // Store depth at pixel (x, y)
-    void setDepth(int x, int y, float depth) {
-        if (x >= 0 && x < width && y >= 0 && y < height) {
-            depthBuffer[static_cast<size_t>(y) * width + x] = depth;
-        }
-    }
-
     // Test and set depth (like z-buffer) - returns true if depth should be written
-    bool testAndSetDepth(int x, int y, float depth) {
-        if (x >= 0 && x < width && y >= 0 && y < height) {
-            size_t idx = static_cast<size_t>(y) * width + x;
-            if (depth < depthBuffer[idx]) {
-                depthBuffer[idx] = depth;
-                return true;
-            }
-        }
-        return false;
+    bool testAndSetDepth(int pos, float depth) {
+        return zbuffer.TestAndSet(pos, depth);
     }
 
     // Get depth at pixel (x, y)
     float getDepth(int x, int y) const {
-        if (x >= 0 && x < width && y >= 0 && y < height) {
-            return depthBuffer[static_cast<size_t>(y) * width + x];
-        }
-        return std::numeric_limits<float>::max();
+        size_t idx = static_cast<size_t>(y) * width + x;
+        return zbuffer.Get(static_cast<int>(idx));
     }
 
     // Build light-space matrices for shadow mapping

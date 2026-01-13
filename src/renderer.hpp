@@ -183,7 +183,9 @@ public:
     float maxDepth = -1.0f;
 
     for (int i = 0; i < sm.width * sm.height; ++i) {
-      float d = sm.depthBuffer[i];
+      int x = i % sm.width;
+      int y = i / sm.width;
+      float d = sm.getDepth(x, y);
       minDepth = std::min(minDepth, d);
       maxDepth = std::max(maxDepth, d);
     }
@@ -214,7 +216,7 @@ public:
         smX = std::clamp(smX, 0, sm.width - 1);
         smY = std::clamp(smY, 0, sm.height - 1);
 
-        float depth = sm.depthBuffer[smY * sm.width + smX];
+        float depth = sm.getDepth(smX, smY);
 
         uint8_t gray;
         if (depth == 1.0f) {

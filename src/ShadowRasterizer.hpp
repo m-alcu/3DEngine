@@ -147,7 +147,7 @@ private:
         int forwards = 1;
         Slope<Vertex> slopes[2]{};
 
-        for (int side = 0, cury = gety(side), nexty[2] = {cury, cury}; cur[side] != last;) {
+        for (int side = 0, cury = gety(side), nexty[2] = {cury, cury}, hy = cury * shadowMap->width; cur[side] != last;) {
             auto prev = std::move(cur[side]);
 
             if (side == forwards) {
@@ -161,15 +161,15 @@ private:
 
             side = (nexty[0] <= nexty[1]) ? 0 : 1;
 
-            for (int limit = nexty[side]; cury < limit; ++cury) {
-                drawScanline(cury, slopes[0], slopes[1]);
+            for (int limit = nexty[side]; cury < limit; ++cury, hy+= shadowMap->width) {
+                drawScanline(hy, slopes[0], slopes[1]);
             }
         }
     }
 
-    void drawScanline(int y, Slope<Vertex>& left, Slope<Vertex>& right) {
-        int xStart = left.getx();
-        int xEnd = right.getx();
+    void drawScanline(int hy, Slope<Vertex>& left, Slope<Vertex>& right) {
+        int xStart = left.getx() + hy;
+        int xEnd = right.getx() + hy;
 
         if (xStart > xEnd) std::swap(xStart, xEnd);
 
@@ -182,7 +182,7 @@ private:
 
             for (int x = xStart; x < xEnd; ++x) {
                 // Only write depth - shadow map acts as z-buffer
-                shadowMap->testAndSetDepth(x, y, vStart.p_z);
+                shadowMap->testAndSetDepth(x, vStart.p_z);
                 vStart.hraster(vStep);
             }
         }

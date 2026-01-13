@@ -14,6 +14,7 @@ public:
 		pBuffer( new float[width*height] )
 	{}
 	ZBuffer( const ZBuffer& ) = delete;
+	ZBuffer& operator=( const ZBuffer& ) = delete;
 	~ZBuffer()
 	{
 		delete[] pBuffer;
@@ -24,10 +25,18 @@ public:
 		std::fill_n(
 			pBuffer,
 			width * height,
-			std::numeric_limits<float>::infinity() // Initialize zBuffer to the maximum float value
+			1.0f // Maximum depth in normalized device coordinates (NDC)
 		);
 	}
-	bool TestAndSet( int pos,float depth )
+	void Resize( int w,int h )
+	{
+		if( w == width && h == height ) return;
+		delete[] pBuffer;
+		width = w;
+		height = h;
+		pBuffer = new float[width * height];
+	}
+	bool TestAndSet( int pos, float depth )
 	{
 		float& depthInBuffer = pBuffer[pos];
 		if( depth < depthInBuffer )
@@ -37,8 +46,19 @@ public:
 		}
 		return false;
 	}
+	void Set( int pos,float depth )
+	{
+		pBuffer[pos] = depth;
+	}
+	float Get( int pos ) const
+	{
+		return pBuffer[pos];
+	}
 private:
 	int width;
 	int height;
 	float* pBuffer = nullptr;
+public:
+	int GetWidth() const { return width; }
+	int GetHeight() const { return height; }
 };
