@@ -76,12 +76,51 @@ public:
         lightSpaceMatrix = lightViewMatrix * lightProjMatrix;
 
         // Auto-calculate bias based on scene parameters
-        calculateOptimalBias(sceneRadius);
+        calculateMinMaxBias(sceneRadius);
     }
+
+    // Sample shadow at a world position and cosTheta in case is available
+    // Returns: 1.0 = fully lit, 0.0 = fully shadowed
+    float sampleShadow(const slib::vec3& worldPos, float cosTheta) const {
+        float dynamicBias = calculateBias(cosTheta);
+        // Transform world position to light clip space
+        slib::vec4 lightSpacePos = slib::vec4(worldPos, 1.0f) * lightSpaceMatrix;
+
+        // Perspective divide (for point/spot lights)
+        if (std::abs(lightSpacePos.w) < 0.0001f) {
+            return 1.0f; // Avoid division by zero
+        }
+
+        float ndcX = lightSpacePos.x / lightSpacePos.w;
+        float ndcY = lightSpacePos.y / lightSpacePos.w;
+        float currentDepth = lightSpacePos.z / lightSpacePos.w;
+
+        // Map from NDC [-1,1] to texture coords [0, width/height]
+        float u = (ndcX * 0.5f + 0.5f);
+        float v = (ndcY * 0.5f + 0.5f);
+
+        // Out of shadow map bounds = lit (no shadow info)
+        if (u < 0.0f || u > 1.0f || v < 0.0f || v > 1.0f) {
+            return 1.0f;
+        }
+
+        // Behind the light = lit
+        if (currentDepth < -1.0f) {
+            return 1.0f;
+        }
+
+        if (pcfRadius < 1) {
+            return sampleShadowSingle(u, v, currentDepth, dynamicBias);
+        } else {
+            return sampleShadowPCF(u, v, currentDepth, dynamicBias);
+        }
+    }
+
+private:
 
     // Calculate optimal bias values based on shadow map resolution and scene scale
     // Depth is stored in NDC space [-1, 1] after perspective divide (z/w)
-    void calculateOptimalBias(float sceneRadius) {
+    void calculateMinMaxBias(float sceneRadius) {
         // Since depth is in NDC [-1, 1], the total depth range is 2.0
         // The bias needs to account for:
         // 1. Shadow map resolution (lower res = larger texels = more error)
@@ -124,45 +163,6 @@ public:
 
         return std::clamp(minBias + minBias * slopeFactor, minBias, maxBias);
     }
-
-    // Sample shadow at a world position and cosTheta in case is available
-    // Returns: 1.0 = fully lit, 0.0 = fully shadowed
-    float sampleShadow(const slib::vec3& worldPos, float cosTheta) const {
-        float dynamicBias = calculateBias(cosTheta);
-        // Transform world position to light clip space
-        slib::vec4 lightSpacePos = slib::vec4(worldPos, 1.0f) * lightSpaceMatrix;
-
-        // Perspective divide (for point/spot lights)
-        if (std::abs(lightSpacePos.w) < 0.0001f) {
-            return 1.0f; // Avoid division by zero
-        }
-
-        float ndcX = lightSpacePos.x / lightSpacePos.w;
-        float ndcY = lightSpacePos.y / lightSpacePos.w;
-        float currentDepth = lightSpacePos.z / lightSpacePos.w;
-
-        // Map from NDC [-1,1] to texture coords [0, width/height]
-        float u = (ndcX * 0.5f + 0.5f);
-        float v = (ndcY * 0.5f + 0.5f);
-
-        // Out of shadow map bounds = lit (no shadow info)
-        if (u < 0.0f || u > 1.0f || v < 0.0f || v > 1.0f) {
-            return 1.0f;
-        }
-
-        // Behind the light = lit
-        if (currentDepth < -1.0f) {
-            return 1.0f;
-        }
-
-        if (pcfRadius < 1) {
-            return sampleShadowSingle(u, v, currentDepth, dynamicBias);
-        } else {
-            return sampleShadowPCF(u, v, currentDepth, dynamicBias);
-        }
-    }
-
-private:
 
     // Single sample shadow test
     float sampleShadowSingle(float u, float v, float currentDepth, float bias) const {
