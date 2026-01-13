@@ -130,6 +130,7 @@ public:
 
   void prepareFrame(Scene &scene, float zNear, float zFar, float viewAngle) {
 
+    slib::mat4 viewMatrix = smath::identity();
     // std::fill_n(scene.pixels, scene.screen.width * scene.screen.height, 0);
     std::copy(scene.backg,
               scene.backg + scene.screen.width * scene.screen.height,
@@ -144,16 +145,18 @@ public:
         (float)scene.screen.width / scene.screen.height; // Width / Height ratio
     float fovRadians = viewAngle * (PI / 180.0f);
 
-    scene.projectionMatrix =
+    slib::mat4 projectionMatrix =
         smath::perspective(zFar, zNear, aspectRatio, fovRadians);
 
     if (scene.orbiting) {
-      scene.viewMatrix =
+      viewMatrix =
           smath::lookAt(scene.camera.pos, scene.camera.orbitTarget, {0, 1, 0});
     } else {
-      scene.viewMatrix = smath::fpsview(scene.camera.pos, scene.camera.pitch,
+      viewMatrix = smath::fpsview(scene.camera.pos, scene.camera.pitch,
                                         scene.camera.yaw, scene.camera.roll);
     }
+
+    scene.spaceMatrix = viewMatrix * projectionMatrix;
 
     // Used in BlinnPhong shading
     // NOTE: For performance we approximate the per-fragment view vector V with

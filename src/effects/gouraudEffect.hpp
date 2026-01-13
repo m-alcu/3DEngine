@@ -79,8 +79,7 @@ public:
       Vertex vertex;
       Projection<Vertex> projection;
       vertex.world = modelMatrix * slib::vec4(vData.vertex, 1);
-      vertex.ndc = slib::vec4(vertex.world, 1) * scene.viewMatrix *
-                   scene.projectionMatrix;
+      vertex.ndc = slib::vec4(vertex.world, 1) * scene.spaceMatrix;
       vertex.normal = normalMatrix * slib::vec4(vData.normal, 0);
       projection.view(scene.screen.width, scene.screen.height, vertex, true);
       return vertex;

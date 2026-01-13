@@ -62,8 +62,7 @@ public:
         : screen(scr),
           zBuffer( std::make_shared<ZBuffer>( scr.width,scr.height )),
           shadowMap( std::make_shared<ShadowMap>(512, 512)),
-          projectionMatrix(smath::identity()),
-		  viewMatrix(smath::identity())
+          spaceMatrix(smath::identity())
     {
         pixels = new uint32_t[screen.width * screen.height];
         backg = new uint32_t[screen.width * screen.height];
@@ -106,8 +105,7 @@ public:
    
 	Light light;
 	slib::vec3 forwardNeg; // Negative forward vector for lighting calculations
-    slib::mat4 projectionMatrix;
-	slib::mat4 viewMatrix;
+    slib::mat4 spaceMatrix;
     std::shared_ptr<ZBuffer> zBuffer; // Use shared_ptr for zBuffer to manage its lifetime automatically.
     std::shared_ptr<ShadowMap> shadowMap; // Shadow map for shadow rendering
     uint32_t* pixels = nullptr; // Pointer to the pixel data.
