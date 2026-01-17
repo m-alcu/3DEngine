@@ -4,6 +4,7 @@
 #include "effects/flatEffect.hpp"
 #include "effects/gouraudEffect.hpp"
 #include "effects/phongEffect.hpp"
+#include "effects/shadowEffect.hpp"
 #include "effects/texturedBlinnPhongEffect.hpp"
 #include "effects/texturedFlatEffect.hpp"
 #include "effects/texturedGouraudEffect.hpp"

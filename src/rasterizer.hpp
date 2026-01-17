@@ -11,9 +11,6 @@
 #include "slope.hpp"
 #include "projection.hpp"
 
-// Include shadow effect after scene.hpp to ensure Scene is fully defined
-#include "effects/shadowEffect.hpp"
-
 // Trait to detect shadow effects
 template<typename T, typename = void>
 struct is_shadow_effect : std::false_type {};
