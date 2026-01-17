@@ -122,11 +122,7 @@ class Rasterizer {
 
                     auto clippedPoly = ClipCullPolygon(poly);
                     if (!clippedPoly.points.empty()) {
-                        if constexpr (isShadowEffect) {
-                            drawShadowPolygon(clippedPoly);
-                        } else {
-                            drawPolygon(clippedPoly);
-                        }
+                        drawPolygon(clippedPoly);
                     }
                 }
             }
@@ -156,15 +152,20 @@ class Rasterizer {
             return dotResult > 0.0f;
         }
 
-        // Regular polygon drawing
-        void drawPolygon(Polygon<vertex>& polygon) requires (!isShadowEffect) {
-            auto* pixels = static_cast<uint32_t*>(scene->pixels);
+        // Unified polygon drawing for both regular and shadow rendering
+        void drawPolygon(Polygon<vertex>& polygon) {
+            uint32_t* pixels = nullptr;
 
-            effect.gs(polygon, scene->screen.width, scene->screen.height, *scene);
+            if constexpr (isShadowEffect) {
+                effect.gs(polygon, shadowMap->width, shadowMap->height);
+            } else {
+                pixels = static_cast<uint32_t*>(scene->pixels);
+                effect.gs(polygon, scene->screen.width, scene->screen.height, *scene);
 
-            if (solid->shading == Shading::Wireframe) {
-                drawWireframePolygon(polygon, 0xffffffff, pixels);
-				return;
+                if (solid->shading == Shading::Wireframe) {
+                    drawWireframePolygon(polygon, 0xffffffff, pixels);
+                    return;
+                }
             }
 
             auto begin = std::begin(polygon.points), end = std::end(polygon.points);
@@ -179,7 +180,10 @@ class Rasterizer {
 
             int forwards = 1;
             Slope<vertex> slopes[2] {};
-            for(int side = 0, cury = gety(side), nexty[2] = {cury,cury}, hy = cury * scene->screen.width; cur[side] != last; )
+
+            int width = isShadowEffect ? shadowMap->width : scene->screen.width;
+
+            for(int side = 0, cury = gety(side), nexty[2] = {cury,cury}, hy = cury * width; cur[side] != last; )
             {
                 auto prev = std::move(cur[side]);
 
@@ -190,75 +194,18 @@ class Rasterizer {
                 slopes[side] = Slope<vertex>(*prev, *cur[side], nexty[side] - cury);
 
                 side = (nexty[0] <= nexty[1]) ? 0 : 1;
-                for(int limit = nexty[side]; cury < limit; ++cury, hy+= scene->screen.width)
-                    drawScanline(hy, slopes[0], slopes[1], polygon, pixels);
-            }
-        };
-
-        // Shadow polygon drawing
-        void drawShadowPolygon(Polygon<vertex>& polygon) requires isShadowEffect {
-
-            effect.gs(polygon, shadowMap->width, shadowMap->height);
-            
-            auto begin = std::begin(polygon.points);
-            auto end = std::end(polygon.points);
-
-            auto cmp_top_left = [](const vertex& a, const vertex& b) {
-                return std::tie(a.p_y, a.p_x) < std::tie(b.p_y, b.p_x);
-            };
-            auto [first, last] = std::minmax_element(begin, end, cmp_top_left);
-
-            std::array<decltype(first), 2> cur{first, first};
-            auto gety = [&](int side) -> int { return cur[side]->p_y >> 16; };
-
-            int forwards = 1;
-            Slope<vertex> slopes[2]{};
-
-            for (int side = 0, cury = gety(side), nexty[2] = {cury, cury}, hy = cury * shadowMap->width; cur[side] != last;) {
-                auto prev = std::move(cur[side]);
-
-                if (side == forwards) {
-                    cur[side] = (std::next(prev) == end) ? begin : std::next(prev);
-                } else {
-                    cur[side] = std::prev(prev == begin ? end : prev);
-                }
-
-                nexty[side] = gety(side);
-                slopes[side] = Slope<vertex>(*prev, *cur[side], nexty[side] - cury);
-
-                side = (nexty[0] <= nexty[1]) ? 0 : 1;
-
-                for (int limit = nexty[side]; cury < limit; ++cury, hy += shadowMap->width) {
-                    drawShadowScanline(hy, slopes[0], slopes[1]);
-                }
-            }
-        }
-
-
-        inline void drawScanline(const int& hy, Slope<vertex>& left, Slope<vertex>& right, Polygon<vertex>& polygon, uint32_t* pixels) {
-
-            int xStart = left.getx() + hy;
-            int xEnd = right.getx() + hy;
-            int dx = xEnd - xStart;
-
-            if (dx != 0) {
-                float invDx = 1.0f / dx;
-                vertex vStart = left.get();
-                vertex vStep = (right.get() - vStart) * invDx;
-
-                for (int x = xStart; x < xEnd; ++x) {
-                    if (scene->zBuffer->TestAndSet(x, vStart.p_z)) {
-                        pixels[x] = effect.ps(vStart, *scene, polygon);
+                for(int limit = nexty[side]; cury < limit; ++cury, hy+= width) {
+                    if constexpr (isShadowEffect) {
+                        drawScanline(hy, slopes[0], slopes[1]);
+                    } else {
+                        drawScanline(hy, slopes[0], slopes[1], polygon, pixels);
                     }
-                    vStart.hraster(vStep);
                 }
             }
-
-            left.down();
-            right.down();
         }
 
-        void drawShadowScanline(int hy, Slope<vertex>& left, Slope<vertex>& right) requires isShadowEffect {
+        // Unified scanline drawing for both regular and shadow rendering
+        inline void drawScanline(const int& hy, Slope<vertex>& left, Slope<vertex>& right) requires isShadowEffect {
             int xStart = left.getx() + hy;
             int xEnd = right.getx() + hy;
 
@@ -273,6 +220,28 @@ class Rasterizer {
                 for (int x = xStart; x < xEnd; ++x) {
                     effect.ps(x, p_z, *shadowMap);
                     p_z += p_z_step;
+                }
+            }
+
+            left.down();
+            right.down();
+        }
+
+        inline void drawScanline(const int& hy, Slope<vertex>& left, Slope<vertex>& right, Polygon<vertex>& polygon, uint32_t* pixels) requires (!isShadowEffect) {
+            int xStart = left.getx() + hy;
+            int xEnd = right.getx() + hy;
+            int dx = xEnd - xStart;
+
+            if (dx != 0) {
+                float invDx = 1.0f / dx;
+                vertex vStart = left.get();
+                vertex vStep = (right.get() - vStart) * invDx;
+
+                for (int x = xStart; x < xEnd; ++x) {
+                    if (scene->zBuffer->TestAndSet(x, vStart.p_z)) {
+                        pixels[x] = effect.ps(vStart, *scene, polygon);
+                    }
+                    vStart.hraster(vStep);
                 }
             }
 
