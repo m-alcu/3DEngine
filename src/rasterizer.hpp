@@ -93,11 +93,11 @@ class Rasterizer {
                 bool shouldRender;
                 if constexpr (is_shadow_effect_v<Effect>) {
                     // Shadow rendering: check visibility from light's perspective
-                    shouldRender = faceIsVisibleFromLight(p1.world, rotatedFaceNormal);
+                    shouldRender = isFaceVisibleFromLight(p1.world, rotatedFaceNormal);
                 } else {
                     // Regular rendering: check visibility from camera's perspective
                     shouldRender = solid->shading == Shading::Wireframe ||
-                                   faceIsVisible(p1.world, rotatedFaceNormal);
+                                   isFaceVisibleFromCamera(p1.world, rotatedFaceNormal);
                 }
 
                 if (shouldRender) {
@@ -131,13 +131,13 @@ class Rasterizer {
             }
         }
 
-        bool faceIsVisible(const slib::vec3& world, const slib::vec3& faceNormal) {
+        bool isFaceVisibleFromCamera(const slib::vec3& world, const slib::vec3& faceNormal) {
             slib::vec3 viewDir = scene->camera.pos - world;
             float dotResult = smath::dot(faceNormal, viewDir);
             return dotResult > 0.0f;
         }
 
-        bool faceIsVisibleFromLight(const slib::vec3& world, const slib::vec3& faceNormal) {
+        bool isFaceVisibleFromLight(const slib::vec3& world, const slib::vec3& faceNormal) {
             // Calculate direction from surface to light
             slib::vec3 lightDir;
             if (scene->light.type == LightType::Directional) {
