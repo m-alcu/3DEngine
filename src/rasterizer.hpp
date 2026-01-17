@@ -239,10 +239,10 @@ class Rasterizer {
         }
 
         void drawWireframePolygon(Polygon<vertex> polygon, uint32_t color, uint32_t* pixels) {
-
-            for (size_t i = 0; i < polygon.points.size(); i++) {
-                auto& v0 = polygon.points[i];
-                auto& v1 = polygon.points[(i + 1) % polygon.points.size()];
+            const size_t n = polygon.points.size();
+            for (size_t i = 0, j = n - 1; i < n; j = i++) {
+                auto& v0 = polygon.points[j];
+                auto& v1 = polygon.points[i];
 
                 drawBresenhamLine(v0.p_x >> 16, v0.p_y >> 16, v1.p_x >> 16, v1.p_y >> 16, pixels, color);
             }
