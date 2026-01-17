@@ -165,13 +165,12 @@ private:
     }
 
     // Single sample shadow test
-    float sampleShadowSingle(float u, float v, float currentDepth, float bias) const {
+    // Note: u, v assumed to be in [0, 1] range (caller validates)
+    inline float sampleShadowSingle(float u, float v, float currentDepth, float bias) const {
         int sx = static_cast<int>(u * width);
         int sy = static_cast<int>(v * height);
-
-        // Clamp to valid range
-        sx = std::clamp(sx, 0, width - 1);
-        sy = std::clamp(sy, 0, height - 1);
+        if (sx == width) sx = width - 1;
+        if (sy == height) sy = height - 1;
 
         float storedDepth = getDepth(sx, sy);
 
