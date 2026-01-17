@@ -134,26 +134,11 @@ class Rasterizer {
 
                 Polygon<vertex> poly(std::move(polyVerts), rotatedFaceNormal);
 
-                auto clippedPoly = clipShadowPolygon(poly);
+                auto clippedPoly = ClipCullPolygonSutherlandHodgman(poly);
                 if (!clippedPoly.points.empty()) {
                     drawShadowPolygon(clippedPoly);
                 }
             }
-        }
-
-        // Sutherland-Hodgman clipping for shadow polygons
-        Polygon<vertex> clipShadowPolygon(const Polygon<vertex>& poly) requires is_shadow_effect_v<Effect> {
-            std::vector<vertex> polygon = poly.points;
-
-            for (ClipPlane plane : {ClipPlane::Left, ClipPlane::Right, ClipPlane::Bottom,
-                                    ClipPlane::Top, ClipPlane::Near, ClipPlane::Far}) {
-                polygon = ClipAgainstPlane(polygon, plane);
-                if (polygon.empty()) {
-                    return Polygon<vertex>({}, poly.rotatedFaceNormal);
-                }
-            }
-
-            return Polygon<vertex>(polygon, poly.rotatedFaceNormal);
         }
 
         bool faceIsVisible(const slib::vec3& world, const slib::vec3& faceNormal) {

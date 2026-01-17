@@ -24,10 +24,22 @@ Polygon<Vertex> ClipCullPolygonSutherlandHodgman(const Polygon<Vertex>& t) {
     for (ClipPlane plane : {ClipPlane::Left, ClipPlane::Right, ClipPlane::Bottom,
         ClipPlane::Top, ClipPlane::Near, ClipPlane::Far}) {
         polygon = ClipAgainstPlane(polygon, plane);
-        if (polygon.empty()) return Polygon<Vertex>(polygon, t.face, t.rotatedFaceNormal, t.material); // Completely outside
+        if (polygon.empty()) {
+            // Return empty polygon with appropriate constructor based on material presence
+            if (t.material) {
+                return Polygon<Vertex>(polygon, t.face, t.rotatedFaceNormal, t.material);
+            } else {
+                return Polygon<Vertex>(polygon, t.rotatedFaceNormal);
+            }
+        }
     }
 
-    return Polygon<Vertex>(polygon, t.face, t.rotatedFaceNormal, t.material);
+    // Return clipped polygon with appropriate constructor based on material presence
+    if (t.material) {
+        return Polygon<Vertex>(polygon, t.face, t.rotatedFaceNormal, t.material);
+    } else {
+        return Polygon<Vertex>(polygon, t.rotatedFaceNormal);
+    }
 }
 
 template<typename Vertex>
