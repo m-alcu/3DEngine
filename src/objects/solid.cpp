@@ -22,7 +22,7 @@ void Solid::calculateNormals() {
 
 void Solid::calculateVertexNormals() {
 
-    for (int i = 0; i < numVertices; i++) { 
+    for (int i = 0; i < numVertices; i++) {
         slib::vec3 vertexNormal = { 0, 0, 0 };
         for(int j = 0; j < numFaces; j++) {
 
@@ -35,6 +35,33 @@ void Solid::calculateVertexNormals() {
         Solid::vertexData[i].normal = smath::normalize(vertexNormal);
     }
 
+}
+
+void Solid::calculateMinMaxCoords() {
+    if (numVertices == 0) {
+        minCoord = {0.0f, 0.0f, 0.0f};
+        maxCoord = {0.0f, 0.0f, 0.0f};
+        return;
+    }
+
+    // Initialize with the first vertex
+    minCoord = vertexData[0].vertex;
+    maxCoord = vertexData[0].vertex;
+
+    // Iterate through all vertices to find min and max coordinates
+    for (int i = 1; i < numVertices; i++) {
+        const slib::vec3& v = vertexData[i].vertex;
+
+        // Update minimum coordinates
+        if (v.x < minCoord.x) minCoord.x = v.x;
+        if (v.y < minCoord.y) minCoord.y = v.y;
+        if (v.z < minCoord.z) minCoord.z = v.z;
+
+        // Update maximum coordinates
+        if (v.x > maxCoord.x) maxCoord.x = v.x;
+        if (v.y > maxCoord.y) maxCoord.y = v.y;
+        if (v.z > maxCoord.z) maxCoord.z = v.z;
+    }
 }
 
 // Function returning MaterialProperties struct

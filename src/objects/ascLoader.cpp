@@ -15,6 +15,7 @@ void AscLoader::setup(const std::string& filename) {
     loadFaces();
     calculateNormals();
     calculateVertexNormals();
+    calculateMinMaxCoords();
 }
 
 void AscLoader::loadVertices(const std::string& filename) {

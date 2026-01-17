@@ -104,6 +104,10 @@ public:
     slib::vec3 orbitU{ 1,0,0 };
     slib::vec3 orbitV{ 0,0,1 };
     OrbitState orbit_;
+
+    // Minimum and maximum coordinates for bounding box
+    slib::vec3 minCoord{};
+    slib::vec3 maxCoord{};
  
 public:
     // Base constructor that initializes common data members.
@@ -120,11 +124,14 @@ public:
         loadFaces();
         calculateNormals();
         calculateVertexNormals();
+        calculateMinMaxCoords();
     }
 
     virtual void calculateNormals();
 
     virtual void calculateVertexNormals();
+
+    virtual void calculateMinMaxCoords();
 
     virtual MaterialProperties getMaterialProperties(MaterialType type);
 
