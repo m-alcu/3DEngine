@@ -181,29 +181,24 @@ private:
 
     // PCF (Percentage Closer Filtering) for soft shadow edges
     float sampleShadowPCF(float u, float v, float currentDepth, float bias) const {
+        // Convert to pixel coordinates once
+        int centerX = static_cast<int>(u * width);
+        int centerY = static_cast<int>(v * height);
+
         float shadow = 0.0f;
         int samples = 0;
 
-        float texelSizeX = 1.0f / width;
-        float texelSizeY = 1.0f / height;
-
         for (int dy = -pcfRadius; dy <= pcfRadius; dy++) {
+            int sy = centerY + dy;
+            if (sy < 0 || sy >= height) continue;
+
             for (int dx = -pcfRadius; dx <= pcfRadius; dx++) {
-                float sampleU = u + dx * texelSizeX;
-                float sampleV = v + dy * texelSizeY;
+                int sx = centerX + dx;
+                if (sx < 0 || sx >= width) continue;
 
-                if (sampleU >= 0.0f && sampleU <= 1.0f &&
-                    sampleV >= 0.0f && sampleV <= 1.0f) {
-
-                    int sx = static_cast<int>(sampleU * width);
-                    int sy = static_cast<int>(sampleV * height);
-                    sx = std::clamp(sx, 0, width - 1);
-                    sy = std::clamp(sy, 0, height - 1);
-
-                    float storedDepth = getDepth(sx, sy);
-                    shadow += (currentDepth - bias < storedDepth) ? 1.0f : 0.0f;
-                    samples++;
-                }
+                float storedDepth = getDepth(sx, sy);
+                shadow += (currentDepth - bias < storedDepth) ? 1.0f : 0.0f;
+                samples++;
             }
         }
 
@@ -243,7 +238,7 @@ private:
         lightViewMatrix = smath::lookAt(light.position, sceneCenter, up);
 
         // Perspective projection for point light
-        float fov = 90.0f * (3.14159265f / 180.0f); // 90 degree FOV
+        float fov = 90.0f * (PI / 180.0f); // 90 degree FOV
         float aspect = static_cast<float>(width) / height;
         float zNear = 1.0f;
         float zFar = light.radius * 2.0f;
