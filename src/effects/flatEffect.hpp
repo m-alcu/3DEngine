@@ -3,7 +3,9 @@
 #include "../polygon.hpp"
 #include "../projection.hpp"
 #include "../slib.hpp"
+#include "../scene.hpp"
 
+class ShadowMap;
 
 // solid color attribute not interpolated
 class FlatEffect {
@@ -62,13 +64,14 @@ public:
   public:
     Vertex operator()(const VertexData &vData,
                       const slib::mat4 &modelMatrix,
-                      const slib::mat4 &normalMatrix,
-                      const Scene &scene) const {
+                      const slib::mat4 &/*normalMatrix*/,
+                      const Scene *scene,
+                      const ShadowMap */*shadowMap*/) const {
       Vertex vertex;
       Projection<Vertex> projection;
       vertex.world = modelMatrix * slib::vec4(vData.vertex, 1);
-      vertex.ndc = slib::vec4(vertex.world, 1) * scene.spaceMatrix;
-      projection.view(scene.screen.width, scene.screen.height, vertex, true);
+      vertex.ndc = slib::vec4(vertex.world, 1) * scene->spaceMatrix;
+      projection.view(scene->screen.width, scene->screen.height, vertex, true);
       return vertex;
     }
   };
@@ -105,8 +108,8 @@ public:
       }
 
       // Recompute color with shadow applied to diffuse only
-      const auto &Ka = poly.material.Ka;
-      const auto &Kd = poly.material.Kd;
+      const auto &Ka = poly.material->Ka;
+      const auto &Kd = poly.material->Kd;
       slib::vec3 color = Ka + Kd * poly.flatDiffuse * scene.light.intensity * shadow;
       return Color(color).toBgra();
     }

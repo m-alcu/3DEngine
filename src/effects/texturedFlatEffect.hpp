@@ -3,7 +3,9 @@
 #include "../polygon.hpp"
 #include "../projection.hpp"
 #include "../slib.hpp"
+#include "../scene.hpp"
 
+class ShadowMap;
 
 // solid color attribute not interpolated
 class TexturedFlatEffect {
@@ -71,14 +73,15 @@ public:
   public:
     Vertex operator()(const VertexData &vData,
                       const slib::mat4 &modelMatrix,
-                      const slib::mat4 &normalMatrix,
-                      const Scene &scene) const {
+                      const slib::mat4 &/*normalMatrix*/,
+                      const Scene *scene,
+                      const ShadowMap */*shadowMap*/) const {
       Vertex vertex;
       Projection<Vertex> projection;
       vertex.world = modelMatrix * slib::vec4(vData.vertex, 1);
-      vertex.ndc = slib::vec4(vertex.world, 1) * scene.spaceMatrix;
+      vertex.ndc = slib::vec4(vertex.world, 1) * scene->spaceMatrix;
       vertex.tex = slib::zvec2(vData.texCoord.x, vData.texCoord.y, 1);
-      projection.view(scene.screen.width, scene.screen.height, vertex, true);
+      projection.view(scene->screen.width, scene->screen.height, vertex, true);
       return vertex;
     }
   };
@@ -88,8 +91,8 @@ public:
     void operator()(Polygon<Vertex> &poly, const Scene &scene) const {
 
       Projection<Vertex> projection;
-      const auto &Ka = poly.material.Ka; // vec3
-      const auto &Kd = poly.material.Kd; // vec3
+      const auto &Ka = poly.material->Ka; // vec3
+      const auto &Kd = poly.material->Kd; // vec3
       const slib::vec3 &luxDirection = scene.light.getDirection(
           poly.points[0].world); // any point aproximately the same
       poly.flatDiffuse =
@@ -113,7 +116,7 @@ public:
 
       float w = 1.0f / vRaster.tex.w;
       float r, g, b;
-      poly.material.map_Kd.sample(vRaster.tex.x * w, vRaster.tex.y * w, r, g, b);
+      poly.material->map_Kd.sample(vRaster.tex.x * w, vRaster.tex.y * w, r, g, b);
       return Color(r * diff, g * diff, b * diff).toBgra();
     }
   };

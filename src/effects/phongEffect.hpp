@@ -3,8 +3,10 @@
 #include "../polygon.hpp"
 #include "../projection.hpp"
 #include "../slib.hpp"
+#include "../scene.hpp"
 #include <cmath>
 
+class ShadowMap;
 
 // solid color attribute not interpolated
 class PhongEffect {
@@ -73,13 +75,14 @@ public:
     Vertex operator()(const VertexData &vData,
                       const slib::mat4 &modelMatrix,
                       const slib::mat4 &normalMatrix,
-                      const Scene &scene) const {
+                      const Scene *scene,
+                      const ShadowMap */*shadowMap*/) const {
       Vertex vertex;
       Projection<Vertex> projection;
       vertex.world = modelMatrix * slib::vec4(vData.vertex, 1);
-      vertex.ndc = slib::vec4(vertex.world, 1) * scene.spaceMatrix;
+      vertex.ndc = slib::vec4(vertex.world, 1) * scene->spaceMatrix;
       vertex.normal = normalMatrix * slib::vec4(vData.normal, 0);
-      projection.view(scene.screen.width, scene.screen.height, vertex, true);
+      projection.view(scene->screen.width, scene->screen.height, vertex, true);
       return vertex;
     }
   };
@@ -99,9 +102,9 @@ public:
     uint32_t operator()(const Vertex &vRaster, const Scene &scene,
                         const Polygon<Vertex> &poly) const {
 
-      const auto &Ka = poly.material.Ka; // vec3
-      const auto &Kd = poly.material.Kd; // vec3
-      const auto &Ks = poly.material.Ks; // vec3
+      const auto &Ka = poly.material->Ka; // vec3
+      const auto &Kd = poly.material->Kd; // vec3
+      const auto &Ks = poly.material->Ks; // vec3
       const slib::vec3 &luxDirection = scene.light.getDirection(vRaster.world);
 
       slib::vec3 normal = smath::normalize(vRaster.normal);
@@ -117,7 +120,7 @@ public:
       // perspective, but it's often a good enough approximation.
       float specAngle =
           std::max(0.0f, smath::dot(R, scene.forwardNeg)); // viewer
-      float spec = std::pow(specAngle, poly.material.Ns);
+      float spec = std::pow(specAngle, poly.material->Ns);
 
       // Shadow calculation
       float shadow = 1.0f;

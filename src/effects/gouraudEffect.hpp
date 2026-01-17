@@ -3,8 +3,10 @@
 #include "../polygon.hpp"
 #include "../projection.hpp"
 #include "../slib.hpp"
+#include "../scene.hpp"
 #include <algorithm>
 
+class ShadowMap;
 
 // solid color attribute not interpolated
 class GouraudEffect {
@@ -75,13 +77,14 @@ public:
     Vertex operator()(const VertexData &vData,
                       const slib::mat4 &modelMatrix,
                       const slib::mat4 &normalMatrix,
-                      const Scene &scene) const {
+                      const Scene *scene,
+                      const ShadowMap */*shadowMap*/) const {
       Vertex vertex;
       Projection<Vertex> projection;
       vertex.world = modelMatrix * slib::vec4(vData.vertex, 1);
-      vertex.ndc = slib::vec4(vertex.world, 1) * scene.spaceMatrix;
+      vertex.ndc = slib::vec4(vertex.world, 1) * scene->spaceMatrix;
       vertex.normal = normalMatrix * slib::vec4(vData.normal, 0);
-      projection.view(scene.screen.width, scene.screen.height, vertex, true);
+      projection.view(scene->screen.width, scene->screen.height, vertex, true);
       return vertex;
     }
   };
@@ -109,7 +112,7 @@ public:
       }
 
       // Shadow affects diffuse, not ambient
-      slib::vec3 color = poly.material.Ka + poly.material.Kd * vRaster.diffuse * scene.light.intensity * shadow;
+      slib::vec3 color = poly.material->Ka + poly.material->Kd * vRaster.diffuse * scene.light.intensity * shadow;
       return Color(color).toBgra();
     }
   };

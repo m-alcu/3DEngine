@@ -1,6 +1,5 @@
 #pragma once
 
-#include "ShadowRasterizer.hpp"
 #include "effects/blinnPhongEffect.hpp"
 #include "effects/flatEffect.hpp"
 #include "effects/gouraudEffect.hpp"
@@ -75,7 +74,7 @@ public:
     bool hasGeometry = false;
 
     for (auto &solidPtr : scene.solids) {
-      // Build model matrix (match ShadowRasterizer)
+      // Build model matrix (match Rasterizer)
       slib::mat4 rotate = smath::rotation(
           slib::vec3({solidPtr->position.xAngle, solidPtr->position.yAngle, solidPtr->position.zAngle}));
       slib::mat4 translate = smath::translation(
@@ -267,5 +266,5 @@ public:
   Rasterizer<TexturedGouraudEffect> texturedGouraudRasterizer;
   Rasterizer<TexturedPhongEffect> texturedPhongRasterizer;
   Rasterizer<TexturedBlinnPhongEffect> texturedBlinnPhongRasterizer;
-  ShadowRasterizer shadowRasterizer;
+  Rasterizer<ShadowEffect> shadowRasterizer;
 };
