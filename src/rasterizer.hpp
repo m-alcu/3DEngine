@@ -26,6 +26,7 @@ template<class Effect>
 class Rasterizer {
     public:
         using vertex = typename Effect::Vertex;
+        static constexpr bool isShadowEffect = is_shadow_effect_v<Effect>;
 
         Rasterizer() :  modelMatrix(smath::identity()),
                         normalMatrix(smath::identity())
@@ -37,7 +38,7 @@ class Rasterizer {
             shadowMap = map;
             calculateTransformMat();
 
-            if constexpr (!is_shadow_effect_v<Effect>) {
+            if constexpr (!isShadowEffect) {
                 if (solid->lightSourceEnabled && scene) {
                     scene->light.position = slib::vec3{ solid->position.x, solid->position.y, solid->position.z };
                     scene->light.type = LightType::Point;
@@ -91,7 +92,7 @@ class Rasterizer {
                 // For shadow effects: cull backfaces from light's perspective
                 // For regular rendering: cull backfaces from camera's perspective or wireframe check
                 bool shouldRender;
-                if constexpr (is_shadow_effect_v<Effect>) {
+                if constexpr (isShadowEffect) {
                     // Shadow rendering: check visibility from light's perspective
                     shouldRender = isFaceVisibleFromLight(p1.world, rotatedFaceNormal);
                 } else {
@@ -107,7 +108,7 @@ class Rasterizer {
                         polyVerts.push_back(projectedPoints[j]);
 
                     Polygon<vertex> poly = [&]() {
-                        if constexpr (is_shadow_effect_v<Effect>) {
+                        if constexpr (isShadowEffect) {
                             return Polygon<vertex>(std::move(polyVerts), rotatedFaceNormal);
                         } else {
                             return Polygon<vertex>(
@@ -121,7 +122,7 @@ class Rasterizer {
 
                     auto clippedPoly = ClipCullPolygonSutherlandHodgman(poly);
                     if (!clippedPoly.points.empty()) {
-                        if constexpr (is_shadow_effect_v<Effect>) {
+                        if constexpr (isShadowEffect) {
                             drawShadowPolygon(clippedPoly);
                         } else {
                             drawPolygon(clippedPoly);
@@ -155,7 +156,7 @@ class Rasterizer {
         }
 
         // Regular polygon drawing
-        void drawPolygon(Polygon<vertex>& polygon) requires (!is_shadow_effect_v<Effect>) {
+        void drawPolygon(Polygon<vertex>& polygon) requires (!isShadowEffect) {
             auto* pixels = static_cast<uint32_t*>(scene->pixels);
 
             effect.gs(polygon, *scene);
@@ -194,7 +195,7 @@ class Rasterizer {
         };
 
         // Shadow polygon drawing
-        void drawShadowPolygon(Polygon<vertex>& polygon) requires is_shadow_effect_v<Effect> {
+        void drawShadowPolygon(Polygon<vertex>& polygon) requires isShadowEffect {
             
             effect.gs(polygon, *shadowMap);
             
@@ -256,7 +257,7 @@ class Rasterizer {
             right.down();
         }
 
-        void drawShadowScanline(int hy, Slope<vertex>& left, Slope<vertex>& right) requires is_shadow_effect_v<Effect> {
+        void drawShadowScanline(int hy, Slope<vertex>& left, Slope<vertex>& right) requires isShadowEffect {
             int xStart = left.getx() + hy;
             int xEnd = right.getx() + hy;
 
