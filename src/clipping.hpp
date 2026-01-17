@@ -47,18 +47,18 @@ Polygon<Vertex> ClipCullPolygon(const Polygon<Vertex>& t) {
         if (polygon.empty()) {
             // Return empty polygon with appropriate constructor based on material presence
             if (t.material) {
-                return Polygon<Vertex>(polygon, t.face, t.rotatedFaceNormal, t.material);
+                return Polygon<Vertex>(std::move(polygon), t.face, t.rotatedFaceNormal, *t.material);
             } else {
-                return Polygon<Vertex>(polygon, t.rotatedFaceNormal);
+                return Polygon<Vertex>(std::move(polygon), t.rotatedFaceNormal);
             }
         }
     }
 
     // Return clipped polygon with appropriate constructor based on material presence
     if (t.material) {
-        return Polygon<Vertex>(polygon, t.face, t.rotatedFaceNormal, t.material);
+        return Polygon<Vertex>(std::move(polygon), t.face, t.rotatedFaceNormal, *t.material);
     } else {
-        return Polygon<Vertex>(polygon, t.rotatedFaceNormal);
+        return Polygon<Vertex>(std::move(polygon), t.rotatedFaceNormal);
     }
 }
 
