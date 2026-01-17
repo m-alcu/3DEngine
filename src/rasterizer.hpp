@@ -136,7 +136,6 @@ class Rasterizer {
 
                 auto clippedPoly = clipShadowPolygon(poly);
                 if (!clippedPoly.points.empty()) {
-                    effect.gs(clippedPoly, *shadowMap);
                     drawShadowPolygon(clippedPoly);
                 }
             }
@@ -204,6 +203,9 @@ class Rasterizer {
 
         // Shadow polygon drawing
         void drawShadowPolygon(Polygon<vertex>& polygon) requires is_shadow_effect_v<Effect> {
+            
+            effect.gs(polygon, *shadowMap);
+            
             auto begin = std::begin(polygon.points);
             auto end = std::end(polygon.points);
 
