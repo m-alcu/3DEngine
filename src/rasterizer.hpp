@@ -53,7 +53,7 @@ class Rasterizer {
             shadowMap = &map;
             calculateTransformMat();
             processVertices();
-            drawShadowFaces();
+            drawFaces();
         }
 
     private:
@@ -87,8 +87,7 @@ class Rasterizer {
             );
         }
 
-        // Regular face drawing
-        void drawFaces() requires (!is_shadow_effect_v<Effect>) {
+        void drawFaces() {
             for (int i = 0; i < static_cast<int>(solid->faceData.size()); ++i) {
                 const auto& faceDataEntry = solid->faceData[i];
                 slib::vec3 rotatedFaceNormal{};
@@ -96,46 +95,39 @@ class Rasterizer {
 
                 vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];
 
-                if (solid->shading == Shading::Wireframe || faceIsVisible(p1.world, rotatedFaceNormal)) {
+                // For shadow effects: render all polygons (no backface culling)
+                // For regular rendering: apply backface culling or wireframe check
+                bool shouldRender = is_shadow_effect_v<Effect> ||
+                                   solid->shading == Shading::Wireframe ||
+                                   faceIsVisible(p1.world, rotatedFaceNormal);
 
+                if (shouldRender) {
                     std::vector<vertex> polyVerts;
                     polyVerts.reserve(faceDataEntry.face.vertexIndices.size());
                     for (int j : faceDataEntry.face.vertexIndices)
                         polyVerts.push_back(projectedPoints[j]);
 
-                    Polygon<vertex> poly(
-                        std::move(polyVerts),
-                        faceDataEntry.face,
-                        rotatedFaceNormal,
-                        solid->materials.at(faceDataEntry.face.materialKey)
-                    );
+                    Polygon<vertex> poly = [&]() {
+                        if constexpr (is_shadow_effect_v<Effect>) {
+                            return Polygon<vertex>(std::move(polyVerts), rotatedFaceNormal);
+                        } else {
+                            return Polygon<vertex>(
+                                std::move(polyVerts),
+                                faceDataEntry.face,
+                                rotatedFaceNormal,
+                                solid->materials.at(faceDataEntry.face.materialKey)
+                            );
+                        }
+                    }();
 
                     auto clippedPoly = ClipCullPolygonSutherlandHodgman(poly);
                     if (!clippedPoly.points.empty()) {
-                        drawPolygon(clippedPoly);
+                        if constexpr (is_shadow_effect_v<Effect>) {
+                            drawShadowPolygon(clippedPoly);
+                        } else {
+                            drawPolygon(clippedPoly);
+                        }
                     }
-                }
-            }
-        }
-
-        // Shadow face drawing (no backface culling)
-        void drawShadowFaces() requires is_shadow_effect_v<Effect> {
-            for (int i = 0; i < static_cast<int>(solid->faceData.size()); ++i) {
-                const auto& faceDataEntry = solid->faceData[i];
-                slib::vec3 rotatedFaceNormal{};
-                rotatedFaceNormal = normalMatrix * slib::vec4(faceDataEntry.faceNormal, 0);
-                
-                std::vector<vertex> polyVerts;
-                polyVerts.reserve(faceDataEntry.face.vertexIndices.size());
-                for (int j : faceDataEntry.face.vertexIndices) {
-                    polyVerts.push_back(projectedPoints[j]);
-                }
-
-                Polygon<vertex> poly(std::move(polyVerts), rotatedFaceNormal);
-
-                auto clippedPoly = ClipCullPolygonSutherlandHodgman(poly);
-                if (!clippedPoly.points.empty()) {
-                    drawShadowPolygon(clippedPoly);
                 }
             }
         }
