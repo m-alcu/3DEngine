@@ -90,29 +90,9 @@ public:
             // Project clipped vertices to shadow map space
             Projection<Vertex> projection;
             for (auto& point : poly.points) {
-                projectToShadowMap(shadowMap.width, shadowMap.height, point);
+                projection.view(shadowMap.width, shadowMap.height, point, true);
             }
         }
-
-    private:
-        void projectToShadowMap(const int32_t width, const int32_t height, Vertex& v) const {
-            if (std::abs(v.ndc.w) < 0.0001f) return;
-
-            float oneOverW = 1.0f / v.ndc.w;
-            float ndcX = v.ndc.x * oneOverW;
-            float ndcY = v.ndc.y * oneOverW;
-
-            // Map from NDC [-1,1] to shadow map [0, width/height]
-            float sx = (ndcX * 0.5f + 0.5f) * width + 0.5f;
-            float sy = (ndcY * 0.5f + 0.5f) * height + 0.5f;
-
-            // 16.16 fixed-point for subpixel precision
-            constexpr float FP = 65536.0f;
-            v.p_x = static_cast<int32_t>(sx * FP);
-            v.p_y = static_cast<int32_t>(sy * FP);
-            v.p_z = v.ndc.z * oneOverW;
-        }
-        
     };
 
     class PixelShader {
