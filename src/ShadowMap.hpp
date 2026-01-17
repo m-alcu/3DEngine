@@ -226,7 +226,7 @@ private:
         lightViewMatrix = smath::lookAt(lightPos, sceneCenter, up);
 
         // Orthographic projection sized to encompass the scene
-        float size = sceneRadius * 1.5f;
+        float size = sceneRadius * 1.2f;
         lightProjMatrix = smath::ortho(-size, size, -size, size, 0.1f, sceneRadius * 4.0f);
     }
 

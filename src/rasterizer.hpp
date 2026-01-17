@@ -205,12 +205,9 @@ class Rasterizer {
         }
 
         // Unified scanline drawing for both regular and shadow rendering
-        inline void drawScanline(const int& hy, Slope<vertex>& left, Slope<vertex>& right) requires isShadowEffect {
+        inline void drawScanline(const int& hy, Slope<vertex>& left, Slope<vertex>& right) {
             int xStart = left.getx() + hy;
             int xEnd = right.getx() + hy;
-
-            if (xStart > xEnd) std::swap(xStart, xEnd);
-
             int dx = xEnd - xStart;
 
             if (dx > 0) {
@@ -227,7 +224,7 @@ class Rasterizer {
             right.down();
         }
 
-        inline void drawScanline(const int& hy, Slope<vertex>& left, Slope<vertex>& right, Polygon<vertex>& polygon, uint32_t* pixels) requires (!isShadowEffect) {
+        inline void drawScanline(const int& hy, Slope<vertex>& left, Slope<vertex>& right, Polygon<vertex>& polygon, uint32_t* pixels) {
             int xStart = left.getx() + hy;
             int xEnd = right.getx() + hy;
             int dx = xEnd - xStart;
