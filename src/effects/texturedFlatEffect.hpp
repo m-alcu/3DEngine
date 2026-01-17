@@ -93,10 +93,8 @@ public:
       Projection<Vertex> projection;
       const auto &Ka = poly.material->Ka; // vec3
       const auto &Kd = poly.material->Kd; // vec3
-      const slib::vec3 &luxDirection = scene.light.getDirection(
-          poly.points[0].world); // any point aproximately the same
-      poly.flatDiffuse =
-          std::max(0.0f, smath::dot(poly.rotatedFaceNormal, luxDirection));
+      const auto &luxDirection = scene.light.getDirection(poly.points[0].world); // any point aproximately the same
+      poly.flatDiffuse = std::max(0.0f, smath::dot(poly.rotatedFaceNormal, luxDirection));
       for (auto &point : poly.points) {
         projection.view(width, height, point, false);
       }
