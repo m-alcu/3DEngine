@@ -86,11 +86,11 @@ public:
 
     class GeometryShader {
     public:
-        void operator()(Polygon<Vertex>& poly, const ShadowMap& shadowMap) const {
+        void operator()(Polygon<Vertex>& poly, int32_t width, int32_t height) const {
             // Project clipped vertices to shadow map space
             Projection<Vertex> projection;
             for (auto& point : poly.points) {
-                projection.view(shadowMap.width, shadowMap.height, point, true);
+                projection.view(width, height, point, true);
             }
         }
     };

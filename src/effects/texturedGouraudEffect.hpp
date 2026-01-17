@@ -98,10 +98,10 @@ public:
 
   class GeometryShader {
   public:
-    void operator()(Polygon<Vertex> &poly, const Scene &scene) const {
+    void operator()(Polygon<Vertex> &poly, int32_t width, int32_t height, const Scene &scene) const {
       Projection<Vertex> projection;
       for (auto &point : poly.points) {
-        projection.view(scene.screen.width, scene.screen.height, point, false);
+        projection.view(width, height, point, false);
       }
     }
   };

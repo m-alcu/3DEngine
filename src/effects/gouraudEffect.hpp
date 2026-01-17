@@ -91,12 +91,12 @@ public:
 
   class GeometryShader {
   public:
-    void operator()(Polygon<Vertex> &poly, const Scene &scene) const {
+    void operator()(Polygon<Vertex> &poly, int32_t width, int32_t height, const Scene &scene) const {
       Projection<Vertex> projection;
       for (auto &point : poly.points) {
         const slib::vec3 &luxDirection = scene.light.getDirection(point.world);
         point.diffuse = std::max(0.0f, smath::dot(point.normal, luxDirection)); // diffuse scalar
-        projection.view(scene.screen.width, scene.screen.height, point, false);
+        projection.view(width, height, point, false);
       }
     }
   };

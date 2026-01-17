@@ -160,7 +160,7 @@ class Rasterizer {
         void drawPolygon(Polygon<vertex>& polygon) requires (!isShadowEffect) {
             auto* pixels = static_cast<uint32_t*>(scene->pixels);
 
-            effect.gs(polygon, *scene);
+            effect.gs(polygon, scene->screen.width, scene->screen.height, *scene);
 
             if (solid->shading == Shading::Wireframe) {
                 drawWireframePolygon(polygon, 0xffffffff, pixels);
@@ -197,8 +197,8 @@ class Rasterizer {
 
         // Shadow polygon drawing
         void drawShadowPolygon(Polygon<vertex>& polygon) requires isShadowEffect {
-            
-            effect.gs(polygon, *shadowMap);
+
+            effect.gs(polygon, shadowMap->width, shadowMap->height);
             
             auto begin = std::begin(polygon.points);
             auto end = std::end(polygon.points);
