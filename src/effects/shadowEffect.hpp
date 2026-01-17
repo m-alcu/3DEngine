@@ -4,6 +4,7 @@
 #include "../objects/solid.hpp"
 #include "../ShadowMap.hpp"
 #include "../polygon.hpp"
+#include "../projection.hpp"
 
 class Scene;
 
@@ -87,13 +88,14 @@ public:
     public:
         void operator()(Polygon<Vertex>& poly, const ShadowMap& shadowMap) const {
             // Project clipped vertices to shadow map space
-            for (auto& v : poly.points) {
-                projectToShadowMap(v, shadowMap);
+            Projection<Vertex> projection;
+            for (auto& point : poly.points) {
+                projectToShadowMap(shadowMap.width, shadowMap.height, point);
             }
         }
 
     private:
-        void projectToShadowMap(Vertex& v, const ShadowMap& shadowMap) const {
+        void projectToShadowMap(const int32_t width, const int32_t height, Vertex& v) const {
             if (std::abs(v.ndc.w) < 0.0001f) return;
 
             float oneOverW = 1.0f / v.ndc.w;
@@ -101,8 +103,8 @@ public:
             float ndcY = v.ndc.y * oneOverW;
 
             // Map from NDC [-1,1] to shadow map [0, width/height]
-            float sx = (ndcX * 0.5f + 0.5f) * shadowMap.width + 0.5f;
-            float sy = (ndcY * 0.5f + 0.5f) * shadowMap.height + 0.5f;
+            float sx = (ndcX * 0.5f + 0.5f) * width + 0.5f;
+            float sy = (ndcY * 0.5f + 0.5f) * height + 0.5f;
 
             // 16.16 fixed-point for subpixel precision
             constexpr float FP = 65536.0f;
@@ -110,6 +112,7 @@ public:
             v.p_y = static_cast<int32_t>(sy * FP);
             v.p_z = v.ndc.z * oneOverW;
         }
+        
     };
 
     class PixelShader {
