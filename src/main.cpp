@@ -359,12 +359,18 @@ int main(int, char **) {
                   scene->camera.orbitTarget.z);
       ImGui::Text("Camera Pitch: %.2f, Yaw: %.2f, Roll: %.2f",
                   scene->camera.pitch, scene->camera.yaw, scene->camera.roll);
+
+      ImGui::Checkbox("Show Shadow Map Overlay", &scene->showShadowMapOverlay);
+
       ImGui::End();
     }
 
     solidRenderer.drawScene(*scene, scene->zNear, scene->zFar,
                             scene->viewAngle);
-    solidRenderer.drawShadowMapOverlay(*scene);
+
+    if (scene->showShadowMapOverlay) {
+      solidRenderer.drawShadowMapOverlay(*scene);
+    }
 
     // Rendering
     ImGui::Render();

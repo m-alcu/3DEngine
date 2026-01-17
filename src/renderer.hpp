@@ -30,34 +30,34 @@ public:
     for (auto &solidPtr : scene.solids) {
       switch (solidPtr->shading) {
       case Shading::Flat:
-        flatRasterizer.drawRenderable(*solidPtr, scene);
+        flatRasterizer.drawRenderable(*solidPtr, &scene);
         break;
       case Shading::Wireframe:
-        flatRasterizer.drawRenderable(*solidPtr, scene);
+        flatRasterizer.drawRenderable(*solidPtr, &scene);
         break;
       case Shading::TexturedFlat:
-        texturedFlatRasterizer.drawRenderable(*solidPtr, scene);
+        texturedFlatRasterizer.drawRenderable(*solidPtr, &scene);
         break;
       case Shading::Gouraud:
-        gouraudRasterizer.drawRenderable(*solidPtr, scene);
+        gouraudRasterizer.drawRenderable(*solidPtr, &scene);
         break;
       case Shading::TexturedGouraud:
-        texturedGouraudRasterizer.drawRenderable(*solidPtr, scene);
+        texturedGouraudRasterizer.drawRenderable(*solidPtr, &scene);
         break;
       case Shading::BlinnPhong:
-        blinnPhongRasterizer.drawRenderable(*solidPtr, scene);
+        blinnPhongRasterizer.drawRenderable(*solidPtr, &scene);
         break;
       case Shading::TexturedBlinnPhong:
-        texturedBlinnPhongRasterizer.drawRenderable(*solidPtr, scene);
+        texturedBlinnPhongRasterizer.drawRenderable(*solidPtr, &scene);
         break;
       case Shading::Phong:
-        phongRasterizer.drawRenderable(*solidPtr, scene);
+        phongRasterizer.drawRenderable(*solidPtr, &scene);
         break;
       case Shading::TexturedPhong:
-        texturedPhongRasterizer.drawRenderable(*solidPtr, scene);
+        texturedPhongRasterizer.drawRenderable(*solidPtr, &scene);
         break;
       default:
-        flatRasterizer.drawRenderable(*solidPtr, scene);
+        flatRasterizer.drawRenderable(*solidPtr, &scene);
       }
     }
   }
@@ -123,7 +123,7 @@ public:
     for (auto &solidPtr : scene.solids) {
       // Skip light sources - they don't cast shadows on themselves
       if (!solidPtr->lightSourceEnabled) {
-        shadowRasterizer.renderSolid(*solidPtr, *scene.shadowMap);
+        shadowRasterizer.drawRenderable(*solidPtr, &scene, scene.shadowMap.get());
       }
     }
   }

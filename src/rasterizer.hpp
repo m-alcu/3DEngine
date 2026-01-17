@@ -31,27 +31,20 @@ class Rasterizer {
                         normalMatrix(smath::identity())
           {}
 
-        // Regular rendering (non-shadow)
-        void drawRenderable(Solid& sol, Scene& scn) requires (!is_shadow_effect_v<Effect>) {
-			solid = &sol;
-            scene = &scn;
-            calculateTransformMat();
-
-			if (solid->lightSourceEnabled) {
-				scene->light.position = slib::vec3{ solid->position.x, solid->position.y, solid->position.z };
-				scene->light.type = LightType::Point;
-				scene->light.intensity = 1.5f;
-			}
-
-            processVertices();
-            drawFaces();
-        }
-
-        // Shadow rendering
-        void renderSolid(Solid& sol, ShadowMap& map) requires is_shadow_effect_v<Effect> {
+        void drawRenderable(Solid& sol, Scene* scn = nullptr, ShadowMap* map = nullptr) {
             solid = &sol;
-            shadowMap = &map;
+            scene = scn;
+            shadowMap = map;
             calculateTransformMat();
+
+            if constexpr (!is_shadow_effect_v<Effect>) {
+                if (solid->lightSourceEnabled && scene) {
+                    scene->light.position = slib::vec3{ solid->position.x, solid->position.y, solid->position.z };
+                    scene->light.type = LightType::Point;
+                    scene->light.intensity = 1.5f;
+                }
+            }
+
             processVertices();
             drawFaces();
         }
@@ -95,11 +88,17 @@ class Rasterizer {
 
                 vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];
 
-                // For shadow effects: render all polygons (no backface culling)
-                // For regular rendering: apply backface culling or wireframe check
-                bool shouldRender = is_shadow_effect_v<Effect> ||
-                                   solid->shading == Shading::Wireframe ||
+                // For shadow effects: cull backfaces from light's perspective
+                // For regular rendering: cull backfaces from camera's perspective or wireframe check
+                bool shouldRender;
+                if constexpr (is_shadow_effect_v<Effect>) {
+                    // Shadow rendering: check visibility from light's perspective
+                    shouldRender = faceIsVisibleFromLight(p1.world, rotatedFaceNormal);
+                } else {
+                    // Regular rendering: check visibility from camera's perspective
+                    shouldRender = solid->shading == Shading::Wireframe ||
                                    faceIsVisible(p1.world, rotatedFaceNormal);
+                }
 
                 if (shouldRender) {
                     std::vector<vertex> polyVerts;
@@ -136,7 +135,24 @@ class Rasterizer {
             slib::vec3 viewDir = scene->camera.pos - world;
             float dotResult = smath::dot(faceNormal, viewDir);
             return dotResult > 0.0f;
-        };
+        }
+
+        bool faceIsVisibleFromLight(const slib::vec3& world, const slib::vec3& faceNormal) {
+            // Calculate direction from surface to light
+            slib::vec3 lightDir;
+            if (scene->light.type == LightType::Directional) {
+                // For directional lights, direction is constant
+                lightDir = scene->light.direction;
+            } else {
+                // For point/spot lights, calculate direction from surface to light position
+                lightDir = scene->light.position - world;
+            }
+            lightDir = smath::normalize(lightDir);
+
+            // Face is visible from light if it's pointing toward the light
+            float dotResult = smath::dot(faceNormal, lightDir);
+            return dotResult > 0.0f;
+        }
 
         // Regular polygon drawing
         void drawPolygon(Polygon<vertex>& polygon) requires (!is_shadow_effect_v<Effect>) {

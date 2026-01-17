@@ -122,6 +122,7 @@ public:
     std::vector<std::unique_ptr<Solid>> solids;
     bool orbiting = false;
     bool shadowsEnabled = true; // Enable/disable shadow rendering
+    bool showShadowMapOverlay = false; // Show/hide shadow map debug overlay
 
     BackgroundType backgroundType = BackgroundType::DESERT;
     uint32_t* backg = nullptr;
