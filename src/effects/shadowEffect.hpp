@@ -86,7 +86,7 @@ public:
 
     class GeometryShader {
     public:
-        void operator()(Polygon<Vertex>& poly, int32_t width, int32_t height) const {
+        void operator()(Polygon<Vertex>& poly, int32_t width, int32_t height, const Scene &scene) const {
             // Project clipped vertices to shadow map space
             Projection<Vertex> projection;
             for (auto& point : poly.points) {

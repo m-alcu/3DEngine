@@ -36,6 +36,13 @@ class Rasterizer {
             solid = &sol;
             scene = scn;
             shadowMap = map;
+            if constexpr (isShadowEffect) {
+                screenWidth = shadowMap->width;
+                screenHeight = shadowMap->height;
+            } else {
+                screenWidth = scene->screen.width;
+                screenHeight = scene->screen.height;
+            }
             calculateTransformMat();
 
             if constexpr (!isShadowEffect) {
@@ -54,6 +61,8 @@ class Rasterizer {
         std::vector<vertex> projectedPoints;
         Solid* solid = nullptr;
         Scene* scene = nullptr;
+        int32_t screenWidth = 0;
+        int32_t screenHeight = 0;
         ShadowMap* shadowMap = nullptr;
         slib::mat4 modelMatrix;
         slib::mat4 normalMatrix;
@@ -155,12 +164,9 @@ class Rasterizer {
         // Unified polygon drawing for both regular and shadow rendering
         void drawPolygon(Polygon<vertex>& polygon) {
             uint32_t* pixels = static_cast<uint32_t*>(scene->pixels);
+            effect.gs(polygon, screenWidth, screenHeight, *scene);
 
-            if constexpr (isShadowEffect) {
-                effect.gs(polygon, shadowMap->width, shadowMap->height);
-            } else {
-                effect.gs(polygon, scene->screen.width, scene->screen.height, *scene);
-
+            if constexpr (!isShadowEffect) {
                 if (solid->shading == Shading::Wireframe) {
                     drawWireframePolygon(polygon, 0xffffffff, pixels);
                     return;
@@ -180,9 +186,7 @@ class Rasterizer {
             int forwards = 1;
             Slope<vertex> slopes[2] {};
 
-            int width = isShadowEffect ? shadowMap->width : scene->screen.width;
-
-            for(int side = 0, cury = gety(side), nexty[2] = {cury,cury}, hy = cury * width; cur[side] != last; )
+            for(int side = 0, cury = gety(side), nexty[2] = {cury,cury}, hy = cury * screenWidth; cur[side] != last; )
             {
                 auto prev = std::move(cur[side]);
 
@@ -193,7 +197,7 @@ class Rasterizer {
                 slopes[side] = Slope<vertex>(*prev, *cur[side], nexty[side] - cury);
 
                 side = (nexty[0] <= nexty[1]) ? 0 : 1;
-                for(int limit = nexty[side]; cury < limit; ++cury, hy+= width) {
+                for(int limit = nexty[side]; cury < limit; ++cury, hy+= screenWidth) {
                     drawScanline(hy, slopes[0], slopes[1], polygon, pixels);
                 }
             }
@@ -235,25 +239,23 @@ class Rasterizer {
         }
 
         void drawWireframePolygon(Polygon<vertex> polygon, uint32_t color, uint32_t* pixels) {
-            int width = scene->screen.width;
-            int height = scene->screen.height;
 
             for (size_t i = 0; i < polygon.points.size(); i++) {
                 auto& v0 = polygon.points[i];
                 auto& v1 = polygon.points[(i + 1) % polygon.points.size()];
 
-                drawBresenhamLine(v0.p_x >> 16, v0.p_y >> 16, v1.p_x >> 16, v1.p_y >> 16, pixels, width, height, color);
+                drawBresenhamLine(v0.p_x >> 16, v0.p_y >> 16, v1.p_x >> 16, v1.p_y >> 16, pixels, color);
             }
         }
 
-        void drawBresenhamLine(int x0, int y0, int x1, int y1, uint32_t* pixels, int width, int height, uint32_t color) {
+        void drawBresenhamLine(int x0, int y0, int x1, int y1, uint32_t* pixels, uint32_t color) {
             int dx = std::abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
             int dy = -std::abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
             int err = dx + dy, e2;
 
             while (true) {
-                if (x0 >= 0 && x0 < width && y0 >= 0 && y0 < height)
-                    pixels[y0 * width + x0] = color;
+                if (x0 >= 0 && x0 < screenWidth && y0 >= 0 && y0 < screenHeight)
+                    pixels[y0 * screenWidth + x0] = color;
 
                 if (x0 == x1 && y0 == y1) break;
                 e2 = 2 * err;
