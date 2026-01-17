@@ -195,33 +195,9 @@ class Rasterizer {
 
                 side = (nexty[0] <= nexty[1]) ? 0 : 1;
                 for(int limit = nexty[side]; cury < limit; ++cury, hy+= width) {
-                    if constexpr (isShadowEffect) {
-                        drawScanline(hy, slopes[0], slopes[1]);
-                    } else {
-                        drawScanline(hy, slopes[0], slopes[1], polygon, pixels);
-                    }
+                    drawScanline(hy, slopes[0], slopes[1], polygon, pixels);
                 }
             }
-        }
-
-        // Unified scanline drawing for both regular and shadow rendering
-        inline void drawScanline(const int& hy, Slope<vertex>& left, Slope<vertex>& right) {
-            int xStart = left.getx() + hy;
-            int xEnd = right.getx() + hy;
-            int dx = xEnd - xStart;
-
-            if (dx > 0) {
-                float invDx = 1.0f / dx;
-                float p_z = left.get().p_z;
-                float p_z_step = (right.get().p_z - p_z) * invDx;
-                for (int x = xStart; x < xEnd; ++x) {
-                    effect.ps(x, p_z, *shadowMap);
-                    p_z += p_z_step;
-                }
-            }
-
-            left.down();
-            right.down();
         }
 
         inline void drawScanline(const int& hy, Slope<vertex>& left, Slope<vertex>& right, Polygon<vertex>& polygon, uint32_t* pixels) {
@@ -229,16 +205,29 @@ class Rasterizer {
             int xEnd = right.getx() + hy;
             int dx = xEnd - xStart;
 
-            if (dx != 0) {
-                float invDx = 1.0f / dx;
-                vertex vStart = left.get();
-                vertex vStep = (right.get() - vStart) * invDx;
 
-                for (int x = xStart; x < xEnd; ++x) {
-                    if (scene->zBuffer->TestAndSet(x, vStart.p_z)) {
-                        pixels[x] = effect.ps(vStart, *scene, polygon);
+            if constexpr (isShadowEffect) {
+                if (dx > 0) {
+                    float invDx = 1.0f / dx;
+                    float p_z = left.get().p_z;
+                    float p_z_step = (right.get().p_z - p_z) * invDx;
+                    for (int x = xStart; x < xEnd; ++x) {
+                        effect.ps(x, p_z, *shadowMap);
+                        p_z += p_z_step;
                     }
-                    vStart.hraster(vStep);
+                }
+            } else {
+                if (dx > 0) {
+                    float invDx = 1.0f / dx;
+                    vertex vStart = left.get();
+                    vertex vStep = (right.get() - vStart) * invDx;
+
+                    for (int x = xStart; x < xEnd; ++x) {
+                        if (scene->zBuffer->TestAndSet(x, vStart.p_z)) {
+                            pixels[x] = effect.ps(vStart, *scene, polygon);
+                        }
+                        vStart.hraster(vStep);
+                    }
                 }
             }
 
