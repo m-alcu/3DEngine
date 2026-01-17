@@ -18,7 +18,7 @@ https://en.wikipedia.org/wiki/Sutherland%E2%80%93Hodgman_algorithm
 
 
 template<typename Vertex>
-Polygon<Vertex> ClipCullPolygonSutherlandHodgman(const Polygon<Vertex>& t) {
+Polygon<Vertex> ClipCullPolygon(const Polygon<Vertex>& t) {
     // Early exit: check if all vertices are inside all clip planes
     // This avoids expensive clipping for polygons entirely within the view frustum
     bool allInside = true;

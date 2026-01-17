@@ -120,7 +120,7 @@ class Rasterizer {
                         }
                     }();
 
-                    auto clippedPoly = ClipCullPolygonSutherlandHodgman(poly);
+                    auto clippedPoly = ClipCullPolygon(poly);
                     if (!clippedPoly.points.empty()) {
                         if constexpr (isShadowEffect) {
                             drawShadowPolygon(clippedPoly);
