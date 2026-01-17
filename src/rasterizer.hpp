@@ -122,10 +122,9 @@ class Rasterizer {
         void drawShadowFaces() requires is_shadow_effect_v<Effect> {
             for (int i = 0; i < static_cast<int>(solid->faceData.size()); ++i) {
                 const auto& faceDataEntry = solid->faceData[i];
-
-                slib::vec4 rotatedNormal4 = normalMatrix * slib::vec4(faceDataEntry.faceNormal, 0);
-                slib::vec3 rotatedFaceNormal = {rotatedNormal4.x, rotatedNormal4.y, rotatedNormal4.z};
-
+                slib::vec3 rotatedFaceNormal{};
+                rotatedFaceNormal = normalMatrix * slib::vec4(faceDataEntry.faceNormal, 0);
+                
                 std::vector<vertex> polyVerts;
                 polyVerts.reserve(faceDataEntry.face.vertexIndices.size());
                 for (int j : faceDataEntry.face.vertexIndices) {
