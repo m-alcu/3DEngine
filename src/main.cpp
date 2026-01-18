@@ -22,7 +22,6 @@
 #include <SDL3/SDL.h>
 #include <stdio.h>
 
-
 #ifdef __EMSCRIPTEN__
 #include "../libs/emscripten/emscripten_mainloop_stub.h"
 #endif
@@ -115,7 +114,8 @@ int main(int, char **) {
   // io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f,
   // nullptr, io.Fonts->GetGlyphRangesJapanese()); IM_ASSERT(font != nullptr);
 
-  auto scene = SceneFactory::createScene(SceneType::SHADOWTEST, {height, width});
+  auto scene =
+      SceneFactory::createScene(SceneType::SHADOWTEST, {height, width});
   scene->setup();
 
   float lastMouseX = 0, lastMouseY = 0;
@@ -342,6 +342,13 @@ int main(int, char **) {
         scene = SceneFactory::createScene(static_cast<SceneType>(currentScene),
                                           {height, width});
         scene->setup();
+        // Update orbitTarget to first solid's position
+        if (!scene->solids.empty()) {
+          scene->camera.orbitTarget = {scene->solids[0]->position.x,
+                                       scene->solids[0]->position.y,
+                                       scene->solids[0]->position.z};
+        }
+        scene->camera.setOrbitFromCurrent();
         scene->solids[0]->shading = static_cast<Shading>(currentShading);
         scene->backgroundType = static_cast<BackgroundType>(currentBackground);
         scene->background = std::unique_ptr<Background>(
@@ -364,6 +371,8 @@ int main(int, char **) {
 
       ImGui::End();
     }
+
+    scene->update(io.DeltaTime);
 
     solidRenderer.drawScene(*scene, scene->zNear, scene->zFar,
                             scene->viewAngle);

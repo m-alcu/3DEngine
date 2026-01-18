@@ -1,271 +1,282 @@
 #pragma once
 
-#include <limits>
-#include <cmath>
-#include <algorithm>
+#include "ZBuffer.hpp"
+#include "constants.hpp"
+#include "light.hpp"
 #include "slib.hpp"
 #include "smath.hpp"
-#include "light.hpp"
-#include "ZBuffer.hpp"
+#include <algorithm>
+#include <cmath>
 
 class ShadowMap {
 public:
-    int width;
-    int height;
-    ZBuffer zbuffer;
-    slib::mat4 lightViewMatrix;
-    slib::mat4 lightProjMatrix;
+  int width;
+  int height;
+  ZBuffer zbuffer;
+  slib::mat4 lightViewMatrix;
+  slib::mat4 lightProjMatrix;
 
-    // Combined matrix for transforming world coords to light clip space
-    slib::mat4 lightSpaceMatrix;
+  // Combined matrix for transforming world coords to light clip space
+  slib::mat4 lightSpaceMatrix;
 
-    // Shadow bias parameters for slope-scaled bias
-    float minBias = 0.025f;  // Minimum bias (surfaces facing the light)
-    float maxBias = 0.05f;   // Maximum bias (surfaces at grazing angles)
+  // Shadow bias parameters for slope-scaled bias
+  float minBias = 0.025f; // Minimum bias (surfaces facing the light)
+  float maxBias = 0.05f;  // Maximum bias (surfaces at grazing angles)
 
-    // PCF kernel size (0 = no filtering, 1 = 3x3, 2 = 5x5, etc.)
-    int pcfRadius = 1;
+  // PCF kernel size (0 = no filtering, 1 = 3x3, 2 = 5x5, etc.)
+  int pcfRadius = 1;
 
-    ShadowMap(int w = 512, int h = 512)
-        : width(w), height(h),
-          zbuffer(w, h),
-          lightViewMatrix(smath::identity()),
-          lightProjMatrix(smath::identity()),
-          lightSpaceMatrix(smath::identity())
-    {
-        zbuffer.Clear();
+  ShadowMap(int w = 512, int h = 512)
+      : width(w), height(h), zbuffer(w, h), lightViewMatrix(smath::identity()),
+        lightProjMatrix(smath::identity()),
+        lightSpaceMatrix(smath::identity()) {
+    zbuffer.Clear();
+  }
+
+  void clear() { zbuffer.Clear(); }
+
+  void resize(int w, int h) {
+    width = w;
+    height = h;
+    zbuffer.Resize(w, h);
+    clear();
+  }
+
+  // Test and set depth (like z-buffer) - returns true if depth should be
+  // written
+  bool testAndSetDepth(int pos, float depth) {
+    return zbuffer.TestAndSet(pos, depth);
+  }
+
+  // Get depth at pixel (x, y)
+  float getDepth(int x, int y) const {
+    size_t idx = static_cast<size_t>(y) * width + x;
+    return zbuffer.Get(static_cast<int>(idx));
+  }
+
+  // Build light-space matrices for shadow mapping
+  // sceneCenter: approximate center of the scene being shadowed
+  // sceneRadius: approximate radius encompassing shadow casters/receivers
+  void buildLightMatrices(const Light &light, const slib::vec3 &sceneCenter,
+                          float sceneRadius) {
+    if (light.type == LightType::Directional) {
+      buildDirectionalLightMatrices(light, sceneCenter, sceneRadius);
+    } else if (light.type == LightType::Point) {
+      buildPointLightMatrices(light, sceneCenter, sceneRadius);
+    } else if (light.type == LightType::Spot) {
+      buildSpotLightMatrices(light, sceneRadius);
     }
 
-    void clear() {
-        zbuffer.Clear();
+    // Pre-compute combined matrix
+    lightSpaceMatrix = lightViewMatrix * lightProjMatrix;
+
+    // Auto-calculate bias based on scene parameters
+    calculateMinMaxBias(sceneRadius);
+  }
+
+  // Sample shadow at a world position and cosTheta in case is available
+  // Returns: 1.0 = fully lit, 0.0 = fully shadowed
+  float sampleShadow(const slib::vec3 &worldPos, float cosTheta) const {
+    float dynamicBias = calculateBias(cosTheta);
+    // Transform world position to light clip space
+    slib::vec4 lightSpacePos = slib::vec4(worldPos, 1.0f) * lightSpaceMatrix;
+
+    // Perspective divide (for point/spot lights)
+    if (std::abs(lightSpacePos.w) < 0.0001f) {
+      return 1.0f; // Avoid division by zero
     }
 
-    void resize(int w, int h) {
-        width = w;
-        height = h;
-        zbuffer.Resize(w, h);
-        clear();
+    float ndcX = lightSpacePos.x / lightSpacePos.w;
+    float ndcY = lightSpacePos.y / lightSpacePos.w;
+    float currentDepth = lightSpacePos.z / lightSpacePos.w;
+
+    // Map from NDC [-1,1] to texture coords [0, width/height]
+    float u = (ndcX * 0.5f + 0.5f);
+    float v = (ndcY * 0.5f + 0.5f);
+
+    // Out of shadow map bounds = lit (no shadow info)
+    if (u < 0.0f || u > 1.0f || v < 0.0f || v > 1.0f) {
+      return 1.0f;
     }
 
-    // Test and set depth (like z-buffer) - returns true if depth should be written
-    bool testAndSetDepth(int pos, float depth) {
-        return zbuffer.TestAndSet(pos, depth);
+    // Behind the light = lit
+    if (currentDepth < -1.0f) {
+      return 1.0f;
     }
 
-    // Get depth at pixel (x, y)
-    float getDepth(int x, int y) const {
-        size_t idx = static_cast<size_t>(y) * width + x;
-        return zbuffer.Get(static_cast<int>(idx));
+    if (pcfRadius < 1) {
+      return sampleShadowSingle(u, v, currentDepth, dynamicBias);
+    } else {
+      return sampleShadowPCF(u, v, currentDepth, dynamicBias);
     }
-
-    // Build light-space matrices for shadow mapping
-    // sceneCenter: approximate center of the scene being shadowed
-    // sceneRadius: approximate radius encompassing shadow casters/receivers
-    void buildLightMatrices(const Light& light, const slib::vec3& sceneCenter, float sceneRadius) {
-        if (light.type == LightType::Directional) {
-            buildDirectionalLightMatrices(light, sceneCenter, sceneRadius);
-        }
-        else if (light.type == LightType::Point) {
-            buildPointLightMatrices(light, sceneCenter, sceneRadius);
-        }
-        else if (light.type == LightType::Spot) {
-            buildSpotLightMatrices(light, sceneRadius);
-        }
-
-        // Pre-compute combined matrix
-        lightSpaceMatrix = lightViewMatrix * lightProjMatrix;
-
-        // Auto-calculate bias based on scene parameters
-        calculateMinMaxBias(sceneRadius);
-    }
-
-    // Sample shadow at a world position and cosTheta in case is available
-    // Returns: 1.0 = fully lit, 0.0 = fully shadowed
-    float sampleShadow(const slib::vec3& worldPos, float cosTheta) const {
-        float dynamicBias = calculateBias(cosTheta);
-        // Transform world position to light clip space
-        slib::vec4 lightSpacePos = slib::vec4(worldPos, 1.0f) * lightSpaceMatrix;
-
-        // Perspective divide (for point/spot lights)
-        if (std::abs(lightSpacePos.w) < 0.0001f) {
-            return 1.0f; // Avoid division by zero
-        }
-
-        float ndcX = lightSpacePos.x / lightSpacePos.w;
-        float ndcY = lightSpacePos.y / lightSpacePos.w;
-        float currentDepth = lightSpacePos.z / lightSpacePos.w;
-
-        // Map from NDC [-1,1] to texture coords [0, width/height]
-        float u = (ndcX * 0.5f + 0.5f);
-        float v = (ndcY * 0.5f + 0.5f);
-
-        // Out of shadow map bounds = lit (no shadow info)
-        if (u < 0.0f || u > 1.0f || v < 0.0f || v > 1.0f) {
-            return 1.0f;
-        }
-
-        // Behind the light = lit
-        if (currentDepth < -1.0f) {
-            return 1.0f;
-        }
-
-        if (pcfRadius < 1) {
-            return sampleShadowSingle(u, v, currentDepth, dynamicBias);
-        } else {
-            return sampleShadowPCF(u, v, currentDepth, dynamicBias);
-        }
-    }
+  }
 
 private:
+  // Calculate optimal bias values based on shadow map resolution and scene
+  // scale Depth is stored in NDC space [-1, 1] after perspective divide (z/w)
+  void calculateMinMaxBias(float sceneRadius) {
+    // Since depth is in NDC [-1, 1], the total depth range is 2.0
+    // The bias needs to account for:
+    // 1. Shadow map resolution (lower res = larger texels = more error)
+    // 2. Depth quantization in NDC space
 
-    // Calculate optimal bias values based on shadow map resolution and scene scale
-    // Depth is stored in NDC space [-1, 1] after perspective divide (z/w)
-    void calculateMinMaxBias(float sceneRadius) {
-        // Since depth is in NDC [-1, 1], the total depth range is 2.0
-        // The bias needs to account for:
-        // 1. Shadow map resolution (lower res = larger texels = more error)
-        // 2. Depth quantization in NDC space
+    // NDC depth range is always 2.0 (from -1 to 1)
+    constexpr float ndcDepthRange = 2.0f;
 
-        // NDC depth range is always 2.0 (from -1 to 1)
-        constexpr float ndcDepthRange = 2.0f;
+    // A single texel spans this much in UV space: 1/width
+    // The depth error per texel is roughly: ndcDepthRange / width
+    // This represents the minimum depth difference we can reliably detect
+    float depthPerTexel = ndcDepthRange / static_cast<float>(width);
 
-        // A single texel spans this much in UV space: 1/width
-        // The depth error per texel is roughly: ndcDepthRange / width
-        // This represents the minimum depth difference we can reliably detect
-        float depthPerTexel = ndcDepthRange / static_cast<float>(width);
+    // minBias: for surfaces perpendicular to light (cosTheta ≈ 1)
+    // Need enough bias to overcome depth precision issues (~1 texel)
+    minBias = depthPerTexel * 0.5f;
 
-        // minBias: for surfaces perpendicular to light (cosTheta ≈ 1)
-        // Need enough bias to overcome depth precision issues (~1 texel)
-        minBias = depthPerTexel * 0.5f;
+    // maxBias: for surfaces at grazing angles (cosTheta ≈ 0)
+    // Slope causes projected depth error, need more bias (~2-4 texels)
+    maxBias = depthPerTexel * 2.0f;
 
-        // maxBias: for surfaces at grazing angles (cosTheta ≈ 0)
-        // Slope causes projected depth error, need more bias (~2-4 texels)
-        maxBias = depthPerTexel * 2.0f;
+    // Clamp to reasonable NDC values
+    minBias = std::clamp(minBias, 0.01f, 0.025f);
+    maxBias = std::clamp(maxBias, minBias * 2.0f, 0.10f);
+  }
 
-        // Clamp to reasonable NDC values
-        minBias = std::clamp(minBias, 0.01f, 0.025f);
-        maxBias = std::clamp(maxBias, minBias * 2.0f, 0.10f);
-
+  // Calculate dynamic slope-scaled bias based on surface angle to light
+  // normal: surface normal (normalized)
+  // lightDir: direction TO the light (normalized)
+  float calculateBias(float cosTheta) const {
+    // Slope scale: when surface is perpendicular to light (cosTheta=1), use
+    // minBias When surface is at grazing angle (cosTheta~0), use maxBias Using
+    // tan(acos(x)) = sqrt(1-x²)/x for slope factor
+    float slopeFactor = 1.0f;
+    if (cosTheta > 0.001f) {
+      slopeFactor = std::sqrt(1.0f - cosTheta * cosTheta) / cosTheta;
+      slopeFactor =
+          std::min(slopeFactor, 10.0f); // Clamp to avoid extreme values
     }
 
-    // Calculate dynamic slope-scaled bias based on surface angle to light
-    // normal: surface normal (normalized)
-    // lightDir: direction TO the light (normalized)
-    float calculateBias(float cosTheta) const {
-        // Slope scale: when surface is perpendicular to light (cosTheta=1), use minBias
-        // When surface is at grazing angle (cosTheta~0), use maxBias
-        // Using tan(acos(x)) = sqrt(1-x²)/x for slope factor
-        float slopeFactor = 1.0f;
-        if (cosTheta > 0.001f) {
-            slopeFactor = std::sqrt(1.0f - cosTheta * cosTheta) / cosTheta;
-            slopeFactor = std::min(slopeFactor, 10.0f); // Clamp to avoid extreme values
-        }
+    return std::clamp(minBias + minBias * slopeFactor, minBias, maxBias);
+  }
 
-        return std::clamp(minBias + minBias * slopeFactor, minBias, maxBias);
-    }
+  // Single sample shadow test
+  // Note: u, v assumed to be in [0, 1] range (caller validates)
+  inline float sampleShadowSingle(float u, float v, float currentDepth,
+                                  float bias) const {
+    int sx = static_cast<int>(u * width);
+    int sy = static_cast<int>(v * height);
+    if (sx == width)
+      sx = width - 1;
+    if (sy == height)
+      sy = height - 1;
 
-    // Single sample shadow test
-    // Note: u, v assumed to be in [0, 1] range (caller validates)
-    inline float sampleShadowSingle(float u, float v, float currentDepth, float bias) const {
-        int sx = static_cast<int>(u * width);
-        int sy = static_cast<int>(v * height);
-        if (sx == width) sx = width - 1;
-        if (sy == height) sy = height - 1;
+    float storedDepth = getDepth(sx, sy);
+
+    // If current depth (minus bias) is less than stored depth, we're in shadow
+    return (currentDepth - bias < storedDepth) ? 1.0f : 0.0f;
+  }
+
+  // PCF (Percentage Closer Filtering) for soft shadow edges
+  float sampleShadowPCF(float u, float v, float currentDepth,
+                        float bias) const {
+    // Convert to pixel coordinates once
+    int centerX = static_cast<int>(u * width);
+    int centerY = static_cast<int>(v * height);
+
+    float shadow = 0.0f;
+    int samples = 0;
+
+    for (int dy = -pcfRadius; dy <= pcfRadius; dy++) {
+      int sy = centerY + dy;
+      if (sy < 0 || sy >= height)
+        continue;
+
+      for (int dx = -pcfRadius; dx <= pcfRadius; dx++) {
+        int sx = centerX + dx;
+        if (sx < 0 || sx >= width)
+          continue;
 
         float storedDepth = getDepth(sx, sy);
-
-        // If current depth (minus bias) is less than stored depth, we're in shadow
-        return (currentDepth - bias < storedDepth) ? 1.0f : 0.0f;
+        shadow += (currentDepth - bias < storedDepth) ? 1.0f : 0.0f;
+        samples++;
+      }
     }
 
-    // PCF (Percentage Closer Filtering) for soft shadow edges
-    float sampleShadowPCF(float u, float v, float currentDepth, float bias) const {
-        // Convert to pixel coordinates once
-        int centerX = static_cast<int>(u * width);
-        int centerY = static_cast<int>(v * height);
+    return (samples > 0) ? shadow / samples : 1.0f;
+  }
 
-        float shadow = 0.0f;
-        int samples = 0;
+  void buildDirectionalLightMatrices(const Light &light,
+                                     const slib::vec3 &sceneCenter,
+                                     float sceneRadius) {
+    // Position the "light camera" far enough back along the light direction
+    // Note: light.direction points FROM the light source (inverted convention),
+    // so we ADD to move back toward where the light originates
+    slib::vec3 lightDir = smath::normalize(light.direction);
+    slib::vec3 lightPos = sceneCenter + lightDir * sceneRadius * 2.0f;
 
-        for (int dy = -pcfRadius; dy <= pcfRadius; dy++) {
-            int sy = centerY + dy;
-            if (sy < 0 || sy >= height) continue;
-
-            for (int dx = -pcfRadius; dx <= pcfRadius; dx++) {
-                int sx = centerX + dx;
-                if (sx < 0 || sx >= width) continue;
-
-                float storedDepth = getDepth(sx, sy);
-                shadow += (currentDepth - bias < storedDepth) ? 1.0f : 0.0f;
-                samples++;
-            }
-        }
-
-        return (samples > 0) ? shadow / samples : 1.0f;
+    // Choose an up vector that isn't parallel to light direction
+    slib::vec3 up = {0.0f, 1.0f, 0.0f};
+    if (std::abs(smath::dot(lightDir, up)) > 0.99f) {
+      up = {1.0f, 0.0f, 0.0f};
     }
 
-    void buildDirectionalLightMatrices(const Light& light, const slib::vec3& sceneCenter, float sceneRadius) {
-        // Position the "light camera" far enough back along the light direction
-        // Note: light.direction points FROM the light source (inverted convention),
-        // so we ADD to move back toward where the light originates
-        slib::vec3 lightDir = smath::normalize(light.direction);
-        slib::vec3 lightPos = sceneCenter + lightDir * sceneRadius * 2.0f;
+    lightViewMatrix = smath::lookAt(lightPos, sceneCenter, up);
 
-        // Choose an up vector that isn't parallel to light direction
-        slib::vec3 up = {0.0f, 1.0f, 0.0f};
-        if (std::abs(smath::dot(lightDir, up)) > 0.99f) {
-            up = {1.0f, 0.0f, 0.0f};
-        }
+    // Orthographic projection sized to encompass the scene
+    float size = sceneRadius * 1.2f;
+    lightProjMatrix =
+        smath::ortho(-size, size, -size, size, 0.1f, sceneRadius * 4.0f);
+  }
 
-        lightViewMatrix = smath::lookAt(lightPos, sceneCenter, up);
+  void buildPointLightMatrices(const Light &light,
+                               const slib::vec3 &sceneCenter,
+                               float sceneRadius) {
+    // For point lights, we look from the light position toward the scene center
+    // Note: Full point light shadows would need 6 faces (cubemap), this is
+    // simplified
 
-        // Orthographic projection sized to encompass the scene
-        float size = sceneRadius * 1.2f;
-        lightProjMatrix = smath::ortho(-size, size, -size, size, 0.1f, sceneRadius * 4.0f);
+    slib::vec3 up = {0.0f, 1.0f, 0.0f};
+    slib::vec3 lightDir = smath::normalize(sceneCenter - light.position);
+    if (std::abs(smath::dot(lightDir, up)) > 0.99f) {
+      up = {1.0f, 0.0f, 0.0f};
     }
 
-    void buildPointLightMatrices(const Light& light, const slib::vec3& sceneCenter, float sceneRadius) {
-        // For point lights, we look from the light position toward the scene center
-        // Note: Full point light shadows would need 6 faces (cubemap), this is simplified
+    lightViewMatrix = smath::lookAt(light.position, sceneCenter, up);
 
-        slib::vec3 up = {0.0f, 1.0f, 0.0f};
-        slib::vec3 lightDir = smath::normalize(sceneCenter - light.position);
-        if (std::abs(smath::dot(lightDir, up)) > 0.99f) {
-            up = {1.0f, 0.0f, 0.0f};
-        }
+    // Calculate FOV dynamically to encompass the scene
+    slib::vec3 toScene = sceneCenter - light.position;
+    float distToScene = std::sqrt(smath::dot(toScene, toScene));
+    // Avoid division by zero and ensure minimum distance
+    distToScene = std::max(distToScene, 1.0f);
+    // Calculate FOV that fits the scene sphere
+    float fov = 2.0f * std::atan(sceneRadius / distToScene);
+    // Clamp to reasonable range
+    fov = std::clamp(fov, 30.0f * (PI / 180.0f), 120.0f * (PI / 180.0f));
 
-        lightViewMatrix = smath::lookAt(light.position, sceneCenter, up);
+    float aspect = static_cast<float>(width) / height;
+    float zNear = std::max(1.0f, distToScene - sceneRadius);
+    float zFar = distToScene + sceneRadius * 2.0f;
 
-        // Perspective projection for point light
-        float fov = 90.0f * (PI / 180.0f); // 90 degree FOV
-        float aspect = static_cast<float>(width) / height;
-        float zNear = 1.0f;
-        float zFar = light.radius * 2.0f;
-        if (zFar < sceneRadius * 2.0f) {
-            zFar = sceneRadius * 2.0f;
-        }
+    lightProjMatrix = smath::perspective(zFar, zNear, aspect, fov);
+  }
 
-        lightProjMatrix = smath::perspective(zFar, zNear, aspect, fov);
+  void buildSpotLightMatrices(const Light &light, float sceneRadius) {
+    // Spot light looks along its direction
+    slib::vec3 lightDir = smath::normalize(light.direction);
+    slib::vec3 target = light.position + lightDir * light.radius;
+
+    slib::vec3 up = {0.0f, 1.0f, 0.0f};
+    if (std::abs(smath::dot(lightDir, up)) > 0.99f) {
+      up = {1.0f, 0.0f, 0.0f};
     }
 
-    void buildSpotLightMatrices(const Light& light, float sceneRadius) {
-        // Spot light looks along its direction
-        slib::vec3 lightDir = smath::normalize(light.direction);
-        slib::vec3 target = light.position + lightDir * light.radius;
+    lightViewMatrix = smath::lookAt(light.position, target, up);
 
-        slib::vec3 up = {0.0f, 1.0f, 0.0f};
-        if (std::abs(smath::dot(lightDir, up)) > 0.99f) {
-            up = {1.0f, 0.0f, 0.0f};
-        }
+    // FOV based on outer cutoff angle
+    float fov = std::acos(light.outerCutoff) * 2.0f;
+    float aspect = static_cast<float>(width) / height;
+    float zNear = 1.0f;
+    float zFar = light.radius * 2.0f;
 
-        lightViewMatrix = smath::lookAt(light.position, target, up);
-
-        // FOV based on outer cutoff angle
-        float fov = std::acos(light.outerCutoff) * 2.0f;
-        float aspect = static_cast<float>(width) / height;
-        float zNear = 1.0f;
-        float zFar = light.radius * 2.0f;
-
-        lightProjMatrix = smath::perspective(zFar, zNear, aspect, fov);
-    }
+    lightProjMatrix = smath::perspective(zFar, zNear, aspect, fov);
+  }
 };

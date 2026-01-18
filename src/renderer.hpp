@@ -12,7 +12,6 @@
 #include "objects/solid.hpp"
 #include "rasterizer.hpp"
 #include <cstdint>
-#include <iostream>
 
 class Renderer {
 
@@ -66,41 +65,43 @@ public:
     scene.shadowMap->clear();
 
     // Calculate dynamic scene bounds (AABB in world space)
-    slib::vec3 minV{ std::numeric_limits<float>::max(),
-                     std::numeric_limits<float>::max(),
-                     std::numeric_limits<float>::max() };
-    slib::vec3 maxV{ -std::numeric_limits<float>::max(),
-                     -std::numeric_limits<float>::max(),
-                     -std::numeric_limits<float>::max() };
+    slib::vec3 minV{std::numeric_limits<float>::max(),
+                    std::numeric_limits<float>::max(),
+                    std::numeric_limits<float>::max()};
+    slib::vec3 maxV{-std::numeric_limits<float>::max(),
+                    -std::numeric_limits<float>::max(),
+                    -std::numeric_limits<float>::max()};
     bool hasGeometry = false;
 
     for (auto &solidPtr : scene.solids) {
+
+      if (solidPtr->lightSourceEnabled) {
+        continue; // Skip light sources
+      }
+
       // Build model matrix (match Rasterizer)
       slib::mat4 rotate = smath::rotation(
-          slib::vec3({solidPtr->position.xAngle, solidPtr->position.yAngle, solidPtr->position.zAngle}));
-      slib::mat4 translate = smath::translation(
-          slib::vec3({solidPtr->position.x, solidPtr->position.y, solidPtr->position.z}));
+          slib::vec3({solidPtr->position.xAngle, solidPtr->position.yAngle,
+                      solidPtr->position.zAngle}));
+      slib::mat4 translate = smath::translation(slib::vec3(
+          {solidPtr->position.x, solidPtr->position.y, solidPtr->position.z}));
       slib::mat4 scale = smath::scale(
-          slib::vec3({solidPtr->position.zoom, solidPtr->position.zoom, solidPtr->position.zoom}));
+          slib::vec3({solidPtr->position.zoom, solidPtr->position.zoom,
+                      solidPtr->position.zoom}));
       slib::mat4 modelMatrix = translate * rotate * scale;
 
       // Transform the 8 corners of the bounding box instead of all vertices
-      const slib::vec3& bMin = solidPtr->minCoord;
-      const slib::vec3& bMax = solidPtr->maxCoord;
+      const slib::vec3 &bMin = solidPtr->minCoord;
+      const slib::vec3 &bMax = solidPtr->maxCoord;
 
       // 8 corners of the AABB
       slib::vec3 corners[8] = {
-        {bMin.x, bMin.y, bMin.z},
-        {bMin.x, bMin.y, bMax.z},
-        {bMin.x, bMax.y, bMin.z},
-        {bMin.x, bMax.y, bMax.z},
-        {bMax.x, bMin.y, bMin.z},
-        {bMax.x, bMin.y, bMax.z},
-        {bMax.x, bMax.y, bMin.z},
-        {bMax.x, bMax.y, bMax.z}
-      };
+          {bMin.x, bMin.y, bMin.z}, {bMin.x, bMin.y, bMax.z},
+          {bMin.x, bMax.y, bMin.z}, {bMin.x, bMax.y, bMax.z},
+          {bMax.x, bMin.y, bMin.z}, {bMax.x, bMin.y, bMax.z},
+          {bMax.x, bMax.y, bMin.z}, {bMax.x, bMax.y, bMax.z}};
 
-      for (const auto& corner : corners) {
+      for (const auto &corner : corners) {
         slib::vec4 world = modelMatrix * slib::vec4(corner, 1);
         minV.x = std::min(minV.x, world.x);
         minV.y = std::min(minV.y, world.y);
@@ -116,15 +117,15 @@ public:
     slib::vec3 sceneCenter;
     float sceneRadius;
     if (hasGeometry) {
-      sceneCenter = slib::vec3{ (minV.x + maxV.x) * 0.5f,
-                                (minV.y + maxV.y) * 0.5f,
-                                (minV.z + maxV.z) * 0.5f };
-      slib::vec3 diag{ maxV.x - minV.x, maxV.y - minV.y, maxV.z - minV.z };
+      sceneCenter =
+          slib::vec3{(minV.x + maxV.x) * 0.5f, (minV.y + maxV.y) * 0.5f,
+                     (minV.z + maxV.z) * 0.5f};
+      slib::vec3 diag{maxV.x - minV.x, maxV.y - minV.y, maxV.z - minV.z};
       float diagLen2 = smath::dot(diag, diag);
       sceneRadius = 0.5f * std::sqrt(diagLen2);
       // Padding factor to avoid clipping at frustum edges
-      //const float paddingFactor = 1.25f; // increase if needed
-      //sceneRadius *= paddingFactor;
+      // const float paddingFactor = 1.25f; // increase if needed
+      // sceneRadius *= paddingFactor;
       // Ensure a minimal radius to avoid degenerate projections
       sceneRadius = std::max(sceneRadius, 1.0f);
     } else {
@@ -139,7 +140,8 @@ public:
     for (auto &solidPtr : scene.solids) {
       // Skip light sources - they don't cast shadows on themselves
       if (!solidPtr->lightSourceEnabled) {
-        shadowRasterizer.drawRenderable(*solidPtr, &scene, scene.shadowMap.get());
+        shadowRasterizer.drawRenderable(*solidPtr, &scene,
+                                        scene.shadowMap.get());
       }
     }
   }
@@ -152,7 +154,7 @@ public:
               scene.pixels);
     scene.zBuffer->Clear(); // Clear the zBuffer
 
-    zNear = 10.0f;    // Near plane distance
+    zNear = 10.0f;     // Near plane distance
     zFar = 10000.0f;   // Far plane distance
     viewAngle = 45.0f; // Field of view angle in degrees
 
@@ -163,9 +165,10 @@ public:
     slib::mat4 projectionMatrix =
         smath::perspective(zFar, zNear, aspectRatio, fovRadians);
 
-    slib::mat4 viewMatrix = scene.orbiting ? 
-        smath::lookAt(scene.camera.pos, scene.camera.orbitTarget, {0, 1, 0}) :
-        smath::fpsview(scene.camera.pos, scene.camera.pitch,
+    slib::mat4 viewMatrix =
+        scene.orbiting ? smath::lookAt(scene.camera.pos,
+                                       scene.camera.orbitTarget, {0, 1, 0})
+                       : smath::fpsview(scene.camera.pos, scene.camera.pitch,
                                         scene.camera.yaw, scene.camera.roll);
     scene.spaceMatrix = viewMatrix * projectionMatrix;
 
