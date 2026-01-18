@@ -43,9 +43,9 @@ void KnotScenePoint::setup() {
   // TorusScene used radius 1000. Using same radius.
   icosahedron->enableCircularOrbit(
       /*center*/ {0, 0, -500},
-      /*radius*/ 600.0f,
+      /*radius*/ 200.0f,
       /*planeNormal*/ {0, 1, 1},   // orbit in XZ plane (tilted)
-      /*omega*/ (0), // 60 deg/s
+      /*omega*/ (3.14159265f / 3), // 60 deg/s
       /*initialPhase*/ PI / 2.0f); // start at top);
 
   // Keep reference to update light position
