@@ -50,7 +50,7 @@ void Icosahedron::loadFaces() {
     mat.Kd = { props.k_d * 0xff, props.k_d * 0xff, props.k_d * 0xff };
     mat.Ks = { props.k_s * 0xff, props.k_s * 0xff, props.k_s * 0xff };
     mat.map_Kd = DecodePng(std::string(RES_PATH + mtlPath).c_str());
-    mat.map_Kd.textureFilter = TextureFilter::NEIGHBOUR;
+    mat.map_Kd.setFilter(TextureFilter::NEIGHBOUR);
     mat.Ns = props.shininess;
     materials.insert({ "white", mat });
 

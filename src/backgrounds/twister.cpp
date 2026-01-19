@@ -37,15 +37,14 @@ void Twister::texLine(uint32_t* pixels, int pitch, int x1, int x2, int v, int l,
         float tx = float(x - x1) / dx;
         int cx = int(tx * tex.w * repeats) % tex.w;
         int cy = v % tex.h;
-        int index = 4 * (cy * tex.w + cx);
+        const RGBA8& px = tex.pixels()[cy * tex.w + cx];
 
         float scale = (255.0f - l) / 255.0f;
-        float r = tex.data[index + 0] * scale;
-        float g = tex.data[index + 1] * scale;
-        float b = tex.data[index + 2] * scale;
+        float r = px.r * scale;
+        float g = px.g * scale;
+        float b = px.b * scale;
 
-        pixels[x + width * v] = Color(r, g, b).toBgra(); // Assuming Color has a toBgra() method
-
+        pixels[x + width * v] = Color(r, g, b).toBgra();
     }
 }
 
@@ -98,13 +97,12 @@ void Twister::draw(uint32_t *pixels, uint16_t height, uint16_t width) {
             unsigned src_x = (x < tex2.w) ? x : (x % tex2.w);
             unsigned src_y = (y < tex2.h) ? y : (y % tex2.h);
 
-            // Index into the source image (RGBA, so 4 bytes per pixel)
-            size_t src_index = (src_y * tex.w + src_x) * 4;
+            const RGBA8& px = tex2.pixels()[src_y * tex2.w + src_x];
 
-            uint8_t r = tex2.data[src_index + 0] >> 2;
-            uint8_t g = tex2.data[src_index + 1] >> 2;
-            uint8_t b = tex2.data[src_index + 2] >> 2;
-            uint8_t a = tex2.data[src_index + 3];
+            uint8_t r = px.r >> 2;
+            uint8_t g = px.g >> 2;
+            uint8_t b = px.b >> 2;
+            uint8_t a = px.a;
 
             // You can choose any pixel format. Let's use ARGB here.
             pixels[y * width + x] = (a << 24) | (r << 16) | (g << 8) | b;

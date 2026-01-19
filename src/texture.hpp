@@ -12,12 +12,15 @@ struct RGBA8 {
     uint8_t r, g, b, a;
 };
 
+class Texture;
+using SampleFn = void (Texture::*)(float, float, float&, float&, float&) const;
+
 class Texture {
 public:
     int w = 0;
     int h = 0;
     std::vector<unsigned char> data;
-    TextureFilter textureFilter = TextureFilter::NEIGHBOUR;
+    SampleFn sampleFn = &Texture::sampleNearest; // Function pointer to avoid branch
 
     // Get pixels as RGBA8 array
     const RGBA8* pixels() const {
@@ -92,14 +95,16 @@ public:
         b = (b00 * fx1 + b10 * fx) * fy1 + (b01 * fx1 + b11 * fx) * fy;
     }
 
-    // Unified sample method using the texture's filter setting
-    // For use with perspective-correct texture coordinates (u/w, v/w, 1/w)
+    // Set filter mode (updates function pointer)
+    void setFilter(TextureFilter filter) {
+        sampleFn = (filter == TextureFilter::BILINEAR)
+            ? &Texture::sampleBilinear
+            : &Texture::sampleNearest;
+    }
+
+    // Unified sample method - no branch, uses function pointer
     void sample(float u, float v, float& r, float& g, float& b) const {
-        if (textureFilter == TextureFilter::BILINEAR) {
-            sampleBilinear(u, v, r, g, b);
-        } else {
-            sampleNearest(u, v, r, g, b);
-        }
+        (this->*sampleFn)(u, v, r, g, b);
     }
 };
 
