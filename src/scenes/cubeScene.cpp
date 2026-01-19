@@ -7,6 +7,8 @@ void CubeScene::setup() {
     light.color = { 1.0f, 1.0f, 1.0f };
     light.intensity = 10.0f;
 
+    shadowsEnabled = false; 
+
     clearAllSolids();
 
     auto cube = std::make_unique<Cube>();
