@@ -24,7 +24,7 @@ public:
   float maxBias = 0.05f;  // Maximum bias (surfaces at grazing angles)
 
   // PCF kernel size (0 = no filtering, 1 = 3x3, 2 = 5x5, etc.)
-  int pcfRadius = 1;
+  int pcfRadius = SHADOW_PCF_RADIUS;
 
   ShadowMap(int w = 512, int h = 512)
       : width(w), height(h), zbuffer(w, h), lightViewMatrix(smath::identity()),
@@ -137,8 +137,8 @@ private:
     maxBias = depthPerTexel * 2.0f;
 
     // Clamp to reasonable NDC values
-    minBias = std::clamp(minBias, 0.01f, 0.025f);
-    maxBias = std::clamp(maxBias, minBias * 2.0f, 0.10f);
+    minBias = std::clamp(minBias, SHADOW_BIAS_MIN, 0.025f);
+    maxBias = std::clamp(maxBias, minBias * 2.0f, SHADOW_BIAS_MAX);
   }
 
   // Calculate dynamic slope-scaled bias based on surface angle to light

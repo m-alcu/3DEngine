@@ -184,7 +184,7 @@ public:
   }
 
   // Draw the shadow map as a small overlay in the corner of the screen
-  void drawShadowMapOverlay(Scene &scene, int overlaySize = 200,
+  void drawShadowMapOverlay(Scene &scene, int overlaySize = SHADOW_MAP_OVERVIEW_SIZE,
                             int margin = 10) {
     if (!scene.shadowMap || !scene.shadowsEnabled)
       return;
