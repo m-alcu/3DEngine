@@ -17,26 +17,27 @@ public:
     int w = 0;
     int h = 0;
     std::vector<unsigned char> data;
-    unsigned int bpp = 4;
-    unsigned int rowStride = 0; // == w * bpp (set once)
     TextureFilter textureFilter = TextureFilter::NEIGHBOUR;
 
+    // Get pixels as RGBA8 array
+    const RGBA8* pixels() const {
+        return reinterpret_cast<const RGBA8*>(data.data());
+    }
+
     // Sample texture at normalized coordinates (u, v) in [0, 1]
-    // Returns RGB values in [0, 255]
-    void sampleNearest(float u, float v, int& r, int& g, int& b) const {
+    // Returns RGB values in [0, 255] as floats
+    void sampleNearest(float u, float v, float& r, float& g, float& b) const {
         int tx = static_cast<int>(u * w);
         if (tx == w) tx = w - 1;
 
         int ty = static_cast<int>(v * h);
         if (ty == h) ty = h - 1;
 
-        const RGBA8* row = reinterpret_cast<const RGBA8*>(
-            &data[static_cast<size_t>(ty) * static_cast<size_t>(rowStride)]);
-        const RGBA8& px = row[tx];
+        const RGBA8& px = pixels()[ty * w + tx];
 
-        r = px.r;
-        g = px.g;
-        b = px.b;
+        r = static_cast<float>(px.r);
+        g = static_cast<float>(px.g);
+        b = static_cast<float>(px.b);
     }
 
     // Sample texture with bilinear filtering at normalized coordinates (u, v) in [0, 1]
@@ -55,13 +56,10 @@ public:
         float fx = xf - x;
         float fy = yf - y;
 
-        // Precompute row bases (in bytes)
-        const uint8_t* rowT = data.data() + y * rowStride;
-        const uint8_t* rowB = rowT + rowStride;
-
-        // Access pixels as RGBA8 structs (avoids bit shifting)
-        const RGBA8* rowT8 = reinterpret_cast<const RGBA8*>(rowT);
-        const RGBA8* rowB8 = reinterpret_cast<const RGBA8*>(rowB);
+        // Direct 2D indexing with RGBA8 pointer
+        const RGBA8* px = pixels();
+        const RGBA8* rowT8 = px + y * w;
+        const RGBA8* rowB8 = px + (y + 1) * w;
 
         // Load 4 neighboring pixels
         const RGBA8& p00 = rowT8[x];
@@ -102,11 +100,7 @@ public:
         if (textureFilter == TextureFilter::BILINEAR) {
             sampleBilinear(u, v, r, g, b);
         } else {
-            int ri, gi, bi;
-            sampleNearest(u, v, ri, gi, bi);
-            r = static_cast<float>(ri);
-            g = static_cast<float>(gi);
-            b = static_cast<float>(bi);
+            sampleNearest(u, v, r, g, b);
         }
     }
 };

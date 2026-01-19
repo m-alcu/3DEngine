@@ -97,11 +97,6 @@ Texture Solid::DecodePng(const char* filename)
 
     // decode
     unsigned error = lodepng::decode(image, width, height, state, buffer);
-    const LodePNGColorMode& color = state.info_png.color;
-    // Use the RAW (decoded) format to compute bytes per pixel
-    unsigned bits_per_pixel = lodepng_get_bpp(&state.info_raw); // e.g. 24 for RGB8, 32 for RGBA8
-    unsigned bpp_bytes = bits_per_pixel / 8;               // 3 or 4
-    unsigned rowStride = bpp_bytes * width;
     // if there's an error, display it
     if (error)
     {
@@ -111,7 +106,7 @@ Texture Solid::DecodePng(const char* filename)
 
     // the pixels are now in the vector "image", 4 bytes per pixel, ordered RGBARGBA..., use it as texture, draw
     // it, ...
-    return {static_cast<int>(width), static_cast<int>(height), image, bpp_bytes, rowStride};
+    return {static_cast<int>(width), static_cast<int>(height), image};
 }
 
 void Solid::rotate(float xAngle, float yAngle, float zAngle) {
