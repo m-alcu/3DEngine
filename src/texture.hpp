@@ -59,32 +59,37 @@ public:
         const uint32_t* rowT32 = reinterpret_cast<const uint32_t*>(rowT);
         const uint32_t* rowB32 = reinterpret_cast<const uint32_t*>(rowB);
 
-        // Load 4 neighboring pixels
+        // Load 4 neighboring pixels and extract RGB components once
         uint32_t p00 = rowT32[x];
         uint32_t p10 = rowT32[x + 1];
         uint32_t p01 = rowB32[x];
         uint32_t p11 = rowB32[x + 1];
 
-        // Horizontal lerp on top and bottom rows, then vertical lerp
-        auto lerp = [](float a, float b, float t) { return a + (b - a) * t; };
+        // Extract color components as floats (single conversion per component)
+        float r00 = static_cast<float>(p00 & 0xFF);
+        float g00 = static_cast<float>((p00 >> 8) & 0xFF);
+        float b00 = static_cast<float>((p00 >> 16) & 0xFF);
 
-        float rT = lerp(static_cast<float>(p00 & 0xFF),
-                        static_cast<float>(p10 & 0xFF), fx);
-        float gT = lerp(static_cast<float>((p00 >> 8) & 0xFF),
-                        static_cast<float>((p10 >> 8) & 0xFF), fx);
-        float bT = lerp(static_cast<float>((p00 >> 16) & 0xFF),
-                        static_cast<float>((p10 >> 16) & 0xFF), fx);
+        float r10 = static_cast<float>(p10 & 0xFF);
+        float g10 = static_cast<float>((p10 >> 8) & 0xFF);
+        float b10 = static_cast<float>((p10 >> 16) & 0xFF);
 
-        float rB = lerp(static_cast<float>(p01 & 0xFF),
-                        static_cast<float>(p11 & 0xFF), fx);
-        float gB = lerp(static_cast<float>((p01 >> 8) & 0xFF),
-                        static_cast<float>((p11 >> 8) & 0xFF), fx);
-        float bB = lerp(static_cast<float>((p01 >> 16) & 0xFF),
-                        static_cast<float>((p11 >> 16) & 0xFF), fx);
+        float r01 = static_cast<float>(p01 & 0xFF);
+        float g01 = static_cast<float>((p01 >> 8) & 0xFF);
+        float b01 = static_cast<float>((p01 >> 16) & 0xFF);
 
-        r = lerp(rT, rB, fy);
-        g = lerp(gT, gB, fy);
-        b = lerp(bT, bB, fy);
+        float r11 = static_cast<float>(p11 & 0xFF);
+        float g11 = static_cast<float>((p11 >> 8) & 0xFF);
+        float b11 = static_cast<float>((p11 >> 16) & 0xFF);
+
+        // Precompute interpolation weights
+        float fx1 = 1.0f - fx;
+        float fy1 = 1.0f - fy;
+
+        // Bilinear interpolation using weighted sum (faster than nested lerps)
+        r = (r00 * fx1 + r10 * fx) * fy1 + (r01 * fx1 + r11 * fx) * fy;
+        g = (g00 * fx1 + g10 * fx) * fy1 + (g01 * fx1 + g11 * fx) * fy;
+        b = (b00 * fx1 + b10 * fx) * fy1 + (b01 * fx1 + b11 * fx) * fy;
     }
 
     // Unified sample method using the texture's filter setting
