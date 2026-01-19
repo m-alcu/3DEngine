@@ -42,9 +42,9 @@ public:
         float xf = u * w - 0.5f;
         float yf = v * h - 0.5f;
 
-        // Floor once; clamp to keep (x+1,y+1) in-bounds
-        int x = static_cast<int>(std::floor(xf));
-        int y = static_cast<int>(std::floor(yf));
+        int x = static_cast<int>(xf);
+        int y = static_cast<int>(yf);
+        // Clamp to keep (x+1, y+1) in-bounds
         if (x < 0) x = 0; else if (x > w - 2) x = w - 2;
         if (y < 0) y = 0; else if (y > h - 2) y = h - 2;
 
