@@ -1,7 +1,7 @@
 #pragma once
-#include <vector>
+#include <algorithm>
 #include <cstdint>
-#include <cmath>
+#include <vector>
 
 enum class TextureFilter {
     NEIGHBOUR,
@@ -47,11 +47,9 @@ public:
         float xf = u * w - 0.5f;
         float yf = v * h - 0.5f;
 
-        int x = static_cast<int>(xf);
-        int y = static_cast<int>(yf);
         // Clamp to keep (x+1, y+1) in-bounds
-        if (x < 0) x = 0; else if (x > w - 2) x = w - 2;
-        if (y < 0) y = 0; else if (y > h - 2) y = h - 2;
+        int x = std::clamp(static_cast<int>(xf), 0, w - 2);
+        int y = std::clamp(static_cast<int>(yf), 0, h - 2);
 
         float fx = xf - x;
         float fy = yf - y;
