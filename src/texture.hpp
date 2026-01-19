@@ -8,6 +8,10 @@ enum class TextureFilter {
     BILINEAR
 };
 
+struct RGBA8 {
+    uint8_t r, g, b, a;
+};
+
 class Texture {
 public:
     int w = 0;
@@ -26,13 +30,13 @@ public:
         int ty = static_cast<int>(v * h);
         if (ty == h) ty = h - 1;
 
-        const uint32_t* row32 = reinterpret_cast<const uint32_t*>(
+        const RGBA8* row = reinterpret_cast<const RGBA8*>(
             &data[static_cast<size_t>(ty) * static_cast<size_t>(rowStride)]);
-        uint32_t px = row32[tx];
+        const RGBA8& px = row[tx];
 
-        r = (px) & 0xFF;
-        g = (px >> 8) & 0xFF;
-        b = (px >> 16) & 0xFF;
+        r = px.r;
+        g = px.g;
+        b = px.b;
     }
 
     // Sample texture with bilinear filtering at normalized coordinates (u, v) in [0, 1]
@@ -55,32 +59,32 @@ public:
         const uint8_t* rowT = data.data() + y * rowStride;
         const uint8_t* rowB = rowT + rowStride;
 
-        // Assume RGBA8 (bpp = 4)
-        const uint32_t* rowT32 = reinterpret_cast<const uint32_t*>(rowT);
-        const uint32_t* rowB32 = reinterpret_cast<const uint32_t*>(rowB);
+        // Access pixels as RGBA8 structs (avoids bit shifting)
+        const RGBA8* rowT8 = reinterpret_cast<const RGBA8*>(rowT);
+        const RGBA8* rowB8 = reinterpret_cast<const RGBA8*>(rowB);
 
-        // Load 4 neighboring pixels and extract RGB components once
-        uint32_t p00 = rowT32[x];
-        uint32_t p10 = rowT32[x + 1];
-        uint32_t p01 = rowB32[x];
-        uint32_t p11 = rowB32[x + 1];
+        // Load 4 neighboring pixels
+        const RGBA8& p00 = rowT8[x];
+        const RGBA8& p10 = rowT8[x + 1];
+        const RGBA8& p01 = rowB8[x];
+        const RGBA8& p11 = rowB8[x + 1];
 
-        // Extract color components as floats (single conversion per component)
-        float r00 = static_cast<float>(p00 & 0xFF);
-        float g00 = static_cast<float>((p00 >> 8) & 0xFF);
-        float b00 = static_cast<float>((p00 >> 16) & 0xFF);
+        // Direct byte access - no bit shifting needed
+        float r00 = static_cast<float>(p00.r);
+        float g00 = static_cast<float>(p00.g);
+        float b00 = static_cast<float>(p00.b);
 
-        float r10 = static_cast<float>(p10 & 0xFF);
-        float g10 = static_cast<float>((p10 >> 8) & 0xFF);
-        float b10 = static_cast<float>((p10 >> 16) & 0xFF);
+        float r10 = static_cast<float>(p10.r);
+        float g10 = static_cast<float>(p10.g);
+        float b10 = static_cast<float>(p10.b);
 
-        float r01 = static_cast<float>(p01 & 0xFF);
-        float g01 = static_cast<float>((p01 >> 8) & 0xFF);
-        float b01 = static_cast<float>((p01 >> 16) & 0xFF);
+        float r01 = static_cast<float>(p01.r);
+        float g01 = static_cast<float>(p01.g);
+        float b01 = static_cast<float>(p01.b);
 
-        float r11 = static_cast<float>(p11 & 0xFF);
-        float g11 = static_cast<float>((p11 >> 8) & 0xFF);
-        float b11 = static_cast<float>((p11 >> 16) & 0xFF);
+        float r11 = static_cast<float>(p11.r);
+        float g11 = static_cast<float>(p11.g);
+        float b11 = static_cast<float>(p11.b);
 
         // Precompute interpolation weights
         float fx1 = 1.0f - fx;
