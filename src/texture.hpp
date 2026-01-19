@@ -30,13 +30,10 @@ public:
     // Sample texture at normalized coordinates (u, v) in [0, 1]
     // Returns RGB values in [0, 255] as floats
     void sampleNearest(float u, float v, float& r, float& g, float& b) const {
-        int tx = static_cast<int>(u * w);
-        if (tx == w) tx = w - 1;
+        int x = static_cast<int>(u * (w-1));
+        int y = static_cast<int>(v * (h-1));
 
-        int ty = static_cast<int>(v * h);
-        if (ty == h) ty = h - 1;
-
-        const RGBA8& px = pixels()[ty * w + tx];
+        const RGBA8& px = pixels()[y * w + x];
 
         r = static_cast<float>(px.r);
         g = static_cast<float>(px.g);
