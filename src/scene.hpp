@@ -52,7 +52,7 @@ public:
   // Constructor that initializes the Screen and allocates zBuffer arrays.
   Scene(const Screen &scr)
       : screen(scr), zBuffer(std::make_shared<ZBuffer>(scr.width, scr.height)),
-        shadowMap(std::make_shared<ShadowMap>(512, 512)),
+        shadowMap(std::make_shared<ShadowMap>(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE)),
         spaceMatrix(smath::identity()) {
     pixels = new uint32_t[screen.width * screen.height];
     backg = new uint32_t[screen.width * screen.height];
