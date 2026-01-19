@@ -247,10 +247,11 @@ private:
     float distToScene = std::sqrt(smath::dot(toScene, toScene));
     // Avoid division by zero and ensure minimum distance
     distToScene = std::max(distToScene, 1.0f);
-    // Calculate FOV that fits the scene sphere
-    float fov = 2.0f * std::atan(sceneRadius / distToScene);
+    // Use smaller effective radius to make objects fill more of the shadow map
+    float effectiveRadius = sceneRadius * EFFECTIVE_LIGHT_RADIUS_FACTOR;
+    float fov = 2.0f * std::atan(effectiveRadius / distToScene);
     // Clamp to reasonable range
-    fov = std::clamp(fov, 30.0f * (PI / 180.0f), 120.0f * (PI / 180.0f));
+    fov = std::clamp(fov, 20.0f * (PI / 180.0f), 90.0f * (PI / 180.0f));
 
     float aspect = static_cast<float>(width) / height;
     float zNear = std::max(1.0f, distToScene - sceneRadius);
