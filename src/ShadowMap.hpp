@@ -201,7 +201,13 @@ private:
       }
     }
 
-    return (samples > 0) ? shadow / samples : 1.0f;
+    if (shadow == samples) {
+      return 1.0f; // Fully lit
+    } else if (shadow == 0) {
+      return 0.0f; // Fully shadowed
+    } else { 
+      return shadow / samples;
+    }  
   }
 
   void buildDirectionalLightMatrices(const Light &light,
