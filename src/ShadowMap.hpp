@@ -162,12 +162,8 @@ private:
   // Note: u, v assumed to be in [0, 1] range (caller validates)
   inline float sampleShadowSingle(float u, float v, float currentDepth,
                                   float bias) const {
-    int sx = static_cast<int>(u * width);
-    int sy = static_cast<int>(v * height);
-    if (sx == width)
-      sx = width - 1;
-    if (sy == height)
-      sy = height - 1;
+    int sx = static_cast<int>(u * (width-1));
+    int sy = static_cast<int>(v * (height-1));
 
     float storedDepth = getDepth(sx, sy);
 

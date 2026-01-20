@@ -1,4 +1,5 @@
 #include "amigaScene.hpp"
+#include "../objects/amiga.hpp"
 
 void AmigaScene::setup() {
 

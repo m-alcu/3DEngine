@@ -1,4 +1,5 @@
 #include "cubeScene.hpp"
+#include "../objects/cube.hpp"
 
 void CubeScene::setup() {
 

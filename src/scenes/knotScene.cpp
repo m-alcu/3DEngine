@@ -1,4 +1,5 @@
 #include "knotScene.hpp"
+#include "../objects/ascLoader.hpp"
 
 void KnotScene::setup() {
 

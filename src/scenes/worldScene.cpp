@@ -1,4 +1,5 @@
 #include "worldScene.hpp"
+#include "../objects/world.hpp"
 
 void WorldScene::setup() {
 

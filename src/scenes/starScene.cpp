@@ -1,4 +1,5 @@
 #include "starScene.hpp"
+#include "../objects/ascLoader.hpp"
 
 void StarScene::setup() {
 
@@ -27,7 +28,7 @@ void StarScene::setup() {
     ascLoader->enableCircularOrbit(/*center*/{ ascLoader->position.x,ascLoader->position.y,ascLoader->position.z },
         /*radius*/100.0f,
         /*planeNormal*/{ 0,0,1 },   // orbit in XZ plane
-        /*omega*/(3.14159265f / 1), // 60°/s
+        /*omega*/(3.14159265f / 1), // 60ï¿½/s
         /*initialPhase*/0.0f);
 
     addSolid(std::move(ascLoader));

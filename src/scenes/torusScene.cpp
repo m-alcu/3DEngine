@@ -1,4 +1,6 @@
 #include "torusScene.hpp"
+#include "../objects/torus.hpp"
+#include "../objects/icosahedron.hpp"
 
 void TorusScene::setup() {
 
@@ -40,7 +42,7 @@ void TorusScene::setup() {
     icosahedron->enableCircularOrbit(/*center*/{ icosahedron->position.x,icosahedron->position.y,icosahedron->position.z },
         /*radius*/1000.0f,
         /*planeNormal*/{ 0,1,1 },   // orbit in XZ plane
-        /*omega*/(3.14159265f / 3), // 60°/s
+        /*omega*/(3.14159265f / 3), // 60ï¿½/s
         /*initialPhase*/0.0f);
 
     addSolid(std::move(torus));

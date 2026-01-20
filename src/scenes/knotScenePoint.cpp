@@ -1,4 +1,6 @@
 #include "knotScenePoint.hpp"
+#include "../objects/ascLoader.hpp"
+#include "../objects/icosahedron.hpp"
 
 void KnotScenePoint::setup() {
 

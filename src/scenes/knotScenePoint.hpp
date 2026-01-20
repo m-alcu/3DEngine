@@ -1,5 +1,6 @@
 #pragma once
 #include "../scene.hpp"
+#include "../objects/icosahedron.hpp"
 
 class KnotScenePoint : public Scene {
   Icosahedron *lightSource = nullptr;

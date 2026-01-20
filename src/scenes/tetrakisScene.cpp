@@ -1,4 +1,5 @@
 #include "tetrakisScene.hpp"
+#include "../objects/tetrakis.hpp"
 
 void TetrakisScene::setup() {
 
