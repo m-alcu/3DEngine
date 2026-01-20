@@ -172,11 +172,11 @@ private:
     float storedDepth = getDepth(sx, sy);
 
     // If current depth (minus bias) is less than stored depth, we're in shadow
-    // More details in: https://developer.nvidia.com/gpugems/gpugems/part-ii-lighting-and-shadows/chapter-11-shadow-map-antialiasing
     return (currentDepth - bias < storedDepth) ? 1.0f : 0.0f;
   }
 
   // PCF (Percentage Closer Filtering) for soft shadow edges
+  // More details in: https://developer.nvidia.com/gpugems/gpugems/part-ii-lighting-and-shadows/chapter-11-shadow-map-antialiasing
   float sampleShadowPCF(float u, float v, float currentDepth,
                         float bias) const {
     // Convert to pixel coordinates once
