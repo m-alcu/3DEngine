@@ -73,12 +73,13 @@ public:
                           const Scene* /*scene*/,
                           const ShadowMap* shadowMap) const {
             Vertex vertex;
-
+            Projection<Vertex> projection;
             // Transform to world space
             vertex.world = modelMatrix * slib::vec4(vData.vertex, 1);
 
             // Transform to light clip space
             vertex.ndc = slib::vec4(vertex.world, 1) * shadowMap->lightSpaceMatrix;
+            projection.view(shadowMap->width, shadowMap->height, vertex, true);
 
             return vertex;
         }
@@ -90,7 +91,7 @@ public:
             // Project clipped vertices to shadow map space
             Projection<Vertex> projection;
             for (auto& point : poly.points) {
-                projection.view(width, height, point, true);
+                projection.view(width, height, point, false);
             }
         }
     };
