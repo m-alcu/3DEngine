@@ -195,21 +195,6 @@ namespace slib
         return x == rhs && y == rhs && z == rhs;
     }
 
-    vec3 vec3::operator*(const mat4& rhs) const
-    {
-        mat4 lhs({{this->x, this->y, this->z}});
-        lhs *= rhs;
-        return {lhs.data[0][0], lhs.data[0][1], lhs.data[0][2]};
-    }
-
-    vec3& vec3::operator*=(const mat4& rhs)
-    {
-        mat4 lhs({{this->x, this->y, this->z}});
-        lhs *= rhs;
-        *this = {lhs.data[0][0], lhs.data[0][1], lhs.data[0][2]};
-        return *this;
-    }
-
     bool vec3::operator<(const vec3& rhs) const
     {
         return x < rhs.x && y < rhs.y && z < rhs.z;
