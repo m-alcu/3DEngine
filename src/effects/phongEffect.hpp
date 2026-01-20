@@ -123,10 +123,7 @@ public:
       float spec = std::pow(specAngle, poly.material->Ns);
 
       // Shadow calculation
-      float shadow = 1.0f;
-      if (scene.shadowMap && scene.shadowsEnabled) {
-        shadow = scene.shadowMap->sampleShadow(vRaster.world, diff);
-      }
+      float shadow = scene.shadowMap && scene.shadowsEnabled ? scene.shadowMap->sampleShadow(vRaster.world, diff) : 1.0f;
 
       // Shadow affects diffuse and specular, not ambient
       slib::vec3 color = Ka + (Kd * diff * scene.light.intensity + Ks * spec) * shadow;

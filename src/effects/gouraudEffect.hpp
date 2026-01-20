@@ -106,10 +106,7 @@ public:
     uint32_t operator()(const Vertex &vRaster, const Scene &scene,
                         const Polygon<Vertex> &poly) const {
       // Shadow calculation
-      float shadow = 1.0f;
-      if (scene.shadowMap && scene.shadowsEnabled) {
-        shadow = scene.shadowMap->sampleShadow(vRaster.world, vRaster.diffuse);
-      }
+      float shadow = scene.shadowMap && scene.shadowsEnabled ? scene.shadowMap->sampleShadow(vRaster.world, vRaster.diffuse) : 1.0f;
 
       // Shadow affects diffuse, not ambient
       slib::vec3 color = poly.material->Ka + poly.material->Kd * vRaster.diffuse * scene.light.intensity * shadow;

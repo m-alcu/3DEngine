@@ -102,10 +102,7 @@ public:
     uint32_t operator()(const Vertex &vRaster, const Scene &scene,
                         const Polygon<Vertex> &poly) const {
       // Shadow calculation
-      float shadow = 1.0f;
-      if (scene.shadowMap && scene.shadowsEnabled) {
-        shadow = scene.shadowMap->sampleShadow(vRaster.world, poly.flatDiffuse);
-      }
+      float shadow = scene.shadowMap && scene.shadowsEnabled ? scene.shadowMap->sampleShadow(vRaster.world, poly.flatDiffuse) : 1.0f;
 
       // Recompute color with shadow applied to diffuse only
       const auto &Ka = poly.material->Ka;
