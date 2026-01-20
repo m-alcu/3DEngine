@@ -172,6 +172,7 @@ private:
     float storedDepth = getDepth(sx, sy);
 
     // If current depth (minus bias) is less than stored depth, we're in shadow
+    // More details in: https://developer.nvidia.com/gpugems/gpugems/part-ii-lighting-and-shadows/chapter-11-shadow-map-antialiasing
     return (currentDepth - bias < storedDepth) ? 1.0f : 0.0f;
   }
 
