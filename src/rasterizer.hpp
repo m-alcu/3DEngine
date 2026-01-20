@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cstdint>
 #include <cmath>
+#include <algorithm>
 #include <type_traits>
 #include "scene.hpp"
 #include "slib.hpp"
@@ -91,43 +92,81 @@ class Rasterizer {
         }
 
         void drawFaces() {
-            for (int i = 0; i < static_cast<int>(solid->faceData.size()); ++i) {
-                const auto& faceDataEntry = solid->faceData[i];
-                slib::vec3 rotatedFaceNormal{};
-                rotatedFaceNormal = normalMatrix * slib::vec4(faceDataEntry.faceNormal, 0);
+            if constexpr (isShadowEffect) {
+                // Shadow pass: no sorting needed, just render all visible faces
+                for (int i = 0; i < static_cast<int>(solid->faceData.size()); ++i) {
+                    const auto& faceDataEntry = solid->faceData[i];
+                    slib::vec3 rotatedFaceNormal{};
+                    rotatedFaceNormal = normalMatrix * slib::vec4(faceDataEntry.faceNormal, 0);
+                    vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];
 
-                vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];
+                    if (isFaceVisibleFromLight(p1.world, rotatedFaceNormal)) {
+                        std::vector<vertex> polyVerts;
+                        polyVerts.reserve(faceDataEntry.face.vertexIndices.size());
+                        for (int j : faceDataEntry.face.vertexIndices)
+                            polyVerts.push_back(projectedPoints[j]);
 
-                // For shadow effects: cull backfaces from light's perspective
-                // For regular rendering: cull backfaces from camera's perspective or wireframe check
-                bool shouldRender;
-                if constexpr (isShadowEffect) {
-                    // Shadow rendering: check visibility from light's perspective
-                    shouldRender = isFaceVisibleFromLight(p1.world, rotatedFaceNormal);
-                } else {
-                    // Regular rendering: check visibility from camera's perspective
-                    shouldRender = solid->shading == Shading::Wireframe ||
-                                   isFaceVisibleFromCamera(p1.world, rotatedFaceNormal);
+                        Polygon<vertex> poly(std::move(polyVerts), rotatedFaceNormal);
+                        auto clippedPoly = ClipCullPolygon(poly);
+                        if (!clippedPoly.points.empty()) {
+                            drawPolygon(clippedPoly);
+                        }
+                    }
+                }
+            } else {
+                // Regular rendering: collect visible faces and sort front-to-back for early Z-rejection
+                struct FaceDepth {
+                    int faceIndex;
+                    float depth;
+                };
+                std::vector<FaceDepth> visibleFaces;
+                visibleFaces.reserve(solid->faceData.size());
+
+                // First pass: collect visible faces with their depths
+                for (int i = 0; i < static_cast<int>(solid->faceData.size()); ++i) {
+                    const auto& faceDataEntry = solid->faceData[i];
+                    slib::vec3 rotatedFaceNormal{};
+                    rotatedFaceNormal = normalMatrix * slib::vec4(faceDataEntry.faceNormal, 0);
+                    vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];
+
+                    bool shouldRender = solid->shading == Shading::Wireframe ||
+                                        isFaceVisibleFromCamera(p1.world, rotatedFaceNormal);
+
+                    if (shouldRender) {
+                        // Compute average depth of face vertices (in view space, smaller = closer)
+                        float avgDepth = 0.0f;
+                        for (int j : faceDataEntry.face.vertexIndices) {
+                            avgDepth += projectedPoints[j].p_z;
+                        }
+                        avgDepth /= static_cast<float>(faceDataEntry.face.vertexIndices.size());
+
+                        visibleFaces.push_back({i, avgDepth});
+                    }
                 }
 
-                if (shouldRender) {
+                // Sort front-to-back (smaller depth = closer to camera = render first)
+                std::sort(visibleFaces.begin(), visibleFaces.end(),
+                    [](const FaceDepth& a, const FaceDepth& b) {
+                        return a.depth < b.depth;
+                    });
+
+                // Second pass: render in sorted order
+                for (const auto& fd : visibleFaces) {
+                    const auto& faceDataEntry = solid->faceData[fd.faceIndex];
+                    slib::vec3 rotatedFaceNormal{};
+                    rotatedFaceNormal = normalMatrix * slib::vec4(faceDataEntry.faceNormal, 0);
+
                     std::vector<vertex> polyVerts;
                     polyVerts.reserve(faceDataEntry.face.vertexIndices.size());
                     for (int j : faceDataEntry.face.vertexIndices)
                         polyVerts.push_back(projectedPoints[j]);
 
-                    Polygon<vertex> poly = [&]() {
-                        if constexpr (isShadowEffect) {
-                            return Polygon<vertex>(std::move(polyVerts), rotatedFaceNormal);
-                        } else {
-                            return Polygon<vertex>(
-                                std::move(polyVerts),
-                                faceDataEntry.face,
-                                rotatedFaceNormal,
-                                solid->materials.at(faceDataEntry.face.materialKey)
-                            );
-                        }
-                    }();
+                    Polygon<vertex> poly(
+                        std::move(polyVerts),
+                        faceDataEntry.face,
+                        rotatedFaceNormal,
+                        solid->materials.at(faceDataEntry.face.materialKey)
+                    );
 
                     auto clippedPoly = ClipCullPolygon(poly);
                     if (!clippedPoly.points.empty()) {
