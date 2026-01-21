@@ -42,7 +42,7 @@ public:
   // Subscribe to pcfRadius changes from a source (e.g., Scene)
   void subscribeToPcfRadiusChanges(sage::Event& event, int& sourceRadius) {
     eventManager.Subscribe([this, &sourceRadius]() {
-      pcfRadius = sourceRadius;
+      this->pcfRadius = sourceRadius;
     }, event);
   }
 
