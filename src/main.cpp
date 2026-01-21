@@ -369,6 +369,14 @@ int main(int, char **) {
 
       ImGui::Checkbox("Show Shadow Map Overlay", &scene->showShadowMapOverlay);
 
+      // PCF Radius control (0 = no filtering, 1 = 3x3, 2 = 5x5)
+      static const char* pcfLabels[] = { "Off (0)", "3x3 (1)", "5x5 (2)" };
+      int currentPcfRadius = scene->pcfRadius;
+      if (ImGui::Combo("PCF Radius", &currentPcfRadius, pcfLabels, IM_ARRAYSIZE(pcfLabels))) {
+        scene->pcfRadius = currentPcfRadius;
+        scene->pcfRadiusChanged.InvokeAllCallbacks();
+      }
+
       ImGui::End();
     }
 

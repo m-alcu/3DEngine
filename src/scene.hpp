@@ -9,6 +9,7 @@
 #include "backgrounds/background.hpp"
 #include "backgrounds/backgroundFactory.hpp"
 #include "camera.hpp"
+#include "events/Event.hpp"
 #include "light.hpp"
 #include "objects/solid.hpp"
 #include "slib.hpp"
@@ -47,6 +48,8 @@ public:
         spaceMatrix(smath::identity()) {
     pixels = new uint32_t[screen.width * screen.height];
     backg = new uint32_t[screen.width * screen.height];
+    // Subscribe shadowMap to pcfRadius changes
+    shadowMap->subscribeToPcfRadiusChanges(pcfRadiusChanged, pcfRadius);
   }
 
   // Destructor to free the allocated memory.
@@ -113,4 +116,8 @@ public:
   uint32_t *backg = nullptr;
   std::unique_ptr<Background> background = std::unique_ptr<Background>(
       BackgroundFactory::createBackground(backgroundType));
+
+  // PCF radius control (0 = no filtering, 1 = 3x3, 2 = 5x5)
+  int pcfRadius = SHADOW_PCF_RADIUS;
+  sage::Event pcfRadiusChanged;
 };

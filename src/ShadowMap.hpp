@@ -2,6 +2,7 @@
 
 #include "ZBuffer.hpp"
 #include "constants.hpp"
+#include "events/EventManager.hpp"
 #include "light.hpp"
 #include "slib.hpp"
 #include "smath.hpp"
@@ -26,6 +27,9 @@ public:
   // PCF kernel size (0 = no filtering, 1 = 3x3, 2 = 5x5, etc.)
   int pcfRadius = SHADOW_PCF_RADIUS;
 
+  // Event manager to keep callback subscriptions alive
+  sage::EventManager eventManager;
+
   ShadowMap(int w = 512, int h = 512)
       : width(w), height(h), zbuffer(w, h), lightViewMatrix(smath::identity()),
         lightProjMatrix(smath::identity()),
@@ -34,6 +38,13 @@ public:
   }
 
   void clear() { zbuffer.Clear(); }
+
+  // Subscribe to pcfRadius changes from a source (e.g., Scene)
+  void subscribeToPcfRadiusChanges(sage::Event& event, int& sourceRadius) {
+    eventManager.Subscribe([this, &sourceRadius]() {
+      pcfRadius = sourceRadius;
+    }, event);
+  }
 
   void resize(int w, int h) {
     width = w;
