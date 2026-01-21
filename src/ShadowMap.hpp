@@ -86,18 +86,15 @@ public:
       return 1.0f; // Avoid division by zero
     }
 
-    float ndcX = lightSpacePos.x / lightSpacePos.w;
-    float ndcY = lightSpacePos.y / lightSpacePos.w;
-    float currentDepth = lightSpacePos.z / lightSpacePos.w;
+    float oneOverW = 1.0f / lightSpacePos.w;
 
-    // Map from NDC [-1,1] to texture coords [0, width/height]
-    float u = (ndcX * 0.5f + 0.5f);
-    float v = (ndcY * 0.5f + 0.5f);
+    float ndcX = lightSpacePos.x * oneOverW;
+    float ndcY = lightSpacePos.y * oneOverW;
+    float currentDepth = lightSpacePos.z * oneOverW;
 
-    // Out of shadow map bounds = lit (no shadow info)
-    if (u < 0.0f || u > 1.0f || v < 0.0f || v > 1.0f) {
-      return 1.0f;
-    }
+    // Map from NDC [-1,1] to texture coords [0, screen]
+    int sx = static_cast<int>((ndcX * 0.5f + 0.5f) * width + 0.5f); // Convert from NDC to screen coordinates
+    int sy = static_cast<int>((ndcY * 0.5f + 0.5f) * height + 0.5f); // Convert from NDC to screen coordinates
 
     // Behind the light = lit
     if (currentDepth < -1.0f) {
@@ -105,9 +102,9 @@ public:
     }
 
     if (pcfRadius < 1) {
-      return sampleShadowSingle(u, v, currentDepth, dynamicBias);
+      return sampleShadowSingle(sx, sy, currentDepth, dynamicBias);
     } else {
-      return sampleShadowPCF(u, v, currentDepth, dynamicBias);
+      return sampleShadowPCF(sx, sy, currentDepth, dynamicBias);
     }
   }
 
@@ -160,50 +157,48 @@ private:
 
   // Single sample shadow test
   // Note: u, v assumed to be in [0, 1] range (caller validates)
-  inline float sampleShadowSingle(float u, float v, float currentDepth,
+  inline float sampleShadowSingle(int sx, int sy, float currentDepth,
                                   float bias) const {
-    int sx = static_cast<int>(u * (width-1));
-    int sy = static_cast<int>(v * (height-1));
+
+    // Out of shadow map bounds = lit (no shadow info)
+    if (sx < 0 || sx >= width || sy < 0 || sy >= height) {
+      return 1.0f;
+    }
 
     float storedDepth = getDepth(sx, sy);
-
     // If current depth (minus bias) is less than stored depth, we're in shadow
     return (currentDepth - bias < storedDepth) ? 1.0f : 0.0f;
   }
 
   // PCF (Percentage Closer Filtering) for soft shadow edges
   // More details in: https://developer.nvidia.com/gpugems/gpugems/part-ii-lighting-and-shadows/chapter-11-shadow-map-antialiasing
-  float sampleShadowPCF(float u, float v, float currentDepth,
+  float sampleShadowPCF(int sx, int sy, float currentDepth,
                         float bias) const {
-    // Convert to pixel coordinates once
-    int centerX = static_cast<int>(u * width);
-    int centerY = static_cast<int>(v * height);
-
-    float shadow = 0.0f;
+    int shadow = 0;
     int samples = 0;
 
     for (int dy = -pcfRadius; dy <= pcfRadius; dy++) {
-      int sy = centerY + dy;
-      if (sy < 0 || sy >= height)
+      int dsy = sy + dy;
+      if (dsy < 0 || dsy >= height)
         continue;
 
       for (int dx = -pcfRadius; dx <= pcfRadius; dx++) {
-        int sx = centerX + dx;
-        if (sx < 0 || sx >= width)
+        int dsx = sx + dx;
+        if (dsx < 0 || dsx >= width)
           continue;
 
-        float storedDepth = getDepth(sx, sy);
-        shadow += (currentDepth - bias < storedDepth) ? 1.0f : 0.0f;
+        float storedDepth = getDepth(dsx, dsy);
+        shadow += (currentDepth - bias < storedDepth) ? 1 : 0;
         samples++;
       }
     }
 
-    if (shadow == samples) {
-      return 1.0f; // Fully lit
-    } else if (shadow == 0) {
+    if (shadow == 0) {
       return 0.0f; // Fully shadowed
+    } else if (shadow == samples) {
+      return 1.0f; // Fully lit
     } else { 
-      return shadow / samples;
+      return static_cast<float>(shadow) / samples;
     }  
   }
 
