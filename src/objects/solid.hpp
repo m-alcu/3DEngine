@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <vector>
 #include <map>
+#include <string>
 #include "../slib.hpp"
 #include "../material.hpp"
 #include "../constants.hpp"
@@ -94,6 +95,7 @@ public:
     Shading shading;
     Position position;
 	bool rotationEnabled = true;
+    std::string name;
     std::map<std::string, Material> materials;
 
     int numVertices;
@@ -161,5 +163,4 @@ protected:
     virtual void loadFaces() = 0;
 	
 };
-
 

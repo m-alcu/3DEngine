@@ -229,15 +229,17 @@ int main(int, char **) {
               constexpr int64_t pickRadiusFP = 28 * FP;
               int64_t bestDist2 = pickRadiusFP * pickRadiusFP;
               int bestIndex = -1;
+              Projection<PickVertex> projection;
               for (size_t i = 0; i < scene->solids.size(); ++i) {
                 slib::vec3 worldCenter =
                     getSolidWorldCenter(*scene->solids[i]);
                 PickVertex pv;
                 pv.ndc = slib::vec4(worldCenter, 1.0f) * scene->spaceMatrix;
-                if (!Projection<PickVertex>::view(scene->screen.width,
-                        scene->screen.height, pv, true)) {
+                if (pv.ndc.w <= 0.0001f) {
                   continue;
                 }
+                projection.view(scene->screen.width, scene->screen.height, pv,
+                                true);
                 int64_t dx = pv.p_x - mouseXFP;
                 int64_t dy = pv.p_y - mouseYFP;
                 int64_t dist2 = dx * dx + dy * dy;
@@ -401,7 +403,12 @@ int main(int, char **) {
         std::vector<const char *> solidLabelPtrs;
         solidLabelPtrs.reserve(scene->solids.size());
         for (size_t i = 0; i < scene->solids.size(); ++i) {
-          solidLabels.push_back("Solid " + std::to_string(i));
+          const std::string &solidName = scene->solids[i]->name;
+          if (!solidName.empty()) {
+            solidLabels.push_back(solidName);
+          } else {
+            solidLabels.push_back("Solid " + std::to_string(i));
+          }
           solidLabelPtrs.push_back(solidLabels.back().c_str());
         }
 

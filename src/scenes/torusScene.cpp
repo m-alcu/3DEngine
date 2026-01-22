@@ -12,6 +12,7 @@ void TorusScene::setup() {
 
     clearAllSolids();
     auto torus = std::make_unique<Torus>();
+    torus->name = "Torus";
     torus->setup(20, 10, 500, 250);
 
     torus->position.z = -1000;
@@ -25,6 +26,7 @@ void TorusScene::setup() {
 	sceneType = SceneType::TORUS;
 
     auto icosahedron = std::make_unique<Icosahedron>();
+    icosahedron->name = "Light Icosahedron";
 
     icosahedron->position.z = -1000;
     icosahedron->position.x = 0;

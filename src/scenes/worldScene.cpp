@@ -11,6 +11,7 @@ void WorldScene::setup() {
 
     clearAllSolids();
     auto world = std::make_unique<World>();
+    world->name = "World";
     world->setup(16, 32);
 
     world->position.z = -150;

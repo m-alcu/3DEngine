@@ -11,6 +11,7 @@ void AmigaScene::setup() {
 
     clearAllSolids();
     auto amiga = std::make_unique<Amiga>();
+    amiga->name = "Amiga";
     amiga->setup(16, 32);
 
     amiga->position.z = -500;

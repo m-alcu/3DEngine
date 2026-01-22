@@ -7,10 +7,13 @@
 #include <string>
 #include <regex>
 #include <cstdint>
+#include <filesystem>
 #include "ascLoader.hpp"
 #include "../material.hpp"
 
 void AscLoader::setup(const std::string& filename) {
+    std::filesystem::path filePath(filename);
+    this->name = filePath.stem().string();
     loadVertices(filename);
     loadFaces();
     calculateNormals();

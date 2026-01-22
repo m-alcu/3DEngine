@@ -26,6 +26,7 @@ void KnotScenePoint::setup() {
 
   // Add Orbiting Icosahedron (from TorusScene) acting as light source
   auto icosahedron = std::make_unique<Icosahedron>();
+  icosahedron->name = "Light Icosahedron";
 
   // Initial position (will be overwritten by orbit)
   icosahedron->position.z = -500;

@@ -13,6 +13,7 @@ void CubeScene::setup() {
     clearAllSolids();
 
     auto cube = std::make_unique<Cube>();
+    cube->name = "Cube";
     cube->setup();
     cube->position.z = -500;
     cube->position.x = 0;

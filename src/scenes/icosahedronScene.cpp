@@ -11,6 +11,7 @@ void IcosahedronScene::setup() {
 
     clearAllSolids();
     auto icosahedron = std::make_unique<Icosahedron>();
+    icosahedron->name = "Icosahedron";
 
     icosahedron->position.z = -5000;
     icosahedron->position.x = 0;

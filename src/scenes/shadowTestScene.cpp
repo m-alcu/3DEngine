@@ -18,6 +18,7 @@ void ShadowTestScene::setup() {
 
   // Large floor plane (the receiver of shadows)
   auto floor = std::make_unique<Plane>(150.f);
+  floor->name = "Floor Plane";
   floor->setup();
   floor->position.z = -500;
   floor->position.x = 0;
@@ -31,8 +32,9 @@ void ShadowTestScene::setup() {
   addSolid(std::move(floor));
   sceneType = SceneType::SHADOWTEST;
 
-    // Large floor plane (the receiver of shadows)
+  // Large floor plane (the receiver of shadows)
   auto front = std::make_unique<Plane>(50.f);
+  front->name = "Front Plane";
   front->setup();
   front->position.z = -300;
   front->position.x = 0;

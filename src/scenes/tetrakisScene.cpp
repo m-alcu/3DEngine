@@ -11,6 +11,7 @@ void TetrakisScene::setup() {
 
     clearAllSolids();
     auto tetrakis = std::make_unique<Tetrakis>();
+    tetrakis->name = "Tetrakis";
 
     tetrakis->position.z = -5000;
     tetrakis->position.x = 0;
