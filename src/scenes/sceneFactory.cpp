@@ -1,5 +1,6 @@
 #include "sceneFactory.hpp"
 #include "amigaScene.hpp"
+#include "bunnyScene.hpp"
 #include "cubeScene.hpp"
 #include "icosahedronScene.hpp"
 #include "knotScene.hpp"
@@ -23,6 +24,8 @@ std::unique_ptr<Scene> SceneFactory::createScene(SceneType type, Screen scr) {
     return std::make_unique<KnotScene>(scr);
   case SceneType::KNOT_POINT:
     return std::make_unique<KnotScenePoint>(scr);
+  case SceneType::BUNNY:
+    return std::make_unique<BunnyScene>(scr);
   case SceneType::STAR:
     return std::make_unique<StarScene>(scr);
   case SceneType::TETRAKIS:

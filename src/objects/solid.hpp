@@ -51,13 +51,13 @@ struct FaceData {
 
 typedef struct Position
 {
-    float x;
-    float y;
-    float z;
-    float zoom;
-    float xAngle;
-    float yAngle;
-    float zAngle;    
+    float x = 0.0f;
+    float y = 0.0f;
+    float z = 0.0f;
+    float zoom = 1.0f;
+    float xAngle = 0.0f;
+    float yAngle = 0.0f;
+    float zAngle = 0.0f;
 } Position;
 
 enum class MaterialType {
@@ -135,6 +135,10 @@ public:
 
     virtual void calculateMinMaxCoords();
 
+    float getBoundingRadius() const;
+
+    void scaleToRadius(float targetRadius);
+
     virtual MaterialProperties getMaterialProperties(MaterialType type);
 
     virtual int getColorFromMaterial(const float color);
@@ -163,4 +167,3 @@ protected:
     virtual void loadFaces() = 0;
 	
 };
-

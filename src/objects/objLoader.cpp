@@ -19,6 +19,7 @@ void ObjLoader::setup(const std::string& filename) {
     calculateNormals();
     calculateVertexNormals();
     calculateMinMaxCoords();
+    this->scaleToRadius(400.0f);
 }
 
 void ObjLoader::loadVertices(const std::string& filename) {
@@ -91,9 +92,9 @@ void ObjLoader::loadVertices(const std::string& filename) {
 
                 FaceData faceData;
 
-				faceData.face.vertexIndices.push_back(std::stoi(match[3]) - 1);
-				faceData.face.vertexIndices.push_back(std::stoi(match[2]) - 1);
 				faceData.face.vertexIndices.push_back(std::stoi(match[1]) - 1);
+				faceData.face.vertexIndices.push_back(std::stoi(match[2]) - 1);
+				faceData.face.vertexIndices.push_back(std::stoi(match[3]) - 1);
                 faceData.face.materialKey = "blue"; // Default material key
                 faces.push_back(faceData);
             }

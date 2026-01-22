@@ -64,6 +64,22 @@ void Solid::calculateMinMaxCoords() {
     }
 }
 
+float Solid::getBoundingRadius() const {
+    slib::vec3 center{(minCoord.x + maxCoord.x) * 0.5f,
+                      (minCoord.y + maxCoord.y) * 0.5f,
+                      (minCoord.z + maxCoord.z) * 0.5f};
+    slib::vec3 halfDiag{maxCoord.x - center.x, maxCoord.y - center.y,
+                        maxCoord.z - center.z};
+    return smath::distance(halfDiag);
+}
+
+void Solid::scaleToRadius(float targetRadius) {
+    float radius = getBoundingRadius();
+    if (radius > 0.0f) {
+        position.zoom *= targetRadius / radius;
+    }
+}
+
 // Function returning MaterialProperties struct
 MaterialProperties Solid::getMaterialProperties(MaterialType type) {
     switch (type) {
@@ -168,5 +184,4 @@ void Solid::updateOrbit(float dt)
     position.z = P.z;
 
 }
-
 
