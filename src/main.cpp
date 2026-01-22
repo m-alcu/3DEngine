@@ -13,6 +13,7 @@
 // For a multi-platform app consider using e.g. SDL+DirectX on Windows and
 // SDL+OpenGL on Linux/OSX.
 
+#include "projection.hpp"
 #include "renderer.hpp"
 #include "scene.hpp"
 #include "scenes/sceneFactory.hpp"
@@ -30,6 +31,16 @@
 #endif
 
 namespace {
+
+// Minimal vertex struct for projection
+struct PickVertex {
+  slib::vec4 ndc;
+  int32_t p_x = 0;
+  int32_t p_y = 0;
+  float p_z = 0;
+  bool broken = false;
+};
+
 slib::vec3 getSolidWorldCenter(const Solid &solid) {
   slib::vec3 localCenter{(solid.minCoord.x + solid.maxCoord.x) * 0.5f,
                          (solid.minCoord.y + solid.maxCoord.y) * 0.5f,
@@ -46,19 +57,6 @@ slib::vec3 getSolidWorldCenter(const Solid &solid) {
   return {world.x, world.y, world.z};
 }
 
-bool projectToScreen(const slib::vec3 &world, const Scene &scene, float &outX,
-                     float &outY) {
-  slib::vec4 clip = slib::vec4(world, 1.0f) * scene.spaceMatrix;
-  if (clip.w <= 0.0001f) {
-    return false;
-  }
-  float invW = 1.0f / clip.w;
-  float ndcX = clip.x * invW;
-  float ndcY = clip.y * invW;
-  outX = (ndcX * 0.5f + 0.5f) * scene.screen.width;
-  outY = (ndcY * 0.5f + 0.5f) * scene.screen.height;
-  return true;
-}
 } // namespace
 
 // Main code
@@ -221,26 +219,28 @@ int main(int, char **) {
             int windowH = 0;
             SDL_GetWindowSizeInPixels(window, &windowW, &windowH);
             if (windowW > 0 && windowH > 0) {
-              float scaleX =
-                  static_cast<float>(scene->screen.width) / windowW;
-              float scaleY =
-                  static_cast<float>(scene->screen.height) / windowH;
-              float mouseX = ev.button.x * scaleX;
-              float mouseY = ev.button.y * scaleY;
-              constexpr float pickRadius = 28.0f;
-              float bestDist2 = pickRadius * pickRadius;
+              // Convert mouse to 16.16 fixed-point in scene coordinates
+              constexpr int32_t FP = 65536; // 1<<16
+              int32_t mouseXFP = static_cast<int32_t>(
+                  (ev.button.x * scene->screen.width / windowW + 0.5f) * FP);
+              int32_t mouseYFP = static_cast<int32_t>(
+                  (ev.button.y * scene->screen.height / windowH + 0.5f) * FP);
+              // Pick radius in 16.16 fixed-point (28 pixels)
+              constexpr int64_t pickRadiusFP = 28 * FP;
+              int64_t bestDist2 = pickRadiusFP * pickRadiusFP;
               int bestIndex = -1;
               for (size_t i = 0; i < scene->solids.size(); ++i) {
-                float sx = 0.0f;
-                float sy = 0.0f;
                 slib::vec3 worldCenter =
                     getSolidWorldCenter(*scene->solids[i]);
-                if (!projectToScreen(worldCenter, *scene, sx, sy)) {
+                PickVertex pv;
+                pv.ndc = slib::vec4(worldCenter, 1.0f) * scene->spaceMatrix;
+                if (!Projection<PickVertex>::view(scene->screen.width,
+                        scene->screen.height, pv, true)) {
                   continue;
                 }
-                float dx = sx - mouseX;
-                float dy = sy - mouseY;
-                float dist2 = dx * dx + dy * dy;
+                int64_t dx = pv.p_x - mouseXFP;
+                int64_t dy = pv.p_y - mouseYFP;
+                int64_t dist2 = dx * dx + dy * dy;
                 if (dist2 < bestDist2) {
                   bestDist2 = dist2;
                   bestIndex = static_cast<int>(i);

@@ -84,24 +84,22 @@ public:
                       const ShadowMap */*shadowMap*/) const {
       Vertex vertex;
       slib::vec3 normal{};
-      Projection<Vertex> projection;
       vertex.world = modelMatrix * slib::vec4(vData.vertex, 1);
       vertex.ndc = slib::vec4(vertex.world, 1) * scene->spaceMatrix;
       vertex.tex = slib::zvec2(vData.texCoord.x, vData.texCoord.y, 1);
       normal = normalMatrix * slib::vec4(vData.normal, 0);
       vertex.diffuse = std::max(
           0.0f, smath::dot(normal, scene->light.getDirection(vertex.world)));
-      projection.view(scene->screen.width, scene->screen.height, vertex, true);
+      Projection<Vertex>::view(scene->screen.width, scene->screen.height, vertex, true);
       return vertex;
     }
   };
 
   class GeometryShader {
   public:
-    void operator()(Polygon<Vertex> &poly, int32_t width, int32_t height, const Scene &scene) const {
-      Projection<Vertex> projection;
+    void operator()(Polygon<Vertex> &poly, int32_t width, int32_t height, const Scene &/*scene*/) const {
       for (auto &point : poly.points) {
-        projection.view(width, height, point, false);
+        Projection<Vertex>::view(width, height, point, false);
       }
     }
   };

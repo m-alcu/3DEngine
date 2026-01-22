@@ -73,13 +73,12 @@ public:
                           const Scene* /*scene*/,
                           const ShadowMap* shadowMap) const {
             Vertex vertex;
-            Projection<Vertex> projection;
             // Transform to world space
             vertex.world = modelMatrix * slib::vec4(vData.vertex, 1);
 
             // Transform to light clip space
             vertex.ndc = slib::vec4(vertex.world, 1) * shadowMap->lightSpaceMatrix;
-            projection.view(shadowMap->width, shadowMap->height, vertex, true);
+            Projection<Vertex>::view(shadowMap->width, shadowMap->height, vertex, true);
 
             return vertex;
         }
@@ -87,11 +86,10 @@ public:
 
     class GeometryShader {
     public:
-        void operator()(Polygon<Vertex>& poly, int32_t width, int32_t height, const Scene &scene) const {
+        void operator()(Polygon<Vertex>& poly, int32_t width, int32_t height, const Scene &/*scene*/) const {
             // Project clipped vertices to shadow map space
-            Projection<Vertex> projection;
             for (auto& point : poly.points) {
-                projection.view(width, height, point, false);
+                Projection<Vertex>::view(width, height, point, false);
             }
         }
     };

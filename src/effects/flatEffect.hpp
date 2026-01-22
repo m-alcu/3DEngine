@@ -68,10 +68,9 @@ public:
                       const Scene *scene,
                       const ShadowMap */*shadowMap*/) const {
       Vertex vertex;
-      Projection<Vertex> projection;
       vertex.world = modelMatrix * slib::vec4(vData.vertex, 1);
       vertex.ndc = slib::vec4(vertex.world, 1) * scene->spaceMatrix;
-      projection.view(scene->screen.width, scene->screen.height, vertex, true);
+      Projection<Vertex>::view(scene->screen.width, scene->screen.height, vertex, true);
       return vertex;
     }
   };
@@ -80,7 +79,6 @@ public:
   public:
     void operator()(Polygon<Vertex> &poly, int32_t width, int32_t height, const Scene &scene) const {
 
-      Projection<Vertex> projection;
       const slib::vec3 &luxDirection = scene.light.getDirection(
           poly.points[0].world); // any point aproximately the same
 
@@ -92,7 +90,7 @@ public:
       poly.flatDiffuse =
           std::max(0.0f, smath::dot(poly.rotatedFaceNormal, luxDirection));
       for (auto &point : poly.points) {
-        projection.view(width, height, point, false);
+        Projection<Vertex>::view(width, height, point, false);
       }
     }
   };
