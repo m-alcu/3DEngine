@@ -21,10 +21,45 @@
 #include "vendor/imgui/imgui_impl_sdlrenderer3.h"
 #include <SDL3/SDL.h>
 #include <stdio.h>
+#include <algorithm>
+#include <string>
+#include <vector>
 
 #ifdef __EMSCRIPTEN__
 #include "../libs/emscripten/emscripten_mainloop_stub.h"
 #endif
+
+namespace {
+slib::vec3 getSolidWorldCenter(const Solid &solid) {
+  slib::vec3 localCenter{(solid.minCoord.x + solid.maxCoord.x) * 0.5f,
+                         (solid.minCoord.y + solid.maxCoord.y) * 0.5f,
+                         (solid.minCoord.z + solid.maxCoord.z) * 0.5f};
+  slib::mat4 rotate = smath::rotation(
+      slib::vec3({solid.position.xAngle, solid.position.yAngle,
+                  solid.position.zAngle}));
+  slib::mat4 translate = smath::translation(
+      slib::vec3({solid.position.x, solid.position.y, solid.position.z}));
+  slib::mat4 scale = smath::scale(slib::vec3(
+      {solid.position.zoom, solid.position.zoom, solid.position.zoom}));
+  slib::mat4 modelMatrix = translate * rotate * scale;
+  slib::vec4 world = modelMatrix * slib::vec4(localCenter, 1.0f);
+  return {world.x, world.y, world.z};
+}
+
+bool projectToScreen(const slib::vec3 &world, const Scene &scene, float &outX,
+                     float &outY) {
+  slib::vec4 clip = slib::vec4(world, 1.0f) * scene.spaceMatrix;
+  if (clip.w <= 0.0001f) {
+    return false;
+  }
+  float invW = 1.0f / clip.w;
+  float ndcX = clip.x * invW;
+  float ndcY = clip.y * invW;
+  outX = (ndcX * 0.5f + 0.5f) * scene.screen.width;
+  outY = (ndcY * 0.5f + 0.5f) * scene.screen.height;
+  return true;
+}
+} // namespace
 
 // Main code
 int main(int, char **) {
@@ -119,15 +154,14 @@ int main(int, char **) {
   scene->setup();
 
   float lastMouseX = 0, lastMouseY = 0;
+  int selectedSolidIndex = 0;
 
   // After scene.setup();
-  if (!scene->solids.empty()) {
-    // If you have a centroid method: scene.solids[0]->centroid();
-    scene->camera.orbitTarget = {
-        scene->solids[0]->position.x, scene->solids[0]->position.y,
-        scene->solids[0]->position.z}; // or compute one
-  }
-  scene->camera.setOrbitFromCurrent();
+    if (!scene->solids.empty()) {
+      selectedSolidIndex = 0;
+      scene->camera.orbitTarget = getSolidWorldCenter(*scene->solids[0]);
+    }
+    scene->camera.setOrbitFromCurrent();
 
   // Main loop
   bool closedWindow = false;
@@ -179,6 +213,46 @@ int main(int, char **) {
             SDL_GetMouseState(&lastMouseX, &lastMouseY);
             SDL_SetWindowRelativeMouseMode(
                 window, true); // hide cursor + get relative deltas
+          }
+        }
+        if (ev.button.button == SDL_BUTTON_LEFT) {
+          if (!ImGui::GetIO().WantCaptureMouse && !scene->solids.empty()) {
+            int windowW = 0;
+            int windowH = 0;
+            SDL_GetWindowSizeInPixels(window, &windowW, &windowH);
+            if (windowW > 0 && windowH > 0) {
+              float scaleX =
+                  static_cast<float>(scene->screen.width) / windowW;
+              float scaleY =
+                  static_cast<float>(scene->screen.height) / windowH;
+              float mouseX = ev.button.x * scaleX;
+              float mouseY = ev.button.y * scaleY;
+              constexpr float pickRadius = 28.0f;
+              float bestDist2 = pickRadius * pickRadius;
+              int bestIndex = -1;
+              for (size_t i = 0; i < scene->solids.size(); ++i) {
+                float sx = 0.0f;
+                float sy = 0.0f;
+                slib::vec3 worldCenter =
+                    getSolidWorldCenter(*scene->solids[i]);
+                if (!projectToScreen(worldCenter, *scene, sx, sy)) {
+                  continue;
+                }
+                float dx = sx - mouseX;
+                float dy = sy - mouseY;
+                float dist2 = dx * dx + dy * dy;
+                if (dist2 < bestDist2) {
+                  bestDist2 = dist2;
+                  bestIndex = static_cast<int>(i);
+                }
+              }
+              if (bestIndex >= 0) {
+                selectedSolidIndex = bestIndex;
+                scene->camera.orbitTarget =
+                    getSolidWorldCenter(*scene->solids[bestIndex]);
+                scene->camera.setOrbitFromCurrent();
+              }
+            }
           }
         }
         break;
@@ -318,12 +392,82 @@ int main(int, char **) {
       ImGui::SliderFloat("pitch/yaw/roll sens", &scene->camera.sensitivity,
                          0.0f, 10.0f);
 
-      // Render combo box in your ImGui window code
-      int currentShading = static_cast<int>(scene->solids[0]->shading);
-      if (ImGui::Combo("Shading", &currentShading, shadingNames,
-                       IM_ARRAYSIZE(shadingNames))) {
-        // Update the enum value when selection changes
-        scene->solids[0]->shading = static_cast<Shading>(currentShading);
+      if (!scene->solids.empty()) {
+        selectedSolidIndex =
+            std::clamp(selectedSolidIndex, 0,
+                       static_cast<int>(scene->solids.size() - 1));
+        std::vector<std::string> solidLabels;
+        solidLabels.reserve(scene->solids.size());
+        std::vector<const char *> solidLabelPtrs;
+        solidLabelPtrs.reserve(scene->solids.size());
+        for (size_t i = 0; i < scene->solids.size(); ++i) {
+          solidLabels.push_back("Solid " + std::to_string(i));
+          solidLabelPtrs.push_back(solidLabels.back().c_str());
+        }
+
+        if (ImGui::Combo("Selected Solid", &selectedSolidIndex,
+                         solidLabelPtrs.data(),
+                         static_cast<int>(solidLabelPtrs.size()))) {
+          scene->camera.orbitTarget =
+              getSolidWorldCenter(*scene->solids[selectedSolidIndex]);
+          scene->camera.setOrbitFromCurrent();
+        }
+
+        Solid *selectedSolid = scene->solids[selectedSolidIndex].get();
+
+        int currentShading = static_cast<int>(selectedSolid->shading);
+        if (ImGui::Combo("Shading", &currentShading, shadingNames,
+                         IM_ARRAYSIZE(shadingNames))) {
+          selectedSolid->shading = static_cast<Shading>(currentShading);
+        }
+
+        ImGui::Checkbox("Rotate", &selectedSolid->rotationEnabled);
+        float position[3] = {selectedSolid->position.x,
+                             selectedSolid->position.y,
+                             selectedSolid->position.z};
+        if (ImGui::DragFloat3("Position", position, 1.0f)) {
+          selectedSolid->position.x = position[0];
+          selectedSolid->position.y = position[1];
+          selectedSolid->position.z = position[2];
+        }
+
+        ImGui::DragFloat("Zoom", &selectedSolid->position.zoom, 0.1f, 0.01f,
+                         500.0f);
+
+        float angles[3] = {selectedSolid->position.xAngle,
+                           selectedSolid->position.yAngle,
+                           selectedSolid->position.zAngle};
+        if (ImGui::DragFloat3("Angles", angles, 1.0f, -360.0f, 360.0f)) {
+          selectedSolid->position.xAngle = angles[0];
+          selectedSolid->position.yAngle = angles[1];
+          selectedSolid->position.zAngle = angles[2];
+        }
+
+        bool orbitEnabled = selectedSolid->orbit_.enabled;
+        if (ImGui::Checkbox("Enable Orbit", &orbitEnabled)) {
+          if (orbitEnabled) {
+            selectedSolid->enableCircularOrbit(selectedSolid->orbit_.center,
+                                               selectedSolid->orbit_.radius,
+                                               selectedSolid->orbit_.n,
+                                               selectedSolid->orbit_.omega,
+                                               selectedSolid->orbit_.phase);
+          } else {
+            selectedSolid->disableCircularOrbit();
+          }
+        }
+
+        float orbitCenter[3] = {selectedSolid->orbit_.center.x,
+                                selectedSolid->orbit_.center.y,
+                                selectedSolid->orbit_.center.z};
+        if (ImGui::DragFloat3("Orbit Center", orbitCenter, 1.0f)) {
+          selectedSolid->orbit_.center =
+              {orbitCenter[0], orbitCenter[1], orbitCenter[2]};
+        }
+
+        ImGui::DragFloat("Orbit Radius", &selectedSolid->orbit_.radius, 0.1f,
+                         0.0f, 10000.0f);
+        ImGui::DragFloat("Orbit Speed", &selectedSolid->orbit_.omega, 0.01f,
+                         -10.0f, 10.0f);
       }
 
       int currentBackground = static_cast<int>(scene->backgroundType);
@@ -344,12 +488,10 @@ int main(int, char **) {
         scene->setup();
         // Update orbitTarget to first solid's position
         if (!scene->solids.empty()) {
-          scene->camera.orbitTarget = {scene->solids[0]->position.x,
-                                       scene->solids[0]->position.y,
-                                       scene->solids[0]->position.z};
+          selectedSolidIndex = 0;
+          scene->camera.orbitTarget = getSolidWorldCenter(*scene->solids[0]);
         }
         scene->camera.setOrbitFromCurrent();
-        scene->solids[0]->shading = static_cast<Shading>(currentShading);
         scene->backgroundType = static_cast<BackgroundType>(currentBackground);
         scene->background = std::unique_ptr<Background>(
             BackgroundFactory::createBackground(scene->backgroundType));
