@@ -105,7 +105,7 @@ public:
 
     // Map from NDC [-1,1] to texture coords [0, screen]
     int sx = static_cast<int>((ndcX * 0.5f + 0.5f) * width + 0.5f); // Convert from NDC to screen coordinates
-    int sy = static_cast<int>((ndcY * 0.5f + 0.5f) * height + 0.5f); // Convert from NDC to screen coordinates
+    int sy = static_cast<int>((-ndcY * 0.5f + 0.5f) * height + 0.5f); // Convert from NDC to screen coordinates
 
     // Behind the light = lit
     if (currentDepth < -1.0f) {

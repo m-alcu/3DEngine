@@ -222,7 +222,7 @@ class Rasterizer {
             std::array<decltype(first), 2> cur{ first, first };
             auto gety = [&](int side) -> int { return cur[side]->p_y >> 16; };
 
-            int forwards = 1;
+            int forwards = 0;
             Slope<vertex> slopes[2] {};
 
             for(int side = 0, cury = gety(side), nexty[2] = {cury,cury}, hy = cury * screenWidth; cur[side] != last; )
