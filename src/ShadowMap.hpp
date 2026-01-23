@@ -59,10 +59,9 @@ public:
     return zbuffer.TestAndSet(pos, depth);
   }
 
-  // Get depth at pixel (x, y)
-  float getDepth(int x, int y) const {
-    size_t idx = static_cast<size_t>(y) * width + x;
-    return zbuffer.Get(static_cast<int>(idx));
+  // Get depth at position (y * width + x)
+  float getDepth(int pos) const {
+    return zbuffer.Get(pos);
   }
 
   // Build light-space matrices for shadow mapping
@@ -176,7 +175,7 @@ private:
       return 1.0f;
     }
 
-    float storedDepth = getDepth(sx, sy);
+    float storedDepth = getDepth(sy * width + sx);
     // If current depth (minus bias) is less than stored depth, we're in shadow
     return (currentDepth - bias < storedDepth) ? 1.0f : 0.0f;
   }
@@ -198,7 +197,7 @@ private:
         if (dsx < 0 || dsx >= width)
           continue;
 
-        float storedDepth = getDepth(dsx, dsy);
+        float storedDepth = getDepth(dsy * width + dsx);
         shadow += (currentDepth - bias < storedDepth) ? 1 : 0;
         samples++;
       }

@@ -168,9 +168,7 @@ public:
     float maxDepth = -1.0f;
 
     for (int i = 0; i < sm.width * sm.height; ++i) {
-      int x = i % sm.width;
-      int y = i / sm.width;
-      float d = sm.getDepth(x, y);
+      float d = sm.getDepth(i);
       minDepth = std::min(minDepth, d);
       maxDepth = std::max(maxDepth, d);
     }
@@ -201,7 +199,7 @@ public:
         smX = std::clamp(smX, 0, sm.width - 1);
         smY = std::clamp(smY, 0, sm.height - 1);
 
-        float depth = sm.getDepth(smX, smY);
+        float depth = sm.getDepth(smY * sm.width + smX);
 
         uint8_t gray;
         if (depth == 1.0f) {
