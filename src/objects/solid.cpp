@@ -73,6 +73,21 @@ float Solid::getBoundingRadius() const {
     return smath::distance(halfDiag);
 }
 
+slib::vec3 Solid::getWorldCenter() const {
+    slib::vec3 localCenter{(minCoord.x + maxCoord.x) * 0.5f,
+                           (minCoord.y + maxCoord.y) * 0.5f,
+                           (minCoord.z + maxCoord.z) * 0.5f};
+    slib::mat4 rotate = smath::rotation(
+        slib::vec3{position.xAngle, position.yAngle, position.zAngle});
+    slib::mat4 translate = smath::translation(
+        slib::vec3{position.x, position.y, position.z});
+    slib::mat4 scale = smath::scale(
+        slib::vec3{position.zoom, position.zoom, position.zoom});
+    slib::mat4 modelMatrix = translate * rotate * scale;
+    slib::vec4 world = modelMatrix * slib::vec4(localCenter, 1.0f);
+    return {world.x, world.y, world.z};
+}
+
 void Solid::scaleToRadius(float targetRadius) {
     float radius = getBoundingRadius();
     if (radius > 0.0f) {

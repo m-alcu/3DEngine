@@ -41,22 +41,6 @@ struct PickVertex {
   bool broken = false;
 };
 
-slib::vec3 getSolidWorldCenter(const Solid &solid) {
-  slib::vec3 localCenter{(solid.minCoord.x + solid.maxCoord.x) * 0.5f,
-                         (solid.minCoord.y + solid.maxCoord.y) * 0.5f,
-                         (solid.minCoord.z + solid.maxCoord.z) * 0.5f};
-  slib::mat4 rotate = smath::rotation(
-      slib::vec3({solid.position.xAngle, solid.position.yAngle,
-                  solid.position.zAngle}));
-  slib::mat4 translate = smath::translation(
-      slib::vec3({solid.position.x, solid.position.y, solid.position.z}));
-  slib::mat4 scale = smath::scale(slib::vec3(
-      {solid.position.zoom, solid.position.zoom, solid.position.zoom}));
-  slib::mat4 modelMatrix = translate * rotate * scale;
-  slib::vec4 world = modelMatrix * slib::vec4(localCenter, 1.0f);
-  return {world.x, world.y, world.z};
-}
-
 } // namespace
 
 // Main code
@@ -157,7 +141,7 @@ int main(int, char **) {
   // After scene.setup();
     if (!scene->solids.empty()) {
       selectedSolidIndex = 0;
-      scene->camera.orbitTarget = getSolidWorldCenter(*scene->solids[0]);
+      scene->camera.orbitTarget = scene->solids[0]->getWorldCenter();
     }
     scene->camera.setOrbitFromCurrent();
 
@@ -229,17 +213,15 @@ int main(int, char **) {
               constexpr int64_t pickRadiusFP = 28 * FP;
               int64_t bestDist2 = pickRadiusFP * pickRadiusFP;
               int bestIndex = -1;
-              Projection<PickVertex> projection;
               for (size_t i = 0; i < scene->solids.size(); ++i) {
                 slib::vec3 worldCenter =
-                    getSolidWorldCenter(*scene->solids[i]);
+                    scene->solids[i]->getWorldCenter();
                 PickVertex pv;
                 pv.ndc = slib::vec4(worldCenter, 1.0f) * scene->spaceMatrix;
-                if (pv.ndc.w <= 0.0001f) {
+                if (!Projection<PickVertex>::view(scene->screen.width,
+                        scene->screen.height, pv, true)) {
                   continue;
                 }
-                projection.view(scene->screen.width, scene->screen.height, pv,
-                                true);
                 int64_t dx = pv.p_x - mouseXFP;
                 int64_t dy = pv.p_y - mouseYFP;
                 int64_t dist2 = dx * dx + dy * dy;
@@ -251,7 +233,7 @@ int main(int, char **) {
               if (bestIndex >= 0) {
                 selectedSolidIndex = bestIndex;
                 scene->camera.orbitTarget =
-                    getSolidWorldCenter(*scene->solids[bestIndex]);
+                    scene->solids[bestIndex]->getWorldCenter();
                 scene->camera.setOrbitFromCurrent();
               }
             }
@@ -416,7 +398,7 @@ int main(int, char **) {
                          solidLabelPtrs.data(),
                          static_cast<int>(solidLabelPtrs.size()))) {
           scene->camera.orbitTarget =
-              getSolidWorldCenter(*scene->solids[selectedSolidIndex]);
+              scene->solids[selectedSolidIndex]->getWorldCenter();
           scene->camera.setOrbitFromCurrent();
         }
 
@@ -496,7 +478,7 @@ int main(int, char **) {
         // Update orbitTarget to first solid's position
         if (!scene->solids.empty()) {
           selectedSolidIndex = 0;
-          scene->camera.orbitTarget = getSolidWorldCenter(*scene->solids[0]);
+          scene->camera.orbitTarget = scene->solids[0]->getWorldCenter();
         }
         scene->camera.setOrbitFromCurrent();
         scene->backgroundType = static_cast<BackgroundType>(currentBackground);

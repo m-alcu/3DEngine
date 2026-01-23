@@ -137,6 +137,8 @@ public:
 
     float getBoundingRadius() const;
 
+    slib::vec3 getWorldCenter() const;
+
     void scaleToRadius(float targetRadius);
 
     virtual MaterialProperties getMaterialProperties(MaterialType type);
