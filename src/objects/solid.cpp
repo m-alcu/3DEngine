@@ -88,6 +88,33 @@ slib::vec3 Solid::getWorldCenter() const {
     return {world.x, world.y, world.z};
 }
 
+void Solid::updateWorldBounds(slib::vec3& minV, slib::vec3& maxV) const {
+    slib::mat4 rotate = smath::rotation(
+        slib::vec3{position.xAngle, position.yAngle, position.zAngle});
+    slib::mat4 translate = smath::translation(
+        slib::vec3{position.x, position.y, position.z});
+    slib::mat4 scale = smath::scale(
+        slib::vec3{position.zoom, position.zoom, position.zoom});
+    slib::mat4 modelMatrix = translate * rotate * scale;
+
+    // 8 corners of the AABB
+    slib::vec3 corners[8] = {
+        {minCoord.x, minCoord.y, minCoord.z}, {minCoord.x, minCoord.y, maxCoord.z},
+        {minCoord.x, maxCoord.y, minCoord.z}, {minCoord.x, maxCoord.y, maxCoord.z},
+        {maxCoord.x, minCoord.y, minCoord.z}, {maxCoord.x, minCoord.y, maxCoord.z},
+        {maxCoord.x, maxCoord.y, minCoord.z}, {maxCoord.x, maxCoord.y, maxCoord.z}};
+
+    for (const auto& corner : corners) {
+        slib::vec4 world = modelMatrix * slib::vec4(corner, 1.0f);
+        minV.x = std::min(minV.x, world.x);
+        minV.y = std::min(minV.y, world.y);
+        minV.z = std::min(minV.z, world.z);
+        maxV.x = std::max(maxV.x, world.x);
+        maxV.y = std::max(maxV.y, world.y);
+        maxV.z = std::max(maxV.z, world.z);
+    }
+}
+
 void Solid::scaleToRadius(float targetRadius) {
     float radius = getBoundingRadius();
     if (radius > 0.0f) {

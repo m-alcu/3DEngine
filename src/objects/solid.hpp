@@ -139,6 +139,8 @@ public:
 
     slib::vec3 getWorldCenter() const;
 
+    void updateWorldBounds(slib::vec3& minV, slib::vec3& maxV) const;
+
     void scaleToRadius(float targetRadius);
 
     virtual MaterialProperties getMaterialProperties(MaterialType type);
