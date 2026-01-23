@@ -14,9 +14,9 @@ void BunnyScene::setup() {
     bunny->setup("resources/bunny.obj");
 
     bunny->position.z = -500;
-    bunny->position.x = 0;
-    bunny->position.y = 0;
-    bunny->position.xAngle = 0.0f;
+    bunny->position.x = 100;
+    bunny->position.y = -250;
+    bunny->position.xAngle = -10.0f;
     bunny->position.yAngle = 0.0f;
     bunny->position.zAngle = 0.0f;
     bunny->shading = Shading::TexturedPhong;

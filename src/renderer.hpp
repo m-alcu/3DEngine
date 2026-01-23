@@ -201,11 +201,8 @@ public:
 
         float depth = sm.getDepth(smY * sm.width + smX);
 
-        uint8_t gray;
-        if (depth == 1.0f) {
-          // No geometry - show as black
-          gray = 0;
-        } else {
+        uint8_t gray = 0;
+        if (depth < 1.0f) {
           // Normalize depth to 255-0 (inverse: closer = brighter)
           float normalized = (maxDepth - depth) / depthRange;
           gray = static_cast<uint8_t>(

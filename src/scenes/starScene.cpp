@@ -17,10 +17,10 @@ void StarScene::setup() {
     ascLoader->position.x = 0;
     ascLoader->position.y = 0;
     ascLoader->position.zoom = 1;
-    ascLoader->position.xAngle = 90.0f;
+    ascLoader->position.xAngle = 0.0f;
     ascLoader->position.yAngle = 0.0f;
     ascLoader->position.zAngle = 0.0f;
-    ascLoader->shading = Shading::Flat;
+    ascLoader->shading = Shading::TexturedBlinnPhong;
 	sceneType = SceneType::STAR;
 
     ascLoader->setup("resources/STAR.ASC");
