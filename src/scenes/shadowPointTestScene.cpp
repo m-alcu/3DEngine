@@ -54,4 +54,5 @@ void ShadowPointTestScene::setup() {
 void ShadowPointTestScene::update(float dt) {
   // Update light position to follow camera
   //light.position = camera.pos;
+  Scene::update(dt);
 }
