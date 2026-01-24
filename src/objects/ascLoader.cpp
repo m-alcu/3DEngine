@@ -7,13 +7,18 @@
 #include <string>
 #include <regex>
 #include <cstdint>
+#include <filesystem>
 #include "ascLoader.hpp"
+#include "../material.hpp"
 
 void AscLoader::setup(const std::string& filename) {
+    std::filesystem::path filePath(filename);
+    this->name = filePath.stem().string();
     loadVertices(filename);
     loadFaces();
     calculateNormals();
     calculateVertexNormals();
+    calculateMinMaxCoords();
 }
 
 void AscLoader::loadVertices(const std::string& filename) {
@@ -35,12 +40,12 @@ void AscLoader::loadVertices(const std::string& filename) {
 
     std::string mtlPath = "checker-map_tho.png";
 
-    slib::material material{};
+    Material material{};
     material.Ka = { properties.k_a * 0x00, properties.k_a * 0x00, properties.k_a * 0x00 };
     material.Kd = { properties.k_d * 0x00, properties.k_d * 0x58, properties.k_d * 0xfc }; 
     material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };
     material.map_Kd = DecodePng(std::string(RES_PATH + mtlPath).c_str());
-    material.map_Kd.textureFilter = slib::TextureFilter::NEIGHBOUR;    
+    material.map_Kd.setFilter(TextureFilter::NEIGHBOUR);    
     material.Ns = properties.shininess;
     materials.insert({"blue", material});
 
@@ -48,7 +53,7 @@ void AscLoader::loadVertices(const std::string& filename) {
     material.Kd = { properties.k_d * 0xff, properties.k_d * 0xff, properties.k_d * 0xff };
     material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };
     material.map_Kd = DecodePng(std::string(RES_PATH + mtlPath).c_str());
-    material.map_Kd.textureFilter = slib::TextureFilter::NEIGHBOUR;    
+    material.map_Kd.setFilter(TextureFilter::NEIGHBOUR);    
     material.Ns = properties.shininess;
     materials.insert({"white", material});          
 
@@ -101,9 +106,12 @@ void AscLoader::loadVertices(const std::string& filename) {
                 std::smatch match;
 
                 if (std::regex_search(line, match, faceRegex)) {
-                    faceData.face.vertex1 = std::stoi(match[1]);
-                    faceData.face.vertex2 = std::stoi(match[2]);
-                    faceData.face.vertex3 = std::stoi(match[3]);
+
+                    FaceData faceData;
+
+					faceData.face.vertexIndices.push_back(std::stoi(match[1]));
+					faceData.face.vertexIndices.push_back(std::stoi(match[2]));
+					faceData.face.vertexIndices.push_back(std::stoi(match[3]));
                     faceData.face.materialKey = "blue"; // Default material key
                     faces.push_back(faceData);
                 }

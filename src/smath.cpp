@@ -6,6 +6,7 @@
 #include "constants.hpp"
 #include <cmath>
 #include <algorithm>
+#include <cstdint>
 
 namespace smath
 {
@@ -36,7 +37,7 @@ namespace smath
     slib::vec3 cross(const slib::vec3& v1, const slib::vec3& v2) {
         return slib::vec3({
             v1.y * v2.z - v1.z * v2.y,
-            v1.z * v2.x - v1.x * v2.z, // FIXED HERE
+            v1.z * v2.x - v1.x * v2.z, 
             v1.x * v2.y - v1.y * v2.x
         });
     }
@@ -71,7 +72,21 @@ namespace smath
         return mat;
     }
 
-    slib::mat4 view(const slib::vec3& eye, const slib::vec3& target, const slib::vec3& up)
+    slib::mat4 ortho(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar)
+    {
+        const float rl = right - left;
+        const float tb = top - bottom;
+        const float nearmfar = zNear - zFar;
+
+        slib::mat4 mat(
+            {{2.0f / rl, 0, 0, 0},
+             {0, 2.0f / tb, 0, 0},
+             {0, 0, 2.0f / nearmfar, 0},
+             {-(right + left) / rl, -(top + bottom) / tb, (zFar + zNear) / nearmfar, 1}});
+        return mat;
+    }
+
+    slib::mat4 lookAt(const slib::vec3& eye, const slib::vec3& target, const slib::vec3& up)
     {
         slib::vec3 zaxis = normalize(eye - target);
         slib::vec3 xaxis = normalize(cross(up, zaxis));
@@ -86,27 +101,35 @@ namespace smath
         return viewMatrix;
     }
 
-    slib::mat4 fpsview(const slib::vec3& eye, float pitch, float yaw)
+    slib::mat4 fpsview(const slib::vec3& eye, float pitch, float yaw, float roll)
     {
-        pitch *= RAD;
-        yaw *= RAD;
-        float cosPitch = cos(pitch);
-        float sinPitch = sin(pitch);
-        float cosYaw = cos(yaw);
-        float sinYaw = sin(yaw);
 
-        slib::vec3 xaxis = {cosYaw, 0, -sinYaw};
-        slib::vec3 yaxis = {sinYaw * sinPitch, cosPitch, cosYaw * sinPitch};
-        slib::vec3 zaxis = {sinYaw * cosPitch, -sinPitch, cosPitch * cosYaw};
+        const float cp = std::cos(-pitch), sp = std::sin(-pitch);
+        const float cy = std::cos(-yaw), sy = std::sin(-yaw);
+        const float cr = std::cos(roll), sr = std::sin(roll);
 
-        slib::mat4 viewMatrix(
-            {{xaxis.x, yaxis.x, zaxis.x, 0},
-             {xaxis.y, yaxis.y, zaxis.y, 0},
-             {xaxis.z, yaxis.z, zaxis.z, 0},
-             {-dot(xaxis, eye), -dot(yaxis, eye), -dot(zaxis, eye), 1}});
+        // Base FPS axes from yaw/pitch (your original)
+        slib::vec3 xaxis = { cy,        0.0f, -sy }; // right
+        slib::vec3 yaxis = { sy * sp,     cp,    cy * sp }; // up
+        slib::vec3 zaxis = { sy * cp,    -sp,    cy * cp }; // forward (view dir)
 
-        return viewMatrix;
+        // Roll around the forward axis (zaxis): rotate (x,y) in their plane
+        slib::vec3 x = xaxis * cr + yaxis * sr;
+        slib::vec3 y = yaxis * cr - xaxis * sr;
+        const slib::vec3& z = zaxis;
+
+        // (Optional) re-orthonormalize if you worry about drift:
+        // x = normalize(x); y = normalize(y - z*dot(y,z));  x = normalize(cross(y,z)); // etc.
+
+        slib::mat4 view(
+            { { x.x,  y.x,  z.x, 0.0f },
+             { x.y,  y.y,  z.y, 0.0f },
+             { x.z,  y.z,  z.z, 0.0f },
+             { -dot(x, eye), -dot(y, eye), -dot(z, eye), 1.0f } });
+
+        return view;
     }
+
 
     slib::mat4 rotation(const slib::vec3& eulerAngles)
     {
@@ -143,49 +166,6 @@ namespace smath
     slib::mat4 identity()
     {
         return slib::mat4({{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}});
-    }
-
-    void sampleNearest(const slib::texture& tex, float u, float v, int& r, int& g, int& b)
-    {
-        int tx = static_cast<int>(u * (tex.w - 1));
-        int ty = static_cast<int>(v * (tex.h - 1));
-        int index = (ty * tex.w + tx) * tex.bpp;
-
-        r = tex.data[index];
-        g = tex.data[index + 1];
-        b = tex.data[index + 2];
-    }
-
-    void sampleBilinear(const slib::texture& tex, float u, float v, float& r, float& g, float& b)
-    {
-        float tx = u * tex.w - 0.5f;
-        float ty = v * tex.h - 0.5f;
-
-        int left = std::clamp(static_cast<int>(tx), 0, tex.w - 2);
-        int top = std::clamp(static_cast<int>(ty), 0, tex.h - 2);
-        int right = left + 1;
-        int bottom = top + 1;
-
-        float fracU = tx - left;
-        float fracV = ty - top;
-
-        float ul = (1.0f - fracU) * (1.0f - fracV);
-        float ll = (1.0f - fracU) * fracV;
-        float ur = fracU * (1.0f - fracV);
-        float lr = fracU * fracV;
-
-        auto idx = [&](int x, int y) {
-            return (y * tex.w + x) * tex.bpp;
-        };
-
-        auto tL = idx(left, top);
-        auto tR = idx(right, top);
-        auto bL = idx(left, bottom);
-        auto bR = idx(right, bottom);
-
-        r = ul * tex.data[tL] + ll * tex.data[bL] + ur * tex.data[tR] + lr * tex.data[bR];
-        g = ul * tex.data[tL + 1] + ll * tex.data[bL + 1] + ur * tex.data[tR + 1] + lr * tex.data[bR + 1];
-        b = ul * tex.data[tL + 2] + ll * tex.data[bL + 2] + ur * tex.data[tR + 2] + lr * tex.data[bR + 2];
     }
 
 } // namespace smath

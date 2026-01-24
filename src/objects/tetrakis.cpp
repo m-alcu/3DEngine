@@ -2,6 +2,7 @@
 #include <math.h>
 #include <cstdint>
 #include "tetrakis.hpp"
+#include "../material.hpp"
 
 void Tetrakis::loadVertices() {
     const float half = 50.f;
@@ -45,12 +46,12 @@ void Tetrakis::loadFaces() {
 
     std::string mtlPath = "checker-map_tho.png";
     // Create and store the material
-    slib::material material{};
+    Material material{};
     material.Ka = { properties.k_a * 0x00, properties.k_a * 0x58, properties.k_a * 0xfc };
     material.Kd = { properties.k_d * 0x00, properties.k_d * 0x58, properties.k_d * 0xfc }; 
     material.Ks = { properties.k_s * 0x00, properties.k_s * 0x58, properties.k_s * 0xfc };
     material.map_Kd = DecodePng(std::string(RES_PATH + mtlPath).c_str());
-    material.map_Kd.textureFilter = slib::TextureFilter::NEIGHBOUR;
+    material.map_Kd.setFilter(TextureFilter::NEIGHBOUR);
     material.Ns = properties.shininess;
     materials.insert({"blue", material});
 
@@ -58,7 +59,7 @@ void Tetrakis::loadFaces() {
     material.Kd = { properties.k_d * 0xff, properties.k_d * 0xff, properties.k_d * 0xff };
     material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };
     material.map_Kd = DecodePng(std::string(RES_PATH + mtlPath).c_str());
-    material.map_Kd.textureFilter = slib::TextureFilter::NEIGHBOUR;    
+    material.map_Kd.setFilter(TextureFilter::NEIGHBOUR);    
     material.Ns = properties.shininess;
     materials.insert({"white", material});    
 
@@ -81,9 +82,10 @@ void Tetrakis::loadFaces() {
             uint32_t color = ((j % 2 == 0) ? 0xff0058fc : 0Xffffffff);
 
             FaceData face;
-            face.face.vertex1 = quads[i][(j + 1) % 4]; // wrap-around for the quad
-            face.face.vertex2 = quads[i][j];
-            face.face.vertex3 = centers[i];
+
+            face.face.vertexIndices.push_back(quads[i][(j + 1) % 4]);
+            face.face.vertexIndices.push_back(quads[i][j]);
+            face.face.vertexIndices.push_back(centers[i]);
 
             if (j % 2 == 0) {
                 face.face.materialKey = "blue";

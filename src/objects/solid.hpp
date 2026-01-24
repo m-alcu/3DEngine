@@ -2,12 +2,14 @@
 #include <cstdint>
 #include <vector>
 #include <map>
+#include <string>
 #include "../slib.hpp"
+#include "../material.hpp"
 #include "../constants.hpp"
+#include "../smath.hpp"
 
 enum class Shading {
-    AmigaFlat,
-    AmigaWireframe,
+    Wireframe,
     Flat,
     Gouraud,
     BlinnPhong,
@@ -20,8 +22,7 @@ enum class Shading {
 
 // Labels for the enum (must match order of enum values)
 static const char* shadingNames[] = {
-    "Amiga Flat",
-    "Amiga Wireframe",
+    "Wireframe",
     "Flat",
     "Gouraud",
     "Blinn-Phong",
@@ -40,9 +41,7 @@ struct VertexData {
 
 typedef struct Face
 {
-    int vertex1;
-    int vertex2;
-    int vertex3;
+	std::vector<int> vertexIndices; // For wireframe rendering
     std::string materialKey;
 } Face;
 
@@ -53,13 +52,13 @@ struct FaceData {
 
 typedef struct Position
 {
-    float x;
-    float y;
-    float z;
-    float zoom;
-    float xAngle;
-    float yAngle;
-    float zAngle;    
+    float x = 0.0f;
+    float y = 0.0f;
+    float z = 0.0f;
+    float zoom = 1.0f;
+    float xAngle = 0.0f;
+    float yAngle = 0.0f;
+    float zAngle = 0.0f;
 } Position;
 
 enum class MaterialType {
@@ -69,7 +68,8 @@ enum class MaterialType {
     Marble,
     Glass,
     Metal,
-    Mirror 
+    Mirror,
+    Light
 };
 
 // Struct to hold k_s, k_a, and k_d values
@@ -80,22 +80,45 @@ struct MaterialProperties {
     float shininess;
 };
 
+struct OrbitState {
+    slib::vec3 center{ 0,0,0 };   // orbit center
+    float radius = 1.0f;         // orbit radius
+    slib::vec3 n{ 0,1,0 };         // plane normal (unit)
+    float omega = 1.0f;          // angular speed (radians/sec)
+    float phase = 0.0f;          // current angle (radians)
+    bool enabled = false;
+};
+
 class Solid {
 public:
     std::vector<VertexData> vertexData;
     std::vector<FaceData> faceData;
     Shading shading;
     Position position;
-    std::map<std::string, slib::material> materials;
+    slib::mat4 modelMatrix;
+    slib::mat4 normalMatrix;
+	bool rotationEnabled = true;
+    float incXangle = 0.0f;  // Rotation speed around X axis
+    float incYangle = 0.0f;  // Rotation speed around Y axis
+    std::string name;
+    std::map<std::string, Material> materials;
 
     int numVertices;
     int numFaces;
+	bool lightSourceEnabled = false;
+
+    // Orthonormal basis of the orbit plane
+    slib::vec3 orbitU{ 1,0,0 };
+    slib::vec3 orbitV{ 0,0,1 };
+    OrbitState orbit_;
+
+    // Minimum and maximum coordinates for bounding box
+    slib::vec3 minCoord{};
+    slib::vec3 maxCoord{};
  
 public:
     // Base constructor that initializes common data members.
-    Solid() 
-    {
-    }
+    Solid();
 
     // Virtual destructor for proper cleanup in derived classes.
     virtual ~Solid() = default;
@@ -106,22 +129,50 @@ public:
         loadFaces();
         calculateNormals();
         calculateVertexNormals();
+        calculateMinMaxCoords();
     }
 
     virtual void calculateNormals();
 
     virtual void calculateVertexNormals();
 
+    virtual void calculateMinMaxCoords();
+
+    float getBoundingRadius() const;
+
+    slib::vec3 getWorldCenter() const;
+
+    void updateWorldBounds(slib::vec3& minV, slib::vec3& maxV) const;
+
+    void scaleToRadius(float targetRadius);
+
+    void calculateTransformMat();
+
     virtual MaterialProperties getMaterialProperties(MaterialType type);
 
     virtual int getColorFromMaterial(const float color);
 
-    slib::texture DecodePng(const char* filename);
+    Texture DecodePng(const char* filename);
+
+    virtual void rotate(float xAngle, float yAngle, float zAngle);
+
+    virtual void buildOrbitBasis(const slib::vec3& n);
+
+    // Enable a circular orbit
+    virtual void enableCircularOrbit(const slib::vec3& center,
+        float radius,
+        const slib::vec3& planeNormal,
+        float angularSpeedRadiansPerSec,
+        float initialPhaseRadians = 0.0f,
+        bool faceCenter = false);
+
+    virtual void disableCircularOrbit();
+
+    virtual void updateOrbit(float dt);
 
 protected:
     // Protected virtual methods to be implemented by derived classes.
     virtual void loadVertices() = 0;
     virtual void loadFaces() = 0;
+	
 };
-
-

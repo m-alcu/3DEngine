@@ -2,6 +2,7 @@
 #include <math.h>
 #include <cstdint>
 #include "torus.hpp"
+#include "../material.hpp"
 #include "../constants.hpp"
 
 void Torus::loadVertices() {
@@ -53,13 +54,13 @@ void Torus::loadFaces(int uSteps, int vSteps) {
 
     std::string mtlPath = "checker-map_tho.png";
 
-    slib::material material{};
+    Material material{};
     material.Ka = { properties.k_a * 0x00, properties.k_a * 0x00, properties.k_a * 0x00 };
     material.Kd = { properties.k_d * 0x00, properties.k_d * 0x58, properties.k_d * 0xfc }; 
     material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };
     material.Ns = properties.shininess;
     material.map_Kd = DecodePng(std::string(RES_PATH + mtlPath).c_str());
-    material.map_Kd.textureFilter = slib::TextureFilter::NEIGHBOUR;
+    material.map_Kd.setFilter(TextureFilter::NEIGHBOUR);
     materials.insert({"blue", material});
 
     material.Ka = { properties.k_a * 0x00, properties.k_a * 0x00, properties.k_a * 0x00 };
@@ -67,7 +68,7 @@ void Torus::loadFaces(int uSteps, int vSteps) {
     material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };
     material.Ns = properties.shininess;
     material.map_Kd = DecodePng(std::string(RES_PATH + mtlPath).c_str());
-    material.map_Kd.textureFilter = slib::TextureFilter::NEIGHBOUR;
+    material.map_Kd.setFilter(TextureFilter::NEIGHBOUR);
     materials.insert({"white", material});  
 
     int faceIndex = 0;
@@ -81,18 +82,21 @@ void Torus::loadFaces(int uSteps, int vSteps) {
             int idx2 = nextI * vSteps + nextJ;
             int idx3 = i * vSteps + nextJ;
 
-            FaceData face;
-            face.face.vertex1 = idx0;
-            face.face.vertex2 = idx1; // wrap-around for the quad
-            face.face.vertex3 = idx2;
-            face.face.materialKey = "blue";
-            faces.push_back(face);
+            FaceData face1;
 
-            face.face.vertex1 = idx0;
-            face.face.vertex2 = idx2; // wrap-around for the quad
-            face.face.vertex3 = idx3;
-            face.face.materialKey = "white";
-            faces.push_back(face);
+			face1.face.vertexIndices.push_back(idx0);
+			face1.face.vertexIndices.push_back(idx1);
+			face1.face.vertexIndices.push_back(idx2);
+            face1.face.materialKey = "blue";
+            faces.push_back(face1);
+
+            FaceData face2;
+
+			face2.face.vertexIndices.push_back(idx0);
+			face2.face.vertexIndices.push_back(idx2);
+			face2.face.vertexIndices.push_back(idx3);
+            face2.face.materialKey = "white";
+            faces.push_back(face2);
         }
     }
 

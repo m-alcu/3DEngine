@@ -1,90 +1,215 @@
 #pragma once
-#include <SDL3/SDL.h>
-#include <iostream>
-#include <cstdint>
+
+#include "effects/blinnPhongEffect.hpp"
+#include "effects/flatEffect.hpp"
+#include "effects/gouraudEffect.hpp"
+#include "effects/phongEffect.hpp"
+#include "effects/shadowEffect.hpp"
+#include "effects/texturedBlinnPhongEffect.hpp"
+#include "effects/texturedFlatEffect.hpp"
+#include "effects/texturedGouraudEffect.hpp"
+#include "effects/texturedPhongEffect.hpp"
 #include "objects/solid.hpp"
 #include "rasterizer.hpp"
-#include "amigaRasterizer.hpp"
-#include "effects/flatEffect.hpp"
-#include "effects/amigaFlatEffect.hpp"
-#include "effects/GouraudEffect.hpp"
-#include "effects/BlinnPhongEffect.hpp"
-#include "effects/PhongEffect.hpp"
-#include "effects/TexturedFlatEffect.hpp"
-#include "effects/TexturedGouraudEffect.hpp"
-#include "effects/TexturedPhongEffect.hpp"
-#include "effects/TexturedBlinnPhongEffect.hpp"
+#include <cstdint>
 
 class Renderer {
 
-    public:
+public:
+  void drawScene(Scene &scene) {
+    // Shadow pass - render depth from light's perspective
+    if (scene.shadowMap && scene.shadowsEnabled) {
+      renderShadowPass(scene);
+    }
 
-        void drawScene(Scene& scene, float zNear, float zFar, float viewAngle, uint32_t* back) {
+    scene.drawBackground();
 
-            prepareFrame(scene, zNear, zFar, viewAngle, back);
-            for (auto& solidPtr : scene.solids) {
-                switch (solidPtr->shading) {
-                    case Shading::Flat: 
-                        flatRasterizer.drawRenderable(*solidPtr, scene);
-                        break;   
-                    case Shading::AmigaFlat:
-                        amigaFlatRasterizer.setWireframe(false);
-                        amigaFlatRasterizer.drawRenderable(*solidPtr, scene);
-                        break;        
-                    case Shading::AmigaWireframe: 
-                        amigaFlatRasterizer.setWireframe(true);
-                        amigaFlatRasterizer.drawRenderable(*solidPtr, scene);
-                        break;                                              
-                    case Shading::TexturedFlat: 
-                        texturedFlatRasterizer.drawRenderable(*solidPtr, scene);
-                        break;                             
-                    case Shading::Gouraud: 
-                        gouraudRasterizer.drawRenderable(*solidPtr, scene);
-                        break;
-                    case Shading::TexturedGouraud: 
-                        texturedGouraudRasterizer.drawRenderable(*solidPtr, scene);
-                        break;                        
-                    case Shading::BlinnPhong:
-                        blinnPhongRasterizer.drawRenderable(*solidPtr, scene);
-                        break;  
-                    case Shading::TexturedBlinnPhong:
-                        texturedBlinnPhongRasterizer.drawRenderable(*solidPtr, scene);
-                        break;                                                       
-                    case Shading::Phong:
-                        phongRasterizer.drawRenderable(*solidPtr, scene);
-                        break;      
-                    case Shading::TexturedPhong:
-                        texturedPhongRasterizer.drawRenderable(*solidPtr, scene);
-                        break;                                             
-                    default: flatRasterizer.drawRenderable(*solidPtr, scene);
-                }
-            }
+    prepareFrame(scene);
+    for (auto &solidPtr : scene.solids) {
+      switch (solidPtr->shading) {
+      case Shading::Flat:
+        flatRasterizer.drawRenderable(*solidPtr, &scene);
+        break;
+      case Shading::Wireframe:
+        flatRasterizer.drawRenderable(*solidPtr, &scene);
+        break;
+      case Shading::TexturedFlat:
+        texturedFlatRasterizer.drawRenderable(*solidPtr, &scene);
+        break;
+      case Shading::Gouraud:
+        gouraudRasterizer.drawRenderable(*solidPtr, &scene);
+        break;
+      case Shading::TexturedGouraud:
+        texturedGouraudRasterizer.drawRenderable(*solidPtr, &scene);
+        break;
+      case Shading::BlinnPhong:
+        blinnPhongRasterizer.drawRenderable(*solidPtr, &scene);
+        break;
+      case Shading::TexturedBlinnPhong:
+        texturedBlinnPhongRasterizer.drawRenderable(*solidPtr, &scene);
+        break;
+      case Shading::Phong:
+        phongRasterizer.drawRenderable(*solidPtr, &scene);
+        break;
+      case Shading::TexturedPhong:
+        texturedPhongRasterizer.drawRenderable(*solidPtr, &scene);
+        break;
+      default:
+        flatRasterizer.drawRenderable(*solidPtr, &scene);
+      }
+    }
+
+    if (scene.showShadowMapOverlay) {
+      drawShadowMapOverlay(scene);
+    }
+  }
+
+  void renderShadowPass(Scene &scene) {
+    scene.shadowMap->clear();
+
+    // Build light matrices using scene's pre-calculated bounds
+    scene.shadowMap->buildLightMatrices(scene.light, scene.sceneCenter, scene.sceneRadius);
+
+    // Render all shadow-casting solids to the shadow map
+    for (auto &solidPtr : scene.solids) {
+      // Skip light sources - they don't cast shadows on themselves
+      if (!solidPtr->lightSourceEnabled) {
+        shadowRasterizer.drawRenderable(*solidPtr, &scene,
+                                        scene.shadowMap.get());
+      }
+    }
+  }
+
+  void prepareFrame(Scene &scene) {
+
+    // std::fill_n(scene.pixels, scene.screen.width * scene.screen.height, 0);
+    std::copy(scene.backg,
+              scene.backg + scene.screen.width * scene.screen.height,
+              scene.pixels);
+    scene.zBuffer->Clear(); // Clear the zBuffer
+
+    float aspectRatio =
+        (float)scene.screen.width / scene.screen.height; // Width / Height ratio
+    float fovRadians = scene.camera.viewAngle * (PI / 180.0f);
+
+    slib::mat4 projectionMatrix =
+        smath::perspective(scene.camera.zFar, scene.camera.zNear, aspectRatio, fovRadians);
+
+    slib::mat4 viewMatrix =
+        scene.orbiting ? smath::lookAt(scene.camera.pos,
+                                       scene.camera.orbitTarget, {0, 1, 0})
+                       : smath::fpsview(scene.camera.pos, scene.camera.pitch,
+                                        scene.camera.yaw, scene.camera.roll);
+    scene.spaceMatrix = viewMatrix * projectionMatrix;
+
+    // Used in BlinnPhong shading
+    // NOTE: For performance we approximate the per-fragment view vector V with
+    // -camera.forward. This assumes all view rays are parallel (like an
+    // orthographic camera). Works well when the camera is far away or objects
+    // are small on screen. Not physically correct: highlights will "stick" to
+    // the camera instead of sliding across surfaces when moving in perspective,
+    // but it�s often a good enough approximation.d
+    scene.forwardNeg = {-scene.camera.forward.x, -scene.camera.forward.y,
+                        -scene.camera.forward.z};
+  }
+
+  // Draw the shadow map as a small overlay in the corner of the screen
+  void drawShadowMapOverlay(Scene &scene, int overlaySize = SHADOW_MAP_OVERVIEW_SIZE,
+                            int margin = 10) {
+    if (!scene.shadowMap || !scene.shadowsEnabled)
+      return;
+
+    const ShadowMap &sm = *scene.shadowMap;
+
+    // Position in bottom-left corner
+    int startX = margin;
+    int startY = scene.screen.height - overlaySize - margin;
+
+    // Find min/max depth for normalization (excluding max float values)
+    float minDepth = 1.0f;
+    float maxDepth = -1.0f;
+
+    for (int i = 0; i < sm.width * sm.height; ++i) {
+      float d = sm.getDepth(i);
+      minDepth = std::min(minDepth, d);
+      maxDepth = std::max(maxDepth, d);
+    }
+
+    // Avoid division by zero
+    float depthRange = maxDepth - minDepth;
+    if (depthRange < 0.0001f)
+      depthRange = 1.0f;
+
+    // Scale factors for sampling the shadow map
+    float scaleX = static_cast<float>(sm.width) / overlaySize;
+    float scaleY = static_cast<float>(sm.height) / overlaySize;
+
+    for (int y = 0; y < overlaySize; ++y) {
+      for (int x = 0; x < overlaySize; ++x) {
+        int screenX = startX + x;
+        int screenY = startY + y;
+
+        // Bounds check
+        if (screenX < 0 || screenX >= scene.screen.width || screenY < 0 ||
+            screenY >= scene.screen.height) {
+          continue;
         }
 
-        void prepareFrame(Scene& scene, float zNear, float zFar, float viewAngle, uint32_t* back) {
+        // Sample from shadow map
+        int smX = static_cast<int>(x * scaleX);
+        int smY = static_cast<int>(y * scaleY);
+        smX = std::clamp(smX, 0, sm.width - 1);
+        smY = std::clamp(smY, 0, sm.height - 1);
 
-            //std::fill_n(scene.pixels, scene.screen.width * scene.screen.height, 0);
-            auto* pixels = static_cast<uint32_t*>(scene.sdlSurface->pixels);
-            std::copy(back, back + scene.screen.width * scene.screen.height, pixels);
-            scene.zBuffer->Clear(); // Clear the zBuffer
-        
-            //float zNear = 0.1f; // Near plane distance
-            //float zFar  = 10000.0f; // Far plane distance
-            float aspectRatio = (float) scene.screen.width / scene.screen.height; // Width / Height ratio
-            float fovRadians = viewAngle * (PI / 180.0f);
-        
-            scene.projectionMatrix = smath::perspective(zFar, zNear, aspectRatio, fovRadians);
+        float depth = sm.getDepth(smY * sm.width + smX);
+
+        uint8_t gray = 0;
+        if (depth < 1.0f) {
+          // Normalize depth to 255-0 (inverse: closer = brighter)
+          float normalized = (maxDepth - depth) / depthRange;
+          gray = static_cast<uint8_t>(
+              std::clamp(normalized * 255.0f, 0.0f, 255.0f));
         }
-        
-        Rasterizer<FlatEffect> flatRasterizer;
-        AmigaRasterizer<AmigaFlatEffect> amigaFlatRasterizer;
-        Rasterizer<GouraudEffect> gouraudRasterizer;
-        Rasterizer<PhongEffect> phongRasterizer;
-        Rasterizer<BlinnPhongEffect> blinnPhongRasterizer;
-        Rasterizer<TexturedFlatEffect> texturedFlatRasterizer;
-        Rasterizer<TexturedGouraudEffect> texturedGouraudRasterizer;
-        Rasterizer<TexturedPhongEffect> texturedPhongRasterizer;
-        Rasterizer<TexturedBlinnPhongEffect> texturedBlinnPhongRasterizer;
+
+        // ARGB format
+        uint32_t color = (255 << 24) | (gray << 16) | (gray << 8) | gray;
+        scene.pixels[screenY * scene.screen.width + screenX] = color;
+      }
+    }
+
+    // Draw border around the overlay
+    uint32_t borderColor =
+        (255 << 24) | (255 << 16) | (255 << 8) | 255; // White border
+    for (int x = 0; x < overlaySize; ++x) {
+      int topY = startY;
+      int bottomY = startY + overlaySize - 1;
+      if (startX + x >= 0 && startX + x < scene.screen.width) {
+        if (topY >= 0 && topY < scene.screen.height)
+          scene.pixels[topY * scene.screen.width + startX + x] = borderColor;
+        if (bottomY >= 0 && bottomY < scene.screen.height)
+          scene.pixels[bottomY * scene.screen.width + startX + x] = borderColor;
+      }
+    }
+    for (int y = 0; y < overlaySize; ++y) {
+      int leftX = startX;
+      int rightX = startX + overlaySize - 1;
+      if (startY + y >= 0 && startY + y < scene.screen.height) {
+        if (leftX >= 0 && leftX < scene.screen.width)
+          scene.pixels[(startY + y) * scene.screen.width + leftX] = borderColor;
+        if (rightX >= 0 && rightX < scene.screen.width)
+          scene.pixels[(startY + y) * scene.screen.width + rightX] =
+              borderColor;
+      }
+    }
+  }
+
+  Rasterizer<FlatEffect> flatRasterizer;
+  Rasterizer<GouraudEffect> gouraudRasterizer;
+  Rasterizer<PhongEffect> phongRasterizer;
+  Rasterizer<BlinnPhongEffect> blinnPhongRasterizer;
+  Rasterizer<TexturedFlatEffect> texturedFlatRasterizer;
+  Rasterizer<TexturedGouraudEffect> texturedGouraudRasterizer;
+  Rasterizer<TexturedPhongEffect> texturedPhongRasterizer;
+  Rasterizer<TexturedBlinnPhongEffect> texturedBlinnPhongRasterizer;
+  Rasterizer<ShadowEffect> shadowRasterizer;
 };
-
-

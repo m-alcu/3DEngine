@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cmake --build:*)",
+      "Bash(cmake:*)",
+      "Bash(make:*)",
+      "Bash(ls:*)",
+      "Bash(dir c:/proy/render/3DEngine/build*)"
+    ]
+  }
+}

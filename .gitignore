@@ -1,3 +1,9 @@
 cmake-build-debug
 .idea
 build
+build-msvc
+.vs
+.cache
+.claude
+CMakeSettings.json
+tmp*

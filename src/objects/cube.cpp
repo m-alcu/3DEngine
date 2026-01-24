@@ -2,6 +2,7 @@
 #include <math.h>
 #include <cstdint>
 #include "cube.hpp"
+#include "../material.hpp"
 
 
 void Cube::loadVertices() {
@@ -14,17 +15,11 @@ void Cube::loadVertices() {
     v.vertex = { -half, -half, +half }; v.texCoord = { 1, 1 }; vertices.push_back(v);
     v.vertex = { +half, -half, +half }; v.texCoord = { 0, 1 }; vertices.push_back(v);
     v.vertex = { +half, +half, +half }; v.texCoord = { 0, 0 }; vertices.push_back(v);
-    
-    v.vertex = { -half, -half, +half }; v.texCoord = { 1, 1 }; vertices.push_back(v);
-    v.vertex = { +half, +half, +half }; v.texCoord = { 0, 0 }; vertices.push_back(v);
     v.vertex = { -half, +half, +half }; v.texCoord = { 1, 0 }; vertices.push_back(v);
 
     // Back face (z = -half)
     v.vertex = { +half, -half, -half }; v.texCoord = { 1, 1 }; vertices.push_back(v);
     v.vertex = { -half, -half, -half }; v.texCoord = { 0, 1 }; vertices.push_back(v);
-    v.vertex = { -half, +half, -half }; v.texCoord = { 0, 0 }; vertices.push_back(v);
-
-    v.vertex = { +half, -half, -half }; v.texCoord = { 1, 1 }; vertices.push_back(v);
     v.vertex = { -half, +half, -half }; v.texCoord = { 0, 0 }; vertices.push_back(v);
     v.vertex = { +half, +half, -half }; v.texCoord = { 1, 0 }; vertices.push_back(v);
 
@@ -32,17 +27,11 @@ void Cube::loadVertices() {
     v.vertex = { -half, -half, -half }; v.texCoord = { 1, 1 }; vertices.push_back(v);
     v.vertex = { -half, -half, +half }; v.texCoord = { 0, 1 }; vertices.push_back(v);
     v.vertex = { -half, +half, +half }; v.texCoord = { 0, 0 }; vertices.push_back(v);
-
-    v.vertex = { -half, -half, -half }; v.texCoord = { 1, 1 }; vertices.push_back(v);
-    v.vertex = { -half, +half, +half }; v.texCoord = { 0, 0 }; vertices.push_back(v);
     v.vertex = { -half, +half, -half }; v.texCoord = { 1, 0 }; vertices.push_back(v);
 
     // Right face (x = +half)
     v.vertex = { +half, -half, +half }; v.texCoord = { 1, 1 }; vertices.push_back(v);
     v.vertex = { +half, -half, -half }; v.texCoord = { 0, 1 }; vertices.push_back(v);
-    v.vertex = { +half, +half, -half }; v.texCoord = { 0, 0 }; vertices.push_back(v);
-
-    v.vertex = { +half, -half, +half }; v.texCoord = { 1, 1 }; vertices.push_back(v);
     v.vertex = { +half, +half, -half }; v.texCoord = { 0, 0 }; vertices.push_back(v);
     v.vertex = { +half, +half, +half }; v.texCoord = { 1, 0 }; vertices.push_back(v);
 
@@ -50,17 +39,11 @@ void Cube::loadVertices() {
     v.vertex = { -half, +half, +half }; v.texCoord = { 1, 1 }; vertices.push_back(v);
     v.vertex = { +half, +half, +half }; v.texCoord = { 0, 1 }; vertices.push_back(v);
     v.vertex = { +half, +half, -half }; v.texCoord = { 0, 0 }; vertices.push_back(v);
-
-    v.vertex = { -half, +half, +half }; v.texCoord = { 1, 1 }; vertices.push_back(v);
-    v.vertex = { +half, +half, -half }; v.texCoord = { 0, 0 }; vertices.push_back(v);
     v.vertex = { -half, +half, -half }; v.texCoord = { 1, 0 }; vertices.push_back(v);
 
     // Bottom face (y = -half)
     v.vertex = { -half, -half, -half }; v.texCoord = { 1, 1 }; vertices.push_back(v);
     v.vertex = { +half, -half, -half }; v.texCoord = { 0, 1 }; vertices.push_back(v);
-    v.vertex = { +half, -half, +half }; v.texCoord = { 0, 0 }; vertices.push_back(v);
-
-    v.vertex = { -half, -half, -half }; v.texCoord = { 1, 1 }; vertices.push_back(v);
     v.vertex = { +half, -half, +half }; v.texCoord = { 0, 0 }; vertices.push_back(v);
     v.vertex = { -half, -half, +half }; v.texCoord = { 1, 0 }; vertices.push_back(v);
 
@@ -75,7 +58,7 @@ void Cube::loadFaces() {
     std::string mtlPath = "checker-map_tho.png";
 
     // Create and store the material
-    slib::material material{};
+    Material material{};
 
     material.Ka = { properties.k_a * 0x00, properties.k_a * 0x00, properties.k_a * 0x00 };
     material.Kd = { properties.k_d * 0xff, properties.k_d * 0xff, properties.k_d * 0xff };
@@ -85,12 +68,13 @@ void Cube::loadFaces() {
     materials.insert({materialKey, material});
 
     // Each face has 2 triangles, so for each face we generate 6 indices
-    for (int baseIndex = 0; baseIndex < 6*6; baseIndex += 6) {
+    for (int baseIndex = 0; baseIndex < 4*6; baseIndex += 4) {
 
-        FaceData face1 { .face = { baseIndex + 0, baseIndex + 1, baseIndex + 2, materialKey} };
-        FaceData face2 { .face = { baseIndex + 3, baseIndex + 4, baseIndex + 5, materialKey} };
-        this->faceData.push_back(face1);
-        this->faceData.push_back(face2);
+        FaceData face;
+		face.face.vertexIndices = { baseIndex + 0, baseIndex + 1, baseIndex + 2, baseIndex + 3 };
+		face.face.materialKey = materialKey;
+                
+        this->faceData.push_back(face);
     }
 
     this->numFaces =this->faceData.size();

@@ -1,10 +1,10 @@
 #pragma once
 
 #include <memory>
-#include "Background.hpp"
-#include "Desert.hpp"
-#include "Imagepng.hpp"
-#include "Twister.hpp"
+#include "background.hpp"
+#include "desert.hpp"
+#include "imagepng.hpp"
+#include "twister.hpp"
 
 enum class BackgroundType {
     DESERT,

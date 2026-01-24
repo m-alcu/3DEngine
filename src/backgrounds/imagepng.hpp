@@ -2,7 +2,6 @@
 
 #include <cstdint>
 #include "background.hpp"
-#include "../vendor/lodepng/lodepng.h"
 
 class Imagepng : public Background {
 

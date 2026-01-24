@@ -15,13 +15,13 @@ class Twister : public Background {
 
     private:
 
-        slib::texture tex;
-        slib::texture tex2;
+        Texture tex;
+        Texture tex2;
         bool texLoaded = false; // Flag to check if texture is loaded
         float theta = 0.0f; // Angle for the twister effect
 
-        void texLine(uint32_t* pixels, int pitch, int x1, int x2, int v, int l, const slib::texture& tex, int width);
-        void rasterScan(uint32_t* pixels, int pitch, int v, float* x, const slib::texture& tex, int width);
-        slib::texture DecodePng(const char* filename);
+        void texLine(uint32_t* pixels, int pitch, int x1, int x2, int v, int l, const Texture& tex, int width);
+        void rasterScan(uint32_t* pixels, int pitch, int v, float* x, const Texture& tex, int width);
+        Texture DecodePng(const char* filename);
 
 };

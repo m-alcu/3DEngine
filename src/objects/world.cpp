@@ -2,6 +2,7 @@
 #include <math.h>
 #include <cstdint>
 #include "world.hpp"
+#include "../material.hpp"
 #include "../smath.hpp"
 #include "../constants.hpp"
 
@@ -71,13 +72,13 @@ void World::loadFaces(int lat, int lon) {
 
     std::string mtlPath = "earth_texture.png";
 
-    slib::material material{};
+    Material material{};
     material.Ka = { properties.k_a * 0x00, properties.k_a * 0x00, properties.k_a * 0x00 };
     material.Kd = { properties.k_d * 0xff, properties.k_d * 0x00, properties.k_d * 0x00 }; 
     material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };
     material.Ns = properties.shininess;
     material.map_Kd = DecodePng(std::string(RES_PATH + mtlPath).c_str());
-    material.map_Kd.textureFilter = slib::TextureFilter::BILINEAR;
+    material.map_Kd.setFilter(TextureFilter::BILINEAR);
     materials.insert({"red", material});
 
     material.Ka = { properties.k_a * 0x00, properties.k_a * 0x00, properties.k_a * 0x00 };
@@ -85,42 +86,33 @@ void World::loadFaces(int lat, int lon) {
     material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };
     material.Ns = properties.shininess;
     material.map_Kd = DecodePng(std::string(RES_PATH + mtlPath).c_str());
-    material.map_Kd.textureFilter = slib::TextureFilter::BILINEAR;
+    material.map_Kd.setFilter(TextureFilter::BILINEAR);
     materials.insert({"white", material});  
 
-for (int i = 0; i < lat; i++) {
-    for (int j = 0; j < lon; j++) {
+    for (int i = 0; i < lat; i++) {
+        for (int j = 0; j < lon; j++) {
 
-        int row1 = i * (lon + 1);
-        int row2 = (i + 1) * (lon + 1);
+            int row1 = i * (lon + 1);
+            int row2 = (i + 1) * (lon + 1);
 
-        int v1 = row1 + j;
-        int v2 = row2 + j;
-        int v3 = row1 + j + 1;
-        int v4 = row2 + j + 1;
+            int v1 = row1 + j;
+            int v2 = row2 + j;
+            int v3 = row1 + j + 1;
+            int v4 = row2 + j + 1;
 
-        // Optional: base color on (u,v)
-        std::string color = isRedTile(j / (float)lon, i / (float)lat, lat, lon) ? "red" : "white";
+            // Optional: base color on (u,v)
+            std::string color = isRedTile(j / (float)lon, i / (float)lat, lat, lon) ? "red" : "white";
 
-        // Triangle 1
-        FaceData face1;
-        face1.face.vertex1 = v3;
-        face1.face.vertex2 = v2;
-        face1.face.vertex3 = v1;
-        face1.face.materialKey = color;
-        faces.push_back(face1);
-
-        // Triangle 2
-        FaceData face2;
-        face2.face.vertex1 = v4;
-        face2.face.vertex2 = v2;
-        face2.face.vertex3 = v3;
-        face2.face.materialKey = color;
-        faces.push_back(face2);
+            // Quad
+            FaceData face;
+            face.face.vertexIndices.push_back(v4);
+            face.face.vertexIndices.push_back(v2);
+            face.face.vertexIndices.push_back(v1);
+            face.face.vertexIndices.push_back(v3);
+            face.face.materialKey = color;
+            faces.push_back(face);
+        }
     }
-}
-
-    
 
     World::faceData = faces;
     World::numFaces = faces.size();

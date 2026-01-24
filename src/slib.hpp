@@ -4,7 +4,7 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "slib.hpp"
+#include "texture.hpp"
 
 namespace slib
 {
@@ -13,21 +13,11 @@ namespace slib
     struct vec4;
     struct mat4;
 
-    struct material;
+    // Material moved to global namespace; keep no forward here
 
-    enum class TextureFilter
-    {
-        NEIGHBOUR,
-        BILINEAR
-    };
-
-    struct texture
-    {
-        int w, h;
-        std::vector<unsigned char> data;
-        unsigned int bpp;
-        TextureFilter textureFilter;
-    };
+    // Alias for backwards compatibility
+    using texture = Texture;
+    using TextureFilter = ::TextureFilter;
 
     struct zvec2
     {
@@ -70,8 +60,6 @@ namespace slib
         vec3 operator+(const vec3& rhs) const;
         vec3 operator*(const vec3& rhs) const;
         vec3 operator/(const vec3& rhs) const;
-        vec3 operator*(const mat4& rhs) const;
-        vec3& operator*=(const mat4& rhs);
         bool operator==(const vec3& rhs) const;
         bool operator==(float rhs) const;
         bool operator<(const vec3& rhs) const;
@@ -112,18 +100,4 @@ namespace slib
         vec4 operator*(const vec4& rhs) const;
     };
 
-    struct material
-    {
-        float Ns{};
-        vec3 Ka{};
-        vec3 Kd{};
-        vec3 Ks{};
-        vec3 Ke{};
-        float Ni{};
-        float d{};
-        int illum{};
-        texture map_Kd;
-        texture map_Ks;
-        texture map_Ns;
-    };
 } // namespace slib

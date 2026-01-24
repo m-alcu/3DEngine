@@ -49,7 +49,7 @@ void Desert::draw(uint32_t *pixels, uint16_t height, uint16_t width) {
         pixels[point] = desertPalette[grey];
     }
 
-    for (int point=width; point<(width*height - width); point++) {
+    for (int point=width; point<(width*height); point++) {
         uint8_t h_point = greys[point - width + 1];
         uint8_t l_point = greys[point - width];
         uint8_t grey = (h_point >> 1) + (h_point >> 2) + (h_point >> 3) + (l_point >> 3);

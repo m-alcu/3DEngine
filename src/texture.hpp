@@ -1,0 +1,107 @@
+#pragma once
+#include <algorithm>
+#include <cstdint>
+#include <vector>
+
+enum class TextureFilter {
+    NEIGHBOUR,
+    BILINEAR
+};
+
+struct RGBA8 {
+    uint8_t r, g, b, a;
+};
+
+class Texture;
+using SampleFn = void (Texture::*)(float, float, float&, float&, float&) const;
+
+class Texture {
+public:
+    int w = 0;
+    int h = 0;
+    std::vector<unsigned char> data;
+    SampleFn sampleFn = &Texture::sampleNearest; // Function pointer to avoid branch
+
+    // Get pixels as RGBA8 array
+    const RGBA8* pixels() const {
+        return reinterpret_cast<const RGBA8*>(data.data());
+    }
+
+    // Sample texture at normalized coordinates (u, v) in [0, 1]
+    // Returns RGB values in [0, 255] as floats
+    void sampleNearest(float u, float v, float& r, float& g, float& b) const {
+        int x = static_cast<int>(u * (w-1));
+        int y = static_cast<int>(v * (h-1));
+
+        const RGBA8& px = pixels()[y * w + x];
+
+        r = static_cast<float>(px.r);
+        g = static_cast<float>(px.g);
+        b = static_cast<float>(px.b);
+    }
+
+    // Sample texture with bilinear filtering at normalized coordinates (u, v) in [0, 1]
+    // Returns RGB values in [0, 255] as floats for interpolation precision
+    void sampleBilinear(float u, float v, float& r, float& g, float& b) const {
+        // Map to texel space and center on texel centers (-0.5)
+        float xf = u * w - 0.5f;
+        float yf = v * h - 0.5f;
+
+        // Clamp to keep (x+1, y+1) in-bounds
+        int x = std::clamp(static_cast<int>(xf), 0, w - 2);
+        int y = std::clamp(static_cast<int>(yf), 0, h - 2);
+
+        float fx = xf - x;
+        float fy = yf - y;
+
+        // Direct 2D indexing with RGBA8 pointer
+        const RGBA8* px = pixels();
+        const RGBA8* rowT8 = px + y * w;
+        const RGBA8* rowB8 = px + (y + 1) * w;
+
+        // Load 4 neighboring pixels
+        const RGBA8& p00 = rowT8[x];
+        const RGBA8& p10 = rowT8[x + 1];
+        const RGBA8& p01 = rowB8[x];
+        const RGBA8& p11 = rowB8[x + 1];
+
+        // Direct byte access - no bit shifting needed
+        float r00 = static_cast<float>(p00.r);
+        float g00 = static_cast<float>(p00.g);
+        float b00 = static_cast<float>(p00.b);
+
+        float r10 = static_cast<float>(p10.r);
+        float g10 = static_cast<float>(p10.g);
+        float b10 = static_cast<float>(p10.b);
+
+        float r01 = static_cast<float>(p01.r);
+        float g01 = static_cast<float>(p01.g);
+        float b01 = static_cast<float>(p01.b);
+
+        float r11 = static_cast<float>(p11.r);
+        float g11 = static_cast<float>(p11.g);
+        float b11 = static_cast<float>(p11.b);
+
+        // Precompute interpolation weights
+        float fx1 = 1.0f - fx;
+        float fy1 = 1.0f - fy;
+
+        // Bilinear interpolation using weighted sum (faster than nested lerps)
+        r = (r00 * fx1 + r10 * fx) * fy1 + (r01 * fx1 + r11 * fx) * fy;
+        g = (g00 * fx1 + g10 * fx) * fy1 + (g01 * fx1 + g11 * fx) * fy;
+        b = (b00 * fx1 + b10 * fx) * fy1 + (b01 * fx1 + b11 * fx) * fy;
+    }
+
+    // Set filter mode (updates function pointer)
+    void setFilter(TextureFilter filter) {
+        sampleFn = (filter == TextureFilter::BILINEAR)
+            ? &Texture::sampleBilinear
+            : &Texture::sampleNearest;
+    }
+
+    // Unified sample method - no branch, uses function pointer
+    void sample(float u, float v, float& r, float& g, float& b) const {
+        (this->*sampleFn)(u, v, r, g, b);
+    }
+};
+
