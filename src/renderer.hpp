@@ -17,6 +17,9 @@ class Renderer {
 
 public:
   void drawScene(Scene &scene) {
+
+    prepareFrame(scene);
+
     // Shadow pass - render depth from light's perspective
     if (scene.shadowMap && scene.shadowsEnabled) {
       renderShadowPass(scene);
@@ -24,7 +27,6 @@ public:
 
     scene.drawBackground();
 
-    prepareFrame(scene);
     for (auto &solidPtr : scene.solids) {
       switch (solidPtr->shading) {
       case Shading::Flat:
