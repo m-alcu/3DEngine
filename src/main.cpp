@@ -36,8 +36,8 @@ int main(int, char **) {
     return -1;
   }
 
-  int width = 640;
-  int height = 480;
+  int width = SCREEN_WIDTH;
+  int height = SCREEN_HEIGHT;
 
   Renderer solidRenderer;
 
