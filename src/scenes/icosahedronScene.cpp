@@ -32,4 +32,6 @@ void IcosahedronScene::setup() {
         /*initialPhase*/0.0f);
 
     addSolid(std::move(icosahedron));
+
+    Scene::setup();
 }

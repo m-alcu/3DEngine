@@ -25,4 +25,6 @@ void AmigaScene::setup() {
 	sceneType = SceneType::AMIGA;
 
     addSolid(std::move(amiga));
+
+    Scene::setup();
 }

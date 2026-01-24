@@ -25,4 +25,6 @@ void KnotScene::setup() {
 	sceneType = SceneType::KNOT;
 
     addSolid(std::move(ascLoader));
+
+    Scene::setup();
 }

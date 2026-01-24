@@ -58,6 +58,8 @@ void KnotScenePoint::setup() {
   addSolid(std::move(icosahedron));
 
   sceneType = SceneType::KNOT_POINT;
+
+  Scene::setup();
 }
 
 void KnotScenePoint::update(float dt) {

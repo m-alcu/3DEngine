@@ -1,8 +1,11 @@
 #pragma once
 #include <algorithm> // for std::fill
+#include <cmath>
 #include <cstdint>   // for uint32_t
+#include <map>
 #include <memory>    // for std::unique_ptr
 #include <vector>
+#include <SDL3/SDL_keycode.h>
 
 #include "ShadowMap.hpp"
 #include "ZBuffer.hpp"
@@ -60,13 +63,75 @@ public:
   }
 
   // Called to set up the Scene, including creation of Solids, etc.
+  // Derived classes should call Scene::setup() at the end of their setup.
   virtual void setup() {
-    // Default implementation does nothing.
-    // Derived classes should override this method.
+    // Initialize camera orbit target to first solid
+    if (!solids.empty()) {
+      camera.orbitTarget = solids[0]->getWorldCenter();
+    }
+    camera.setOrbitFromCurrent();
   }
 
   virtual void update(float dt) {
     // Default implementation does nothing.
+  }
+
+  // Process keyboard input for camera movement (Descent-style 6DOF)
+  void processKeyboardInput(const std::map<int, bool>& keys) {
+    bool up = keys.count(SDLK_UP) && keys.at(SDLK_UP);
+    up = up || (keys.count(SDLK_KP_8) && keys.at(SDLK_KP_8));
+    bool down = keys.count(SDLK_DOWN) && keys.at(SDLK_DOWN);
+    down = down || (keys.count(SDLK_KP_2) && keys.at(SDLK_KP_2));
+    bool left = keys.count(SDLK_LEFT) && keys.at(SDLK_LEFT);
+    left = left || (keys.count(SDLK_KP_4) && keys.at(SDLK_KP_4));
+    bool right = keys.count(SDLK_RIGHT) && keys.at(SDLK_RIGHT);
+    right = right || (keys.count(SDLK_KP_6) && keys.at(SDLK_KP_6));
+    bool rleft = keys.count(SDLK_Q) && keys.at(SDLK_Q);
+    rleft = rleft || (keys.count(SDLK_KP_7) && keys.at(SDLK_KP_7));
+    bool rright = keys.count(SDLK_E) && keys.at(SDLK_E);
+    rright = rright || (keys.count(SDLK_KP_9) && keys.at(SDLK_KP_9));
+    bool fwd = keys.count(SDLK_A) && keys.at(SDLK_A);
+    bool back = keys.count(SDLK_Z) && keys.at(SDLK_Z);
+
+    // Calculate input deltas
+    float yawInput = camera.sensitivity * (right - left);
+    float pitchInput = camera.sensitivity * (up - down);
+    float rollInput = camera.sensitivity * (rleft - rright);
+    float moveInput = (fwd - back) * camera.speed;
+
+    if (!orbiting) { // No free-fly when orbiting
+      // Apply hysteresis to rotation momentum
+      rotationMomentum.x =
+          rotationMomentum.x * (1.0f - camera.eagerness) +
+          pitchInput * camera.eagerness;
+      rotationMomentum.y =
+          rotationMomentum.y * (1.0f - camera.eagerness) +
+          yawInput * camera.eagerness;
+      rotationMomentum.z =
+          rotationMomentum.z * (1.0f - camera.eagerness) +
+          rollInput * camera.eagerness;
+
+      camera.pitch -= rotationMomentum.x;
+      camera.yaw -= rotationMomentum.y;
+      camera.roll += rotationMomentum.z;
+      camera.pos += movementMomentum;
+
+      float pitch = camera.pitch;
+      float yaw = camera.yaw;
+      float cosPitch = std::cos(pitch);
+      float sinPitch = std::sin(pitch);
+      float cosYaw = std::cos(yaw);
+      float sinYaw = std::sin(yaw);
+      slib::vec3 zaxis = {sinYaw * cosPitch, -sinPitch, -cosPitch * cosYaw};
+      camera.forward = zaxis;
+
+      // Apply hysteresis to movement momentum
+      movementMomentum =
+          movementMomentum * (1.0f - camera.eagerness) +
+          camera.forward * moveInput * camera.eagerness;
+    } else {
+      camera.forward = smath::normalize(camera.orbitTarget - camera.pos);
+    }
   }
 
   // Add a solid to the scene's list of solids.

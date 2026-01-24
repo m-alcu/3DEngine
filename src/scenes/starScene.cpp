@@ -32,4 +32,6 @@ void StarScene::setup() {
         /*initialPhase*/0.0f);
 
     addSolid(std::move(ascLoader));
+
+    Scene::setup();
 }

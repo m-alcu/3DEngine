@@ -49,4 +49,6 @@ void TorusScene::setup() {
 
     addSolid(std::move(torus));
     addSolid(std::move(icosahedron));
+
+    Scene::setup();
 }

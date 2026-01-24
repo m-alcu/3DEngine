@@ -120,13 +120,6 @@ int main(int, char **) {
 
   int selectedSolidIndex = 0;
 
-  // After scene.setup();
-  if (!scene->solids.empty()) {
-    selectedSolidIndex = 0;
-    scene->camera.orbitTarget = scene->solids[0]->getWorldCenter();
-  }
-  scene->camera.setOrbitFromCurrent();
-
   // Main loop
   bool closedWindow = false;
   std::map<int, bool> keys;
@@ -144,64 +137,8 @@ int main(int, char **) {
     // Process SDL events
     closedWindow = inputHandler.processEvents(scene, selectedSolidIndex);
 
-    // The input scheme is the same as in Descent, the game by Parallax
-    // Interactive.
-    bool up = keys[SDLK_UP] || keys[SDLK_KP_8];
-    bool down = keys[SDLK_DOWN] || keys[SDLK_KP_2],
-         alt = keys[SDLK_LALT] || keys[SDLK_RALT];
-    bool left = keys[SDLK_LEFT] || keys[SDLK_KP_4],
-         rleft = keys[SDLK_Q] || keys[SDLK_KP_7];
-    bool right = keys[SDLK_RIGHT] || keys[SDLK_KP_6],
-         rright = keys[SDLK_E] || keys[SDLK_KP_9];
-    bool fwd = keys[SDLK_A], sup = keys[SDLK_KP_MINUS], sleft = keys[SDLK_KP_1];
-    bool back = keys[SDLK_Z], sdown = keys[SDLK_KP_PLUS],
-         sright = keys[SDLK_KP_3];
-
-    // Calculate input deltas
-    float yawInput = scene->camera.sensitivity * (right - left);
-    float pitchInput = scene->camera.sensitivity * (up - down);
-    float rollInput = scene->camera.sensitivity * (rleft - rright);
-    float moveInput = (fwd - back) * scene->camera.speed;
-
-    if (!scene->orbiting) { // No free-fly when orbiting
-
-      // Update camera using momentum
-      // Apply hysteresis to rotation momentum
-      // Change the rotation momentum vector (r) with hysteresis: newvalue =
-      // oldvalue*(1-eagerness) + input*eagerness
-      scene->rotationMomentum.x =
-          scene->rotationMomentum.x * (1.0f - scene->camera.eagerness) +
-          pitchInput * scene->camera.eagerness;
-      scene->rotationMomentum.y =
-          scene->rotationMomentum.y * (1.0f - scene->camera.eagerness) +
-          yawInput * scene->camera.eagerness;
-      scene->rotationMomentum.z =
-          scene->rotationMomentum.z * (1.0f - scene->camera.eagerness) +
-          rollInput * scene->camera.eagerness;
-
-      scene->camera.pitch -= scene->rotationMomentum.x;
-      scene->camera.yaw -= scene->rotationMomentum.y;
-      scene->camera.roll += scene->rotationMomentum.z;
-      scene->camera.pos += scene->movementMomentum;
-
-      float pitch = scene->camera.pitch;
-      float yaw = scene->camera.yaw;
-      float cosPitch = cos(pitch);
-      float sinPitch = sin(pitch);
-      float cosYaw = cos(yaw);
-      float sinYaw = sin(yaw);
-      slib::vec3 zaxis = {sinYaw * cosPitch, -sinPitch, -cosPitch * cosYaw};
-      scene->camera.forward = zaxis;
-
-      // Apply hysteresis to movement momentum
-      scene->movementMomentum =
-          scene->movementMomentum * (1.0f - scene->camera.eagerness) +
-          scene->camera.forward * moveInput * scene->camera.eagerness;
-
-    } else {
-      scene->camera.forward =
-          smath::normalize(scene->camera.orbitTarget - scene->camera.pos);
-    }
+    // Process keyboard input for camera movement (Descent-style 6DOF)
+    scene->processKeyboardInput(keys);
 
     // [If using SDL_MAIN_USE_CALLBACKS: all code below would likely be your
     // SDL_AppIterate() function]
@@ -327,12 +264,7 @@ int main(int, char **) {
         scene = SceneFactory::createScene(static_cast<SceneType>(currentScene),
                                           {height, width});
         scene->setup();
-        // Update orbitTarget to first solid's position
-        if (!scene->solids.empty()) {
-          selectedSolidIndex = 0;
-          scene->camera.orbitTarget = scene->solids[0]->getWorldCenter();
-        }
-        scene->camera.setOrbitFromCurrent();
+        selectedSolidIndex = 0;
         scene->backgroundType = static_cast<BackgroundType>(currentBackground);
         scene->background = std::unique_ptr<Background>(
             BackgroundFactory::createBackground(scene->backgroundType));

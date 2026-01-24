@@ -47,4 +47,6 @@ void ShadowTestScene::setup() {
   front->rotationEnabled = true;
   addSolid(std::move(front));
   sceneType = SceneType::SHADOWTEST;
+
+  Scene::setup();
 }

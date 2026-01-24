@@ -34,4 +34,6 @@ void TetrakisScene::setup() {
     );
 
     addSolid(std::move(tetrakis));
+
+    Scene::setup();
 }

@@ -23,4 +23,6 @@ void BunnyScene::setup() {
     sceneType = SceneType::BUNNY;
 
     addSolid(std::move(bunny));
+
+    Scene::setup();
 }

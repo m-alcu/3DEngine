@@ -25,4 +25,6 @@ void WorldScene::setup() {
 	sceneType = SceneType::WORLD;
 
     addSolid(std::move(world));
+
+    Scene::setup();
 }

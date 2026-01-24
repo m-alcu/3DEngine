@@ -47,6 +47,8 @@ void ShadowPointTestScene::setup() {
   addSolid(std::move(front));
 
   sceneType = SceneType::SHADOWTEST_POINT;
+
+  Scene::setup();
 }
 
 void ShadowPointTestScene::update(float dt) {
