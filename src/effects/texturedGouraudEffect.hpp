@@ -17,7 +17,7 @@ public:
     Vertex() {}
 
     Vertex(int32_t px, int32_t py, float pz, slib::vec4 vp, slib::zvec2 _tex,
-           float _diffuse, slib::vec3 _world, bool _broken)
+           slib::vec3 _diffuse, slib::vec3 _world, bool _broken)
         : p_x(px), p_y(py), p_z(pz), ndc(vp), tex(_tex), diffuse(_diffuse), world(_world),
           broken(_broken) {}
 
@@ -70,7 +70,7 @@ public:
     slib::vec3 world;
     slib::vec4 ndc;
     slib::zvec2 tex; // Texture coordinates
-    float diffuse;   // Diffuse color
+    slib::vec3 diffuse;   // Diffuse color
     slib::zvec2 texOverW;
     bool broken = false;
   };
@@ -88,8 +88,37 @@ public:
       vertex.ndc = slib::vec4(vertex.world, 1) * scene->spaceMatrix;
       vertex.tex = slib::zvec2(vData.texCoord.x, vData.texCoord.y, 1);
       normal = normalMatrix * slib::vec4(vData.normal, 0);
-      vertex.diffuse = std::max(
-          0.0f, smath::dot(normal, scene->light.getDirection(vertex.world)));
+      normal = smath::normalize(normal);
+      slib::vec3 diffuseColor{0.0f, 0.0f, 0.0f};
+      bool hasLightSource = false;
+      for (const auto &solidPtr : scene->solids) {
+        if (!solidPtr->lightSourceEnabled) {
+          continue;
+        }
+        hasLightSource = true;
+        const Light &light = solidPtr->light;
+        slib::vec3 luxDirection = light.getDirection(vertex.world);
+        float diff = std::max(0.0f, smath::dot(normal, luxDirection));
+        float attenuation = light.getAttenuation(vertex.world);
+        float shadow = 1.0f;
+        if (scene->shadowsEnabled && solidPtr->shadowMap) {
+          shadow = solidPtr->shadowMap->sampleShadow(vertex.world, diff);
+        }
+        diffuseColor += light.color * (diff * attenuation * shadow);
+      }
+
+      if (!hasLightSource) {
+        const Light &light = scene->light;
+        slib::vec3 luxDirection = light.getDirection(vertex.world);
+        float diff = std::max(0.0f, smath::dot(normal, luxDirection));
+        float attenuation = light.getAttenuation(vertex.world);
+        float shadow = 1.0f;
+        if (scene->shadowsEnabled && scene->shadowMap) {
+          shadow = scene->shadowMap->sampleShadow(vertex.world, diff);
+        }
+        diffuseColor += light.color * (diff * attenuation * shadow);
+      }
+      vertex.diffuse = diffuseColor;
       Projection<Vertex>::view(scene->screen.width, scene->screen.height, vertex, true);
       return vertex;
     }
@@ -108,14 +137,12 @@ public:
   public:
     uint32_t operator()(const Vertex &vRaster, const Scene &scene,
                         const Polygon<Vertex> &poly) const {
-      // Shadow calculation
-      float shadow = scene.shadowMap && scene.shadowsEnabled ? scene.shadowMap->sampleShadow(vRaster.world, vRaster.diffuse) : 1.0f;
-
-      float diff = vRaster.diffuse * shadow;
+      slib::vec3 diff = vRaster.diffuse;
       float w = 1.0f / vRaster.tex.w;
       float r, g, b;
       poly.material->map_Kd.sample(vRaster.tex.x * w, vRaster.tex.y * w, r, g, b);
-      return Color(r * diff, g * diff, b * diff).toBgra();
+      slib::vec3 color = slib::vec3{r, g, b} * diff;
+      return Color(color).toBgra();
     }
   };
 

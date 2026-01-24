@@ -103,29 +103,51 @@ public:
       const auto &Ka = poly.material->Ka; // vec3
       const auto &Kd = poly.material->Kd; // vec3
       const auto &Ks = poly.material->Ks; // vec3
-      const slib::vec3 &luxDirection = scene.light.getDirection(vRaster.world);
-      // Normalize vectors
       slib::vec3 N = smath::normalize(vRaster.normal); // Normal at the fragment
-      slib::vec3 L = luxDirection;                     // Light direction
+      slib::vec3 color = Ka;
+      bool hasLightSource = false;
 
-      // Diffuse component
-      float diff = std::max(0.0f, smath::dot(N, L));
+      for (const auto &solidPtr : scene.solids) {
+        if (!solidPtr->lightSourceEnabled) {
+          continue;
+        }
+        hasLightSource = true;
+        const Light &light = solidPtr->light;
+        slib::vec3 luxDirection = light.getDirection(vRaster.world);
+        slib::vec3 L = luxDirection;
+        float diff = std::max(0.0f, smath::dot(N, L));
+        slib::vec3 halfwayVector =
+            smath::normalize(luxDirection - scene.camera.forward);
+        float specAngle = std::max(0.0f, smath::dot(N, halfwayVector));
+        float spec = std::pow(specAngle, poly.material->Ns);
+        float attenuation = light.getAttenuation(vRaster.world);
+        float shadow = 1.0f;
+        if (scene.shadowsEnabled && solidPtr->shadowMap) {
+          shadow = solidPtr->shadowMap->sampleShadow(vRaster.world, diff);
+        }
+        float factor = attenuation * shadow;
+        slib::vec3 lightColor = light.color * factor;
+        color += (Kd * diff + Ks * spec) * lightColor;
+      }
 
-      // Halfway vector H = normalize(L + V)
-      const slib::vec3 &halfwayVector =
-          smath::normalize(luxDirection - scene.camera.forward);
-
-      // Specular component: spec = (N · H)^shininess
-      float specAngle = std::max(0.0f, smath::dot(N, halfwayVector)); // viewer
-      float spec = std::pow(
-          specAngle,
-          poly.material->Ns); // Blinn Phong shininess needs *4 to be like Phong
-
-      // Shadow calculation
-      float shadow = scene.shadowMap && scene.shadowsEnabled ? scene.shadowMap->sampleShadow(vRaster.world, diff) : 1.0f;
-
-      // Shadow affects diffuse and specular, not ambient
-      slib::vec3 color = Ka + (Kd * diff * scene.light.intensity + Ks * spec) * shadow;
+      if (!hasLightSource) {
+        const Light &light = scene.light;
+        slib::vec3 luxDirection = light.getDirection(vRaster.world);
+        slib::vec3 L = luxDirection;
+        float diff = std::max(0.0f, smath::dot(N, L));
+        slib::vec3 halfwayVector =
+            smath::normalize(luxDirection - scene.camera.forward);
+        float specAngle = std::max(0.0f, smath::dot(N, halfwayVector));
+        float spec = std::pow(specAngle, poly.material->Ns);
+        float attenuation = light.getAttenuation(vRaster.world);
+        float shadow = 1.0f;
+        if (scene.shadowsEnabled && scene.shadowMap) {
+          shadow = scene.shadowMap->sampleShadow(vRaster.world, diff);
+        }
+        float factor = attenuation * shadow;
+        slib::vec3 lightColor = light.color * factor;
+        color += (Kd * diff + Ks * spec) * lightColor;
+      }
       return Color(color).toBgra();
     }
   };

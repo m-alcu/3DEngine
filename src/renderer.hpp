@@ -71,18 +71,33 @@ public:
   }
 
   void renderShadowPass(Scene &scene) {
-    if (!scene.shadowMap) return;
+    bool rendered = false;
+    for (auto &lightSolid : scene.solids) {
+      if (!lightSolid->lightSourceEnabled || !lightSolid->shadowMap) {
+        continue;
+      }
+      lightSolid->shadowMap->clear();
+      lightSolid->shadowMap->buildLightMatrices(lightSolid->light,
+                                                scene.sceneCenter,
+                                                scene.sceneRadius);
+      for (auto &solidPtr : scene.solids) {
+        if (!solidPtr->lightSourceEnabled) {
+          shadowRasterizer.drawRenderable(*solidPtr, &scene,
+                                          lightSolid->shadowMap.get());
+        }
+      }
+      rendered = true;
+    }
 
-    scene.shadowMap->clear();
-
-    // Build light matrices using scene's active light
-    scene.shadowMap->buildLightMatrices(scene.light, scene.sceneCenter, scene.sceneRadius);
-
-    // Render all shadow-casting solids to the shadow map
-    for (auto &solidPtr : scene.solids) {
-      // Skip light sources - they don't cast shadows on themselves
-      if (!solidPtr->lightSourceEnabled) {
-        shadowRasterizer.drawRenderable(*solidPtr, &scene, scene.shadowMap.get());
+    if (!rendered && scene.shadowMap) {
+      scene.shadowMap->clear();
+      scene.shadowMap->buildLightMatrices(scene.light, scene.sceneCenter,
+                                          scene.sceneRadius);
+      for (auto &solidPtr : scene.solids) {
+        if (!solidPtr->lightSourceEnabled) {
+          shadowRasterizer.drawRenderable(*solidPtr, &scene,
+                                          scene.shadowMap.get());
+        }
       }
     }
   }

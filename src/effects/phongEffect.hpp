@@ -103,28 +103,51 @@ public:
       const auto &Ka = poly.material->Ka; // vec3
       const auto &Kd = poly.material->Kd; // vec3
       const auto &Ks = poly.material->Ks; // vec3
-      const slib::vec3 &luxDirection = scene.light.getDirection(vRaster.world);
-
       slib::vec3 normal = smath::normalize(vRaster.normal);
-      float diff = std::max(0.0f, smath::dot(normal, luxDirection));
+      slib::vec3 color = Ka;
+      bool hasLightSource = false;
 
-      slib::vec3 R =
-          normal * 2.0f * smath::dot(normal, luxDirection) - luxDirection;
-      // NOTE: For performance we approximate the per-fragment view vector V
-      // with -camera.forward. This assumes all view rays are parallel (like an
-      // orthographic camera). Works well when the camera is far away or objects
-      // are small on screen. Not physically correct: highlights will "stick" to
-      // the camera instead of sliding across surfaces when moving in
-      // perspective, but it's often a good enough approximation.
-      float specAngle =
-          std::max(0.0f, smath::dot(R, scene.forwardNeg)); // viewer
-      float spec = std::pow(specAngle, poly.material->Ns);
+      for (const auto &solidPtr : scene.solids) {
+        if (!solidPtr->lightSourceEnabled) {
+          continue;
+        }
+        hasLightSource = true;
+        const Light &light = solidPtr->light;
+        slib::vec3 luxDirection = light.getDirection(vRaster.world);
+        float diff = std::max(0.0f, smath::dot(normal, luxDirection));
+        slib::vec3 R =
+            normal * 2.0f * smath::dot(normal, luxDirection) - luxDirection;
+        float specAngle =
+            std::max(0.0f, smath::dot(R, scene.forwardNeg)); // viewer
+        float spec = std::pow(specAngle, poly.material->Ns);
+        float attenuation = light.getAttenuation(vRaster.world);
+        float shadow = 1.0f;
+        if (scene.shadowsEnabled && solidPtr->shadowMap) {
+          shadow = solidPtr->shadowMap->sampleShadow(vRaster.world, diff);
+        }
+        float factor = attenuation * shadow;
+        slib::vec3 lightColor = light.color * factor;
+        color += (Kd * diff + Ks * spec) * lightColor;
+      }
 
-      // Shadow calculation
-      float shadow = scene.shadowMap && scene.shadowsEnabled ? scene.shadowMap->sampleShadow(vRaster.world, diff) : 1.0f;
-
-      // Shadow affects diffuse and specular, not ambient
-      slib::vec3 color = Ka + (Kd * diff * scene.light.intensity + Ks * spec) * shadow;
+      if (!hasLightSource) {
+        const Light &light = scene.light;
+        slib::vec3 luxDirection = light.getDirection(vRaster.world);
+        float diff = std::max(0.0f, smath::dot(normal, luxDirection));
+        slib::vec3 R =
+            normal * 2.0f * smath::dot(normal, luxDirection) - luxDirection;
+        float specAngle =
+            std::max(0.0f, smath::dot(R, scene.forwardNeg));
+        float spec = std::pow(specAngle, poly.material->Ns);
+        float attenuation = light.getAttenuation(vRaster.world);
+        float shadow = 1.0f;
+        if (scene.shadowsEnabled && scene.shadowMap) {
+          shadow = scene.shadowMap->sampleShadow(vRaster.world, diff);
+        }
+        float factor = attenuation * shadow;
+        slib::vec3 lightColor = light.color * factor;
+        color += (Kd * diff + Ks * spec) * lightColor;
+      }
       return Color(color).toBgra(); // assumes vec3 uses .r/g/b or [0]/[1]/[2]
     }
   };

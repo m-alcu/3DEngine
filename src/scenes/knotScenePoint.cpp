@@ -36,7 +36,7 @@ void KnotScenePoint::setup() {
   icosahedron->lightSourceEnabled = true;
   icosahedron->light.type = LightType::Point;
   icosahedron->light.color = {1.0f, 1.0f, 1.0f};
-  icosahedron->light.intensity = 1.0f;
+  icosahedron->light.intensity = 2.0f;
   icosahedron->rotationEnabled = false;
 
   icosahedron->setup();

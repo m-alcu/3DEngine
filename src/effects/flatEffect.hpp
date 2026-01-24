@@ -79,16 +79,39 @@ public:
   public:
     void operator()(Polygon<Vertex> &poly, int32_t width, int32_t height, const Scene &scene) const {
 
-      const slib::vec3 &luxDirection = scene.light.getDirection(
-          poly.points[0].world); // any point aproximately the same
+      slib::vec3 diffuseColor{0.0f, 0.0f, 0.0f};
+      bool hasLightSource = false;
+      for (const auto &solidPtr : scene.solids) {
+        if (!solidPtr->lightSourceEnabled) {
+          continue;
+        }
+        hasLightSource = true;
+        const Light &light = solidPtr->light;
+        slib::vec3 luxDirection = light.getDirection(poly.points[0].world);
+        float diff =
+            std::max(0.0f, smath::dot(poly.rotatedFaceNormal, luxDirection));
+        float attenuation = light.getAttenuation(poly.points[0].world);
+        float shadow = 1.0f;
+        if (scene.shadowsEnabled && solidPtr->shadowMap) {
+          shadow = solidPtr->shadowMap->sampleShadow(poly.points[0].world, diff);
+        }
+        diffuseColor += light.color * (diff * attenuation * shadow);
+      }
 
-      /*
-      All vertex faces are counterwise (cw), so normal is pointing towards the
-      screen, Light is also set to point towards the screen. So, it's resulting
-      in a positive dot product.
-      */
-      poly.flatDiffuse =
-          std::max(0.0f, smath::dot(poly.rotatedFaceNormal, luxDirection));
+      if (!hasLightSource) {
+        const Light &light = scene.light;
+        slib::vec3 luxDirection = light.getDirection(poly.points[0].world);
+        float diff =
+            std::max(0.0f, smath::dot(poly.rotatedFaceNormal, luxDirection));
+        float attenuation = light.getAttenuation(poly.points[0].world);
+        float shadow = 1.0f;
+        if (scene.shadowsEnabled && scene.shadowMap) {
+          shadow = scene.shadowMap->sampleShadow(poly.points[0].world, diff);
+        }
+        diffuseColor += light.color * (diff * attenuation * shadow);
+      }
+
+      poly.flatDiffuseColor = diffuseColor;
       for (auto &point : poly.points) {
         Projection<Vertex>::view(width, height, point, false);
       }
@@ -99,13 +122,9 @@ public:
   public:
     uint32_t operator()(const Vertex &vRaster, const Scene &scene,
                         const Polygon<Vertex> &poly) const {
-      // Shadow calculation
-      float shadow = scene.shadowMap && scene.shadowsEnabled ? scene.shadowMap->sampleShadow(vRaster.world, poly.flatDiffuse) : 1.0f;
-
-      // Recompute color with shadow applied to diffuse only
       const auto &Ka = poly.material->Ka;
       const auto &Kd = poly.material->Kd;
-      slib::vec3 color = Ka + Kd * poly.flatDiffuse * scene.light.intensity * shadow;
+      slib::vec3 color = Ka + Kd * poly.flatDiffuseColor;
       return Color(color).toBgra();
     }
   };

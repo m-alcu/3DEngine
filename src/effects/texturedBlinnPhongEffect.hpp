@@ -106,37 +106,61 @@ public:
     uint32_t operator()(const Vertex &vRaster, const Scene &scene,
                         const Polygon<Vertex> &poly) const {
 
-      const auto &Ks = poly.material->Ks; // vec3
-      const slib::vec3 &luxDirection = scene.light.getDirection(vRaster.world);
-      // Normalize vectors
-      slib::vec3 N = smath::normalize(vRaster.normal); // Normal at the fragment
-      slib::vec3 L = luxDirection;                     // Light direction
-
-      // Diffuse component
-      float diff = std::max(0.0f, smath::dot(N, L));
-
-      // Halfway vector H = normalize(L + V)
-      const slib::vec3 &halfwayVector =
-          smath::normalize(luxDirection - scene.camera.forward);
-
-      // Specular component: spec = (N · H)^shininess
-      float specAngle = std::max(0.0f, smath::dot(N, halfwayVector)); // viewer
-      float spec = std::pow(
-          specAngle,
-          poly.material->Ns); // Blinn Phong shininess needs *4 to be like Phong
-
-      // Shadow calculation
-      if (scene.shadowMap && scene.shadowsEnabled) {
-        float shadow = scene.shadowMap->sampleShadow(vRaster.world, diff);
-        diff *= shadow;
-        spec *= shadow;
-      }
-
       float w = 1.0f / vRaster.tex.w;
       float r, g, b;
       poly.material->map_Kd.sample(vRaster.tex.x * w, vRaster.tex.y * w, r, g, b);
-      return Color(r * diff + Ks.x * spec, g * diff + Ks.y * spec, b * diff + Ks.z * spec)
-          .toBgra();
+      slib::vec3 texColor{r, g, b};
+
+      const auto &Ks = poly.material->Ks; // vec3
+      slib::vec3 N = smath::normalize(vRaster.normal); // Normal at the fragment
+      slib::vec3 color{0.0f, 0.0f, 0.0f};
+      bool hasLightSource = false;
+
+      for (const auto &solidPtr : scene.solids) {
+        if (!solidPtr->lightSourceEnabled) {
+          continue;
+        }
+        hasLightSource = true;
+        const Light &light = solidPtr->light;
+        slib::vec3 luxDirection = light.getDirection(vRaster.world);
+        slib::vec3 L = luxDirection;
+        float diff = std::max(0.0f, smath::dot(N, L));
+        slib::vec3 halfwayVector =
+            smath::normalize(luxDirection - scene.camera.forward);
+        float specAngle = std::max(0.0f, smath::dot(N, halfwayVector));
+        float spec = std::pow(specAngle, poly.material->Ns);
+        float attenuation = light.getAttenuation(vRaster.world);
+        float shadow = 1.0f;
+        if (scene.shadowsEnabled && solidPtr->shadowMap) {
+          shadow = solidPtr->shadowMap->sampleShadow(vRaster.world, diff);
+        }
+        float factor = light.intensity * attenuation * shadow;
+        slib::vec3 lightColor = light.color * factor;
+        color += texColor * lightColor * diff;
+        color += Ks * lightColor * spec;
+      }
+
+      if (!hasLightSource) {
+        const Light &light = scene.light;
+        slib::vec3 luxDirection = light.getDirection(vRaster.world);
+        slib::vec3 L = luxDirection;
+        float diff = std::max(0.0f, smath::dot(N, L));
+        slib::vec3 halfwayVector =
+            smath::normalize(luxDirection - scene.camera.forward);
+        float specAngle = std::max(0.0f, smath::dot(N, halfwayVector));
+        float spec = std::pow(specAngle, poly.material->Ns);
+        float attenuation = light.getAttenuation(vRaster.world);
+        float shadow = 1.0f;
+        if (scene.shadowsEnabled && scene.shadowMap) {
+          shadow = scene.shadowMap->sampleShadow(vRaster.world, diff);
+        }
+        float factor = light.intensity * attenuation * shadow;
+        slib::vec3 lightColor = light.color * factor;
+        color += texColor * lightColor * diff;
+        color += Ks * lightColor * spec;
+      }
+
+      return Color(color).toBgra();
     }
   };
 
