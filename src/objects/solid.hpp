@@ -95,6 +95,8 @@ public:
     Shading shading;
     Position position;
 	bool rotationEnabled = true;
+    float incXangle = 0.0f;  // Rotation speed around X axis
+    float incYangle = 0.0f;  // Rotation speed around Y axis
     std::string name;
     std::map<std::string, Material> materials;
 

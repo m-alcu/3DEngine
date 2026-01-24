@@ -227,6 +227,8 @@ public:
     }
 
     ImGui::Checkbox("Rotate", &selectedSolid->rotationEnabled);
+    ImGui::SliderFloat("Rot X Speed", &selectedSolid->incXangle, 0.0f, 1.0f);
+    ImGui::SliderFloat("Rot Y Speed", &selectedSolid->incYangle, 0.0f, 1.0f);
 
     float position[3] = {selectedSolid->position.x,
                          selectedSolid->position.y,

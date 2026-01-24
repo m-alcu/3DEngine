@@ -148,14 +148,10 @@ int main(int, char **) {
     ImGui::NewFrame();
     ImGui::SetNextWindowBgAlpha(0.3f);
 
-    static float incXangle = 0.0f;
-    static float incYangle = 0.0f;
     // 2. Show a simple window that we create ourselves. We use a Begin/End pair
     // to create a named window.
     {
       ImGui::Begin("3d params");
-      ImGui::SliderFloat("rot x angle", &incXangle, 0.0f, 1.0f);
-      ImGui::SliderFloat("rot y angle", &incYangle, 0.0f, 1.0f);
       ImGui::SliderFloat("cam speed", &scene->camera.speed, 0.1f, 10.0f);
       ImGui::SliderFloat("pitch/yaw/roll sens", &scene->camera.sensitivity,
                          0.0f, 10.0f);
@@ -197,10 +193,9 @@ int main(int, char **) {
     SDL_RenderPresent(renderer);
 
     for (auto &solidPtr : scene->solids) {
-      // Update the solid's position based on the input angles
+      // Update the solid's position based on its rotation speeds
       if (solidPtr->rotationEnabled) {
-        // Rotate the solid around its local axes
-        solidPtr->rotate(incXangle, incYangle, 0.0f);
+        solidPtr->rotate(solidPtr->incXangle, solidPtr->incYangle, 0.0f);
       }
 
       solidPtr->updateOrbit(io.DeltaTime);
