@@ -16,7 +16,17 @@
 class Renderer {
 
 public:
-  void drawScene(Scene &scene) {
+  void drawScene(Scene &scene, float dt) {
+
+    for (auto &solidPtr : scene.solids) {
+      // Update the solid's position based on its rotation speeds
+      if (solidPtr->rotationEnabled) {
+        solidPtr->rotate(solidPtr->incXangle, solidPtr->incYangle, 0.0f);
+      }
+
+      solidPtr->updateOrbit(dt);
+      solidPtr->calculateTransformMat();
+    }
 
     // Shadow pass - render depth from light's perspective
     if (scene.shadowMap && scene.shadowsEnabled) {

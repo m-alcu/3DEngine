@@ -41,7 +41,6 @@ class Rasterizer {
                 screenWidth = scene->screen.width;
                 screenHeight = scene->screen.height;
             }
-            solid->calculateTransformMat();
 
             if constexpr (!isShadowEffect) {
                 if (solid->lightSourceEnabled && scene) {

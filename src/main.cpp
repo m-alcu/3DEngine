@@ -181,7 +181,7 @@ int main(int, char **) {
 
     scene->update(io.DeltaTime);
 
-    solidRenderer.drawScene(*scene);
+    solidRenderer.drawScene(*scene, io.DeltaTime);
 
     // Rendering
     ImGui::Render();
@@ -192,14 +192,6 @@ int main(int, char **) {
     ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
     SDL_RenderPresent(renderer);
 
-    for (auto &solidPtr : scene->solids) {
-      // Update the solid's position based on its rotation speeds
-      if (solidPtr->rotationEnabled) {
-        solidPtr->rotate(solidPtr->incXangle, solidPtr->incYangle, 0.0f);
-      }
-
-      solidPtr->updateOrbit(io.DeltaTime);
-    }
   }
 #ifdef __EMSCRIPTEN__
   EMSCRIPTEN_MAINLOOP_END;
