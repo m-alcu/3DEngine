@@ -35,7 +35,7 @@ public:
     }
 
     void applyOrbit() {
-        const float el = clampf(orbitElevation, -1.5533f, 1.5533f); // ~�89�
+        const float el = clampf(orbitElevation, -1.5533f, 1.5533f); // ~89º
         const float ca = std::cos(orbitAzimuth), sa = std::sin(orbitAzimuth);
         const float ce = std::cos(el), se = std::sin(el);
 

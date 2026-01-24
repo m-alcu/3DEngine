@@ -183,7 +183,7 @@ int main(int, char **) {
 
     solidRenderer.drawScene(*scene, io.DeltaTime);
 
-    // Rendering
+    // ImGui rendering
     ImGui::Render();
 
     SDL_UpdateTexture(texture, nullptr, &scene->pixels[0], 4 * SCREEN_WIDTH);

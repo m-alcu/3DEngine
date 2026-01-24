@@ -27,8 +27,8 @@ public:
         const slib::vec3 &color = {1.0f, 1.0f, 1.0f}, float intensity = 1.0f)
       : type(type), color(color), intensity(intensity),
         direction({0.0f, -1.0f, 0.0f}), position({0.0f, 0.0f, 0.0f}),
-        radius(100.0f), innerCutoff(std::cos(0.5f)), // ~60� cone
-        outerCutoff(std::cos(0.7f))                  // ~80� cone
+        radius(100.0f), innerCutoff(std::cos(0.5f)), // ~60º cone
+        outerCutoff(std::cos(0.7f))                  // ~80º cone
   {}
 
   // Direction vector from a surface point towards light
