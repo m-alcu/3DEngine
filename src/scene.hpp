@@ -96,6 +96,20 @@ public:
       hasGeometry = true;
     }
 
+    // Sync light from first light-source solid, or use defaultLight
+    bool foundLightSource = false;
+    for (auto &solidPtr : solids) {
+      if (solidPtr->lightSourceEnabled) {
+        light = solidPtr->light;
+        light.position = {solidPtr->position.x, solidPtr->position.y, solidPtr->position.z};
+        foundLightSource = true;
+        break;
+      }
+    }
+    if (!foundLightSource) {
+      light = defaultLight;
+    }
+
     // Calculate world bounds
 
     for (auto &solidPtr : solids) {
@@ -198,7 +212,8 @@ public:
   Screen screen;
   SceneType sceneType = SceneType::TETRAKIS; // Default scene type
 
-  Light light;
+  Light light;           // Active light (synced from light-source solid or defaultLight)
+  Light defaultLight;     // Fallback light when no solid has lightSourceEnabled
   slib::vec3 forwardNeg; // Negative forward vector for lighting calculations
   slib::mat4 spaceMatrix;
   std::shared_ptr<ZBuffer> zBuffer; // Use shared_ptr for zBuffer to manage its

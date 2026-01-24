@@ -4,10 +4,10 @@
 void ShadowTestScene::setup() {
   // Point light positioned above and to the side to create shadows
   // Light comming from origin towards far y and z
-  light.type = LightType::Directional;
-  light.color = {1.0f, 1.0f, 1.0f};
-  light.intensity = 1.0f;
-  light.direction = smath::normalize(slib::vec3{0, 0, 1});
+  defaultLight.type = LightType::Directional;
+  defaultLight.color = {1.0f, 1.0f, 1.0f};
+  defaultLight.intensity = 1.0f;
+  defaultLight.direction = smath::normalize(slib::vec3{0, 0, 1});
 
   camera.pos = {50.0f, 100.0f, 100.0f};
   camera.pitch = 0.0f;

@@ -4,12 +4,6 @@
 
 void TorusScene::setup() {
 
-    // Light comming from origin towards far y and z
-    light.type = LightType::Directional;
-    light.color = { 1.0f, 1.0f, 1.0f };
-    light.intensity = 1.0f;
-    light.direction = smath::normalize(slib::vec3{ 1, 1, 1 });
-
     clearAllSolids();
     auto torus = std::make_unique<Torus>();
     torus->name = "Torus";
@@ -37,6 +31,9 @@ void TorusScene::setup() {
     icosahedron->position.zAngle = 0.0f;
     icosahedron->shading = Shading::Flat;
 	icosahedron->lightSourceEnabled = true;
+    icosahedron->light.type = LightType::Point;
+    icosahedron->light.color = {1.0f, 1.0f, 1.0f};
+    icosahedron->light.intensity = 1.5f;
     icosahedron->rotationEnabled = false;
 
     icosahedron->setup();

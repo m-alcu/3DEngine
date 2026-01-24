@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include "../slib.hpp"
+#include "../light.hpp"
 #include "../material.hpp"
 #include "../constants.hpp"
 #include "../smath.hpp"
@@ -106,6 +107,7 @@ public:
     int numVertices;
     int numFaces;
 	bool lightSourceEnabled = false;
+    Light light;  // Light properties when this solid is a light source
 
     // Orthonormal basis of the orbit plane
     slib::vec3 orbitU{ 1,0,0 };

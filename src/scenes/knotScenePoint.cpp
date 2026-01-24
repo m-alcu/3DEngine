@@ -4,12 +4,6 @@
 
 void KnotScenePoint::setup() {
 
-  // Initialize as Point Light
-  light.type = LightType::Point;
-  light.color = {1.0f, 1.0f, 1.0f};
-  light.intensity = 1.0f;
-  light.position = {0, 0, 0}; // Will be updated
-
   camera.pos = {25.0f, 60.0f, -250.0f};
 
   clearAllSolids();
@@ -40,6 +34,9 @@ void KnotScenePoint::setup() {
   icosahedron->position.zAngle = 0.0f;
   icosahedron->shading = Shading::Flat;
   icosahedron->lightSourceEnabled = true;
+  icosahedron->light.type = LightType::Point;
+  icosahedron->light.color = {1.0f, 1.0f, 1.0f};
+  icosahedron->light.intensity = 1.0f;
   icosahedron->rotationEnabled = false;
 
   icosahedron->setup();
@@ -53,22 +50,10 @@ void KnotScenePoint::setup() {
       /*omega*/ (3.14159265f / 3), // 60 deg/s
       /*initialPhase*/ PI / 2.0f); // start at top);
 
-  // Keep reference to update light position
-  lightSource = icosahedron.get();
-
   addSolid(std::move(ascLoader));
   addSolid(std::move(icosahedron));
 
   sceneType = SceneType::KNOT_POINT;
 
   Scene::setup();
-}
-
-void KnotScenePoint::update(float dt) {
-  if (lightSource) {
-    light.position = {lightSource->position.x, lightSource->position.y,
-                      lightSource->position.z};
-  }
-
-  Scene::update(dt);
 }

@@ -4,9 +4,9 @@
 void CubeScene::setup() {
 
     // Light comming from origin towards far y and z
-    light.type = LightType::Point;
-    light.color = { 1.0f, 1.0f, 1.0f };
-    light.intensity = 10.0f;
+    defaultLight.type = LightType::Point;
+    defaultLight.color = { 1.0f, 1.0f, 1.0f };
+    defaultLight.intensity = 10.0f;
 
     shadowsEnabled = false; 
 

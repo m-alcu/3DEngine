@@ -4,10 +4,10 @@
 void StarScene::setup() {
 
     // Light comming from origin towards far y and z
-    light.type = LightType::Directional;
-    light.color = { 1.0f, 1.0f, 1.0f };
-    light.intensity = 1.0f;
-    light.direction = smath::normalize(slib::vec3{ 1, 1, 1 });
+    defaultLight.type = LightType::Directional;
+    defaultLight.color = { 1.0f, 1.0f, 1.0f };
+    defaultLight.intensity = 1.0f;
+    defaultLight.direction = smath::normalize(slib::vec3{ 1, 1, 1 });
 
     clearAllSolids();
 

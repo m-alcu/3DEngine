@@ -9,10 +9,10 @@ void ShadowPointTestScene::setup() {
   camera.roll = 0.0f;
 
   // Initialize as Point Light at camera position
-  light.type = LightType::Point;
-  light.color = {1.0f, 1.0f, 1.0f};
-  light.intensity = 1.0f;
-  light.position = {0.0f, 0.0f, 0.0f}; // Will be updated in update()
+  defaultLight.type = LightType::Point;
+  defaultLight.color = {1.0f, 1.0f, 1.0f};
+  defaultLight.intensity = 1.0f;
+  defaultLight.position = {0.0f, 0.0f, 0.0f};
 
   clearAllSolids();
 
