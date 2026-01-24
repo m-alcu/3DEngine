@@ -13,14 +13,10 @@
 // For a multi-platform app consider using e.g. SDL+DirectX on Windows and
 // SDL+OpenGL on Linux/OSX.
 
-#include "projection.hpp"
+#include "InputHandler.hpp"
 #include "renderer.hpp"
-#include "scene.hpp"
 #include "scenes/sceneFactory.hpp"
-#include "vendor/imgui/imgui.h"
-#include "vendor/imgui/imgui_impl_sdl3.h"
 #include "vendor/imgui/imgui_impl_sdlrenderer3.h"
-#include <SDL3/SDL.h>
 #include <stdio.h>
 #include <algorithm>
 #include <string>
@@ -29,19 +25,6 @@
 #ifdef __EMSCRIPTEN__
 #include "../libs/emscripten/emscripten_mainloop_stub.h"
 #endif
-
-namespace {
-
-// Minimal vertex struct for projection
-struct PickVertex {
-  slib::vec4 ndc;
-  int32_t p_x = 0;
-  int32_t p_y = 0;
-  float p_z = 0;
-  bool broken = false;
-};
-
-} // namespace
 
 // Main code
 int main(int, char **) {
@@ -135,18 +118,19 @@ int main(int, char **) {
       SceneFactory::createScene(SceneType::SHADOWTEST, {height, width});
   scene->setup();
 
-  float lastMouseX = 0, lastMouseY = 0;
   int selectedSolidIndex = 0;
 
   // After scene.setup();
-    if (!scene->solids.empty()) {
-      selectedSolidIndex = 0;
-      scene->camera.orbitTarget = scene->solids[0]->getWorldCenter();
-    }
-    scene->camera.setOrbitFromCurrent();
+  if (!scene->solids.empty()) {
+    selectedSolidIndex = 0;
+    scene->camera.orbitTarget = scene->solids[0]->getWorldCenter();
+  }
+  scene->camera.setOrbitFromCurrent();
 
   // Main loop
   bool closedWindow = false;
+  std::map<int, bool> keys;
+  InputHandler inputHandler(window, keys);
 #ifdef __EMSCRIPTEN__
   // For an Emscripten build we are disabling file-system access, so let's not
   // attempt to do a fopen() of the imgui.ini file. You may manually call
@@ -154,143 +138,11 @@ int main(int, char **) {
   io.IniFilename = nullptr;
   EMSCRIPTEN_MAINLOOP_BEGIN
 #else
-  for (std::map<int, bool> keys; !keys[SDLK_ESCAPE] && !closedWindow;)
+  while (!keys[SDLK_ESCAPE] && !closedWindow)
 #endif
   {
-    // Poll and handle events (inputs, window resize, etc.)
-    // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to
-    // tell if dear imgui wants to use your inputs.
-    // - When io.WantCaptureMouse is true, do not dispatch mouse input data to
-    // your main application, or clear/overwrite your copy of the mouse data.
-    // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input
-    // data to your main application, or clear/overwrite your copy of the
-    // keyboard data. Generally you may always pass all inputs to dear imgui,
-    // and hide them from your application based on those two flags. [If using
-    // SDL_MAIN_USE_CALLBACKS: call ImGui_ImplSDL3_ProcessEvent() from your
-    // SDL_AppEvent() function] Process events.
-    for (SDL_Event ev; SDL_PollEvent(&ev);) {
-
-      ImGui_ImplSDL3_ProcessEvent(&ev);
-
-      switch (ev.type) {
-      case SDL_EVENT_QUIT:
-        keys[SDLK_ESCAPE] = true;
-        break;
-      case SDL_EVENT_KEY_DOWN:
-        keys[ev.key.key] = true;
-        break;
-      case SDL_EVENT_KEY_UP:
-        keys[ev.key.key] = false;
-        break;
-      case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
-        if (ev.window.windowID == SDL_GetWindowID(window)) {
-          closedWindow = true;
-        }
-        break;
-      case SDL_EVENT_MOUSE_BUTTON_DOWN:
-        if (ev.button.button == SDL_BUTTON_RIGHT) {
-          // Respect ImGui focus: do not orbit if ImGui wants the mouse
-          if (!ImGui::GetIO().WantCaptureMouse) {
-            scene->orbiting = true;
-            SDL_GetMouseState(&lastMouseX, &lastMouseY);
-            SDL_SetWindowRelativeMouseMode(
-                window, true); // hide cursor + get relative deltas
-          }
-        }
-        if (ev.button.button == SDL_BUTTON_LEFT) {
-          if (!ImGui::GetIO().WantCaptureMouse && !scene->solids.empty()) {
-            int windowW = 0;
-            int windowH = 0;
-            SDL_GetWindowSizeInPixels(window, &windowW, &windowH);
-            if (windowW > 0 && windowH > 0) {
-              // Convert mouse to 16.16 fixed-point in scene coordinates
-              constexpr int32_t FP = 65536; // 1<<16
-              int32_t mouseXFP = static_cast<int32_t>(
-                  (ev.button.x * scene->screen.width / windowW + 0.5f) * FP);
-              int32_t mouseYFP = static_cast<int32_t>(
-                  (ev.button.y * scene->screen.height / windowH + 0.5f) * FP);
-              // Pick radius in 16.16 fixed-point (28 pixels)
-              constexpr int64_t pickRadiusFP = 28 * FP;
-              int64_t bestDist2 = pickRadiusFP * pickRadiusFP;
-              int bestIndex = -1;
-              for (size_t i = 0; i < scene->solids.size(); ++i) {
-                slib::vec3 worldCenter =
-                    scene->solids[i]->getWorldCenter();
-                PickVertex pv;
-                pv.ndc = slib::vec4(worldCenter, 1.0f) * scene->spaceMatrix;
-                if (!Projection<PickVertex>::view(scene->screen.width,
-                        scene->screen.height, pv, true)) {
-                  continue;
-                }
-                int64_t dx = pv.p_x - mouseXFP;
-                int64_t dy = pv.p_y - mouseYFP;
-                int64_t dist2 = dx * dx + dy * dy;
-                if (dist2 < bestDist2) {
-                  bestDist2 = dist2;
-                  bestIndex = static_cast<int>(i);
-                }
-              }
-              if (bestIndex >= 0) {
-                selectedSolidIndex = bestIndex;
-                scene->camera.orbitTarget =
-                    scene->solids[bestIndex]->getWorldCenter();
-                scene->camera.setOrbitFromCurrent();
-              }
-            }
-          }
-        }
-        break;
-      case SDL_EVENT_MOUSE_BUTTON_UP:
-        if (ev.button.button == SDL_BUTTON_RIGHT && scene->orbiting) {
-          scene->orbiting = false;
-          SDL_SetWindowRelativeMouseMode(window, false);
-          /*
-          slib::vec3 eye = scene.camera.pos;
-          slib::vec3 target = scene.camera.orbitTarget;
-
-          // 1) Forward (camera looks from eye -> target)
-          slib::vec3 forward = smath::normalize(target - eye);
-
-          // 2) Yaw & pitch (radians), matching your zaxis convention:
-          // zaxis = { sinYaw*cosPitch, -sinPitch, cosYaw*cosPitch }
-            ne.camera.yaw = std::atan2(forward.x, -forward.z); // [-pi, pi]
-            scene.camera.pitch = std::asin(-forward.y);            // [-pi/2,
-          pi/2]
-          */
-        }
-        break;
-      case SDL_EVENT_MOUSE_WHEEL:
-        // Zoom (wheel.y > 0 => zoom in)
-        if (!ImGui::GetIO().WantCaptureMouse) {
-          float zoomStep = 0.9f; // multiplicative for nicer feel
-          if (ev.wheel.y > 0)
-            scene->camera.orbitRadius *= zoomStep;
-          if (ev.wheel.y < 0)
-            scene->camera.orbitRadius /= zoomStep;
-          scene->camera.orbitRadius = std::max(0.1f, scene->camera.orbitRadius);
-          scene->camera.applyOrbit();
-        }
-        break;
-      case SDL_EVENT_MOUSE_MOTION:
-        if (scene->orbiting) {
-          // Relative mode gives motion.xrel/yrel directly
-          float dx = static_cast<float>(ev.motion.xrel);
-          float dy = static_cast<float>(ev.motion.yrel);
-
-          // Tune these two if orbit feels too slow/fast
-          const float orbitYawSpeed = 0.0035f; // radians per pixel
-          const float orbitPitchSpeed = 0.0035f;
-
-          scene->camera.orbitAzimuth -=
-              dx * orbitYawSpeed; // drag right => orbit right
-          scene->camera.orbitElevation -=
-              dy * orbitPitchSpeed; // drag up   => orbit up
-          // Clamp elevation in apply
-          scene->camera.applyOrbit();
-        }
-        break;
-      }
-    }
+    // Process SDL events
+    closedWindow = inputHandler.processEvents(scene, selectedSolidIndex);
 
     // The input scheme is the same as in Descent, the game by Parallax
     // Interactive.
