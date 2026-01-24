@@ -16,18 +16,7 @@
 class Renderer {
 
 public:
-  void drawScene(Scene &scene, float dt) {
-
-    for (auto &solidPtr : scene.solids) {
-      // Update the solid's position based on its rotation speeds
-      if (solidPtr->rotationEnabled) {
-        solidPtr->rotate(solidPtr->incXangle, solidPtr->incYangle, 0.0f);
-      }
-
-      solidPtr->updateOrbit(dt);
-      solidPtr->calculateTransformMat();
-    }
-
+  void drawScene(Scene &scene) {
     // Shadow pass - render depth from light's perspective
     if (scene.shadowMap && scene.shadowsEnabled) {
       renderShadowPass(scene);
@@ -78,45 +67,8 @@ public:
   void renderShadowPass(Scene &scene) {
     scene.shadowMap->clear();
 
-    // Calculate dynamic scene bounds (AABB in world space)
-    slib::vec3 worldBoundMin{std::numeric_limits<float>::max(),
-                    std::numeric_limits<float>::max(),
-                    std::numeric_limits<float>::max()};
-    slib::vec3 worldBoundMax{-std::numeric_limits<float>::max(),
-                    -std::numeric_limits<float>::max(),
-                    -std::numeric_limits<float>::max()};
-    bool hasGeometry = false;
-
-    for (auto &solidPtr : scene.solids) {
-      if (solidPtr->lightSourceEnabled) {
-        continue; // Skip light sources
-      }
-      solidPtr->updateWorldBounds(worldBoundMin, worldBoundMax);
-      hasGeometry = true;
-    }
-
-    // Fallback in case of no geometry
-    slib::vec3 sceneCenter;
-    float sceneRadius;
-    if (hasGeometry) {
-      sceneCenter =
-          slib::vec3{(worldBoundMin.x + worldBoundMax.x) * 0.5f, (worldBoundMin.y + worldBoundMax.y) * 0.5f,
-                     (worldBoundMin.z + worldBoundMax.z) * 0.5f};
-      slib::vec3 diag{worldBoundMax.x - worldBoundMin.x, worldBoundMax.y - worldBoundMin.y, worldBoundMax.z - worldBoundMin.z};
-      float diagLen2 = smath::dot(diag, diag);
-      sceneRadius = 0.5f * std::sqrt(diagLen2);
-      // Padding factor to avoid clipping at frustum edges
-      // const float paddingFactor = 1.25f; // increase if needed
-      // sceneRadius *= paddingFactor;
-      // Ensure a minimal radius to avoid degenerate projections
-      sceneRadius = std::max(sceneRadius, 1.0f);
-    } else {
-      sceneCenter = {0.0f, 0.0f, -400.0f};
-      sceneRadius = 125.0f;
-    }
-
-    // Build light matrices
-    scene.shadowMap->buildLightMatrices(scene.light, sceneCenter, sceneRadius);
+    // Build light matrices using scene's pre-calculated bounds
+    scene.shadowMap->buildLightMatrices(scene.light, scene.sceneCenter, scene.sceneRadius);
 
     // Render all shadow-casting solids to the shadow map
     for (auto &solidPtr : scene.solids) {

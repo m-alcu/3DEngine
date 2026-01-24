@@ -2,6 +2,7 @@
 #include <algorithm> // for std::fill
 #include <cmath>
 #include <cstdint>   // for uint32_t
+#include <limits>
 #include <map>
 #include <memory>    // for std::unique_ptr
 #include <string>
@@ -76,7 +77,47 @@ public:
   }
 
   virtual void update(float dt) {
-    // Default implementation does nothing.
+    // Update all solids (rotation, orbit, transform matrix)
+    for (auto &solidPtr : solids) {
+      if (solidPtr->rotationEnabled) {
+        solidPtr->rotate(solidPtr->incXangle, solidPtr->incYangle, 0.0f);
+      }
+      solidPtr->updateOrbit(dt);
+      solidPtr->calculateTransformMat();
+    }
+
+    // Calculate world bounds
+    worldBoundMin = {std::numeric_limits<float>::max(),
+                     std::numeric_limits<float>::max(),
+                     std::numeric_limits<float>::max()};
+    worldBoundMax = {-std::numeric_limits<float>::max(),
+                     -std::numeric_limits<float>::max(),
+                     -std::numeric_limits<float>::max()};
+    bool hasGeometry = false;
+
+    for (auto &solidPtr : solids) {
+      if (solidPtr->lightSourceEnabled) {
+        continue; // Skip light sources
+      }
+      solidPtr->updateWorldBounds(worldBoundMin, worldBoundMax);
+      hasGeometry = true;
+    }
+
+    // Calculate scene center and radius
+    if (hasGeometry) {
+      sceneCenter = {(worldBoundMin.x + worldBoundMax.x) * 0.5f,
+                     (worldBoundMin.y + worldBoundMax.y) * 0.5f,
+                     (worldBoundMin.z + worldBoundMax.z) * 0.5f};
+      slib::vec3 diag{worldBoundMax.x - worldBoundMin.x,
+                      worldBoundMax.y - worldBoundMin.y,
+                      worldBoundMax.z - worldBoundMin.z};
+      float diagLen2 = smath::dot(diag, diag);
+      sceneRadius = 0.5f * std::sqrt(diagLen2);
+      sceneRadius = std::max(sceneRadius, 1.0f);
+    } else {
+      sceneCenter = {0.0f, 0.0f, -400.0f};
+      sceneRadius = 125.0f;
+    }
   }
 
   // Process keyboard input for camera movement (Descent-style 6DOF)
@@ -176,6 +217,12 @@ public:
   bool orbiting = false;
   bool shadowsEnabled = true;        // Enable/disable shadow rendering
   bool showShadowMapOverlay = false; // Show/hide shadow map debug overlay
+
+  // World bounds calculated in update()
+  slib::vec3 worldBoundMin{};
+  slib::vec3 worldBoundMax{};
+  slib::vec3 sceneCenter{};
+  float sceneRadius = 0.0f;
 
   BackgroundType backgroundType = BackgroundType::DESERT;
   uint32_t *backg = nullptr;

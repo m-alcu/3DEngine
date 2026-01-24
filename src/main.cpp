@@ -181,7 +181,7 @@ int main(int, char **) {
 
     scene->update(io.DeltaTime);
 
-    solidRenderer.drawScene(*scene, io.DeltaTime);
+    solidRenderer.drawScene(*scene);
 
     // ImGui rendering
     ImGui::Render();
