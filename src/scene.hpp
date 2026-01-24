@@ -69,6 +69,7 @@ public:
   virtual void setup() {
     // Initialize camera orbit target to first solid
     if (!solids.empty()) {
+      solids[0]->calculateTransformMat();
       camera.orbitTarget = solids[0]->getWorldCenter();
     }
     camera.setOrbitFromCurrent();

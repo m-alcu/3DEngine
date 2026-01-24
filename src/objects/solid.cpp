@@ -93,26 +93,11 @@ slib::vec3 Solid::getWorldCenter() const {
     slib::vec3 localCenter{(minCoord.x + maxCoord.x) * 0.5f,
                            (minCoord.y + maxCoord.y) * 0.5f,
                            (minCoord.z + maxCoord.z) * 0.5f};
-    slib::mat4 rotate = smath::rotation(
-        slib::vec3{position.xAngle, position.yAngle, position.zAngle});
-    slib::mat4 translate = smath::translation(
-        slib::vec3{position.x, position.y, position.z});
-    slib::mat4 scale = smath::scale(
-        slib::vec3{position.zoom, position.zoom, position.zoom});
-    slib::mat4 modelMatrix = translate * rotate * scale;
     slib::vec4 world = modelMatrix * slib::vec4(localCenter, 1.0f);
     return {world.x, world.y, world.z};
 }
 
 void Solid::updateWorldBounds(slib::vec3& minV, slib::vec3& maxV) const {
-    slib::mat4 rotate = smath::rotation(
-        slib::vec3{position.xAngle, position.yAngle, position.zAngle});
-    slib::mat4 translate = smath::translation(
-        slib::vec3{position.x, position.y, position.z});
-    slib::mat4 scale = smath::scale(
-        slib::vec3{position.zoom, position.zoom, position.zoom});
-    slib::mat4 modelMatrix = translate * rotate * scale;
-
     // 8 corners of the AABB
     slib::vec3 corners[8] = {
         {minCoord.x, minCoord.y, minCoord.z}, {minCoord.x, minCoord.y, maxCoord.z},
