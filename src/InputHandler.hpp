@@ -28,7 +28,7 @@ public:
 
   // Process all pending SDL events
   // Returns true if window close was requested
-  bool processEvents(std::unique_ptr<Scene>& scene, int& selectedSolidIndex) {
+  bool processEvents(std::unique_ptr<Scene>& scene) {
     for (SDL_Event ev; SDL_PollEvent(&ev);) {
       ImGui_ImplSDL3_ProcessEvent(&ev);
 
@@ -48,7 +48,7 @@ public:
         }
         break;
       case SDL_EVENT_MOUSE_BUTTON_DOWN:
-        handleMouseButtonDown(ev, scene, selectedSolidIndex);
+        handleMouseButtonDown(ev, scene);
         break;
       case SDL_EVENT_MOUSE_BUTTON_UP:
         handleMouseButtonUp(ev, scene);
@@ -71,8 +71,7 @@ private:
   float lastMouseY = 0;
 
   void handleMouseButtonDown(const SDL_Event& ev,
-                             std::unique_ptr<Scene>& scene,
-                             int& selectedSolidIndex) {
+                             std::unique_ptr<Scene>& scene) {
     if (ev.button.button == SDL_BUTTON_RIGHT) {
       // Respect ImGui focus: do not orbit if ImGui wants the mouse
       if (!ImGui::GetIO().WantCaptureMouse) {
@@ -84,13 +83,12 @@ private:
 
     if (ev.button.button == SDL_BUTTON_LEFT) {
       if (!ImGui::GetIO().WantCaptureMouse && !scene->solids.empty()) {
-        pickSolid(ev, scene, selectedSolidIndex);
+        pickSolid(ev, scene);
       }
     }
   }
 
-  void pickSolid(const SDL_Event& ev, std::unique_ptr<Scene>& scene,
-                 int& selectedSolidIndex) {
+  void pickSolid(const SDL_Event& ev, std::unique_ptr<Scene>& scene) {
     int windowW = 0;
     int windowH = 0;
     SDL_GetWindowSizeInPixels(window, &windowW, &windowH);
@@ -132,7 +130,7 @@ private:
     }
 
     if (bestIndex >= 0) {
-      selectedSolidIndex = bestIndex;
+      scene->selectedSolidIndex = bestIndex;
       scene->camera.orbitTarget =
           scene->solids[bestIndex]->getWorldCenter();
       scene->camera.setOrbitFromCurrent();

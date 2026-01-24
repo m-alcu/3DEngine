@@ -4,10 +4,12 @@
 #include <cstdint>   // for uint32_t
 #include <map>
 #include <memory>    // for std::unique_ptr
+#include <string>
 #include <vector>
 #include <SDL3/SDL_keycode.h>
 
 #include "ShadowMap.hpp"
+#include "vendor/imgui/imgui.h"
 #include "ZBuffer.hpp"
 #include "backgrounds/background.hpp"
 #include "backgrounds/backgroundFactory.hpp"
@@ -182,4 +184,119 @@ public:
   // PCF radius control (0 = no filtering, 1 = 3x3, 2 = 5x5)
   int pcfRadius = SHADOW_PCF_RADIUS;
   sage::Event pcfRadiusChanged;
+
+  // Selected solid index for UI
+  int selectedSolidIndex = 0;
+
+  // Draw ImGui controls for solid editing
+  void drawSolidControls() {
+    if (solids.empty()) return;
+
+    selectedSolidIndex = std::clamp(selectedSolidIndex, 0,
+                                    static_cast<int>(solids.size() - 1));
+
+    // Build solid labels for combo
+    std::vector<std::string> solidLabels;
+    solidLabels.reserve(solids.size());
+    std::vector<const char*> solidLabelPtrs;
+    solidLabelPtrs.reserve(solids.size());
+
+    for (size_t i = 0; i < solids.size(); ++i) {
+      const std::string& solidName = solids[i]->name;
+      if (!solidName.empty()) {
+        solidLabels.push_back(solidName);
+      } else {
+        solidLabels.push_back("Solid " + std::to_string(i));
+      }
+      solidLabelPtrs.push_back(solidLabels.back().c_str());
+    }
+
+    if (ImGui::Combo("Selected Solid", &selectedSolidIndex,
+                     solidLabelPtrs.data(),
+                     static_cast<int>(solidLabelPtrs.size()))) {
+      camera.orbitTarget = solids[selectedSolidIndex]->getWorldCenter();
+      camera.setOrbitFromCurrent();
+    }
+
+    Solid* selectedSolid = solids[selectedSolidIndex].get();
+
+    int currentShading = static_cast<int>(selectedSolid->shading);
+    if (ImGui::Combo("Shading", &currentShading, shadingNames,
+                     IM_ARRAYSIZE(shadingNames))) {
+      selectedSolid->shading = static_cast<Shading>(currentShading);
+    }
+
+    ImGui::Checkbox("Rotate", &selectedSolid->rotationEnabled);
+
+    float position[3] = {selectedSolid->position.x,
+                         selectedSolid->position.y,
+                         selectedSolid->position.z};
+    if (ImGui::DragFloat3("Position", position, 1.0f)) {
+      selectedSolid->position.x = position[0];
+      selectedSolid->position.y = position[1];
+      selectedSolid->position.z = position[2];
+    }
+
+    ImGui::DragFloat("Zoom", &selectedSolid->position.zoom, 0.1f, 0.01f, 500.0f);
+
+    float angles[3] = {selectedSolid->position.xAngle,
+                       selectedSolid->position.yAngle,
+                       selectedSolid->position.zAngle};
+    if (ImGui::DragFloat3("Angles", angles, 1.0f, -360.0f, 360.0f)) {
+      selectedSolid->position.xAngle = angles[0];
+      selectedSolid->position.yAngle = angles[1];
+      selectedSolid->position.zAngle = angles[2];
+    }
+
+    bool orbitEnabled = selectedSolid->orbit_.enabled;
+    if (ImGui::Checkbox("Enable Orbit", &orbitEnabled)) {
+      if (orbitEnabled) {
+        selectedSolid->enableCircularOrbit(selectedSolid->orbit_.center,
+                                           selectedSolid->orbit_.radius,
+                                           selectedSolid->orbit_.n,
+                                           selectedSolid->orbit_.omega,
+                                           selectedSolid->orbit_.phase);
+      } else {
+        selectedSolid->disableCircularOrbit();
+      }
+    }
+
+    float orbitCenter[3] = {selectedSolid->orbit_.center.x,
+                            selectedSolid->orbit_.center.y,
+                            selectedSolid->orbit_.center.z};
+    if (ImGui::DragFloat3("Orbit Center", orbitCenter, 1.0f)) {
+      selectedSolid->orbit_.center = {orbitCenter[0], orbitCenter[1], orbitCenter[2]};
+    }
+
+    ImGui::DragFloat("Orbit Radius", &selectedSolid->orbit_.radius, 0.1f, 0.0f, 10000.0f);
+    ImGui::DragFloat("Orbit Speed", &selectedSolid->orbit_.omega, 0.01f, -10.0f, 10.0f);
+  }
+
+  // Draw ImGui controls for scene-level settings
+  void drawSceneControls() {
+    int currentBackground = static_cast<int>(backgroundType);
+    if (ImGui::Combo("Background", &currentBackground, backgroundNames,
+                     IM_ARRAYSIZE(backgroundNames))) {
+      backgroundType = static_cast<BackgroundType>(currentBackground);
+      background = std::unique_ptr<Background>(
+          BackgroundFactory::createBackground(backgroundType));
+    }
+
+    ImGui::Checkbox("Show Shadow Map Overlay", &showShadowMapOverlay);
+
+    static const char* pcfLabels[] = {"Off (0)", "3x3 (1)", "5x5 (2)"};
+    int currentPcfRadius = pcfRadius;
+    if (ImGui::Combo("PCF Radius", &currentPcfRadius, pcfLabels, IM_ARRAYSIZE(pcfLabels))) {
+      pcfRadius = currentPcfRadius;
+      pcfRadiusChanged.InvokeAllCallbacks();
+    }
+  }
+
+  // Draw camera info text
+  void drawCameraInfo() {
+    ImGui::Text("Camera pos: (%.2f, %.2f, %.2f)", camera.pos.x, camera.pos.y, camera.pos.z);
+    ImGui::Text("Camera for: (%.2f, %.2f, %.2f)", camera.forward.x, camera.forward.y, camera.forward.z);
+    ImGui::Text("OrbitTarget: (%.2f, %.2f, %.2f)", camera.orbitTarget.x, camera.orbitTarget.y, camera.orbitTarget.z);
+    ImGui::Text("Camera Pitch: %.2f, Yaw: %.2f, Roll: %.2f", camera.pitch, camera.yaw, camera.roll);
+  }
 };
