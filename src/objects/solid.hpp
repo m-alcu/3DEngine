@@ -6,6 +6,7 @@
 #include "../slib.hpp"
 #include "../material.hpp"
 #include "../constants.hpp"
+#include "../smath.hpp"
 
 enum class Shading {
     Wireframe,
@@ -94,6 +95,8 @@ public:
     std::vector<FaceData> faceData;
     Shading shading;
     Position position;
+    slib::mat4 modelMatrix;
+    slib::mat4 normalMatrix;
 	bool rotationEnabled = true;
     float incXangle = 0.0f;  // Rotation speed around X axis
     float incYangle = 0.0f;  // Rotation speed around Y axis
@@ -115,9 +118,7 @@ public:
  
 public:
     // Base constructor that initializes common data members.
-    Solid() 
-    {
-    }
+    Solid();
 
     // Virtual destructor for proper cleanup in derived classes.
     virtual ~Solid() = default;
@@ -144,6 +145,8 @@ public:
     void updateWorldBounds(slib::vec3& minV, slib::vec3& maxV) const;
 
     void scaleToRadius(float targetRadius);
+
+    void calculateTransformMat();
 
     virtual MaterialProperties getMaterialProperties(MaterialType type);
 

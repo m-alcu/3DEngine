@@ -1,8 +1,24 @@
 #include <iostream>
 #include <math.h>
-#include "../rasterizer.hpp"
+#include "solid.hpp"
 #include "../smath.hpp"
 #include "../vendor/lodepng/lodepng.h"
+
+Solid::Solid()
+    : modelMatrix(smath::identity()),
+      normalMatrix(smath::identity()) {
+}
+
+void Solid::calculateTransformMat() {
+    slib::mat4 rotate = smath::rotation(
+        slib::vec3{position.xAngle, position.yAngle, position.zAngle});
+    slib::mat4 translate = smath::translation(
+        slib::vec3{position.x, position.y, position.z});
+    slib::mat4 scale = smath::scale(
+        slib::vec3{position.zoom, position.zoom, position.zoom});
+    modelMatrix = translate * rotate * scale;
+    normalMatrix = rotate;
+}
 
 void Solid::calculateNormals() {
 
@@ -226,4 +242,3 @@ void Solid::updateOrbit(float dt)
     position.z = P.z;
 
 }
-

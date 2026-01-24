@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <type_traits>
 #include "scene.hpp"
+#include "objects/solid.hpp"
 #include "slib.hpp"
 #include "smath.hpp"
 #include "polygon.hpp"
@@ -29,10 +30,6 @@ class Rasterizer {
         using vertex = typename Effect::Vertex;
         static constexpr bool isShadowEffect = is_shadow_effect_v<Effect>;
 
-        Rasterizer() :  modelMatrix(smath::identity()),
-                        normalMatrix(smath::identity())
-          {}
-
         void drawRenderable(Solid& sol, Scene* scn = nullptr, ShadowMap* map = nullptr) {
             solid = &sol;
             scene = scn;
@@ -44,7 +41,7 @@ class Rasterizer {
                 screenWidth = scene->screen.width;
                 screenHeight = scene->screen.height;
             }
-            calculateTransformMat();
+            solid->calculateTransformMat();
 
             if constexpr (!isShadowEffect) {
                 if (solid->lightSourceEnabled && scene) {
@@ -65,18 +62,8 @@ class Rasterizer {
         int32_t screenWidth = 0;
         int32_t screenHeight = 0;
         ShadowMap* shadowMap = nullptr;
-        slib::mat4 modelMatrix;
-        slib::mat4 normalMatrix;
         Effect effect;
 		Projection<vertex> projection;
-
-        void calculateTransformMat() {
-            slib::mat4 rotate = smath::rotation(slib::vec3({solid->position.xAngle, solid->position.yAngle, solid->position.zAngle}));
-            slib::mat4 translate = smath::translation(slib::vec3({solid->position.x, solid->position.y, solid->position.z}));
-            slib::mat4 scale = smath::scale(slib::vec3({solid->position.zoom, solid->position.zoom, solid->position.zoom}));
-            modelMatrix = translate * rotate * scale;
-            normalMatrix = rotate;
-        }
 
         void processVertices() {
             projectedPoints.resize(solid->numVertices);
@@ -86,7 +73,7 @@ class Rasterizer {
                 solid->vertexData.end(),
                 projectedPoints.begin(),
                 [&](const auto& vData) {
-                    return effect.vs(vData, modelMatrix, normalMatrix, scene, shadowMap);
+                    return effect.vs(vData, solid->modelMatrix, solid->normalMatrix, scene, shadowMap);
                 }
             );
         }
@@ -97,7 +84,7 @@ class Rasterizer {
                 for (int i = 0; i < static_cast<int>(solid->faceData.size()); ++i) {
                     const auto& faceDataEntry = solid->faceData[i];
                     slib::vec3 rotatedFaceNormal{};
-                    rotatedFaceNormal = normalMatrix * slib::vec4(faceDataEntry.faceNormal, 0);
+                    rotatedFaceNormal = solid->normalMatrix * slib::vec4(faceDataEntry.faceNormal, 0);
                     vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];
 
                     if (isFaceVisibleFromLight(p1.world, rotatedFaceNormal)) {
@@ -126,7 +113,7 @@ class Rasterizer {
                 for (int i = 0; i < static_cast<int>(solid->faceData.size()); ++i) {
                     const auto& faceDataEntry = solid->faceData[i];
                     slib::vec3 rotatedFaceNormal{};
-                    rotatedFaceNormal = normalMatrix * slib::vec4(faceDataEntry.faceNormal, 0);
+                    rotatedFaceNormal = solid->normalMatrix * slib::vec4(faceDataEntry.faceNormal, 0);
                     vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];
 
                     bool shouldRender = solid->shading == Shading::Wireframe ||
@@ -154,7 +141,7 @@ class Rasterizer {
                 for (const auto& fd : visibleFaces) {
                     const auto& faceDataEntry = solid->faceData[fd.faceIndex];
                     slib::vec3 rotatedFaceNormal{};
-                    rotatedFaceNormal = normalMatrix * slib::vec4(faceDataEntry.faceNormal, 0);
+                    rotatedFaceNormal = solid->normalMatrix * slib::vec4(faceDataEntry.faceNormal, 0);
 
                     std::vector<vertex> polyVerts;
                     polyVerts.reserve(faceDataEntry.face.vertexIndices.size());
@@ -304,5 +291,3 @@ class Rasterizer {
         }
 
     };
-
-
