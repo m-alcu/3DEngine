@@ -9,9 +9,10 @@
 
 class AxisRenderer {
 public:
-  static void drawAxes(Scene &scene, float axisLength = 1000.0f) {
-    const slib::vec3 origin{0.0f, 0.0f, 0.0f};
-    drawGridPlanes(scene);
+  static void drawAxes(Scene &scene, float axisLength = 500.0f) {
+    float gridSpacing = axisLength * 0.1f;
+    drawGridPlanes(scene, axisLength, gridSpacing);
+    drawAxisLabels(scene, axisLength);
   }
 
   static void drawGridPlanes(Scene &scene, float halfSize = 500.0f,
@@ -43,6 +44,18 @@ public:
     }
   }
 
+  static void drawAxisLabels(Scene &scene, float axisLength) {
+    float labelOffset = axisLength * 0.12f;
+    float labelSize = axisLength * 0.14f;
+
+    drawLetterX(scene, {axisLength + labelOffset, 0.0f, 0.0f}, labelSize,
+                {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, 0xffff0000);
+    drawLetterY(scene, {0.0f, axisLength + labelOffset, 0.0f}, labelSize,
+                {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 0.0f}, 0xff00ff00);
+    drawLetterZ(scene, {0.0f, 0.0f, axisLength + labelOffset}, labelSize,
+                {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, 0xff0000ff);
+  }
+
 private:
   struct AxisVertex {
     slib::vec4 ndc;
@@ -71,6 +84,43 @@ private:
     }
 
     drawLineWithDepth(scene, v0, v1, color);
+  }
+
+  static void drawLetterX(Scene &scene, const slib::vec3 &center, float size,
+                          const slib::vec3 &up, const slib::vec3 &right,
+                          uint32_t color) {
+    float half = size * 0.5f;
+    drawAxisLine(scene, center - up * half - right * half,
+                 center + up * half + right * half, color);
+    drawAxisLine(scene, center - up * half + right * half,
+                 center + up * half - right * half, color);
+  }
+
+  static void drawLetterY(Scene &scene, const slib::vec3 &center, float size,
+                          const slib::vec3 &up, const slib::vec3 &right,
+                          uint32_t color) {
+    float half = size * 0.5f;
+    float arm = size * 0.6f;
+    slib::vec3 topLeft = center + up * half - right * (arm * 0.5f);
+    slib::vec3 topRight = center + up * half + right * (arm * 0.5f);
+    slib::vec3 junction = center + up * (size * 0.1f);
+    slib::vec3 bottom = center - up * half;
+    drawAxisLine(scene, topLeft, junction, color);
+    drawAxisLine(scene, topRight, junction, color);
+    drawAxisLine(scene, junction, bottom, color);
+  }
+
+  static void drawLetterZ(Scene &scene, const slib::vec3 &center, float size,
+                          const slib::vec3 &up, const slib::vec3 &right,
+                          uint32_t color) {
+    float half = size * 0.5f;
+    slib::vec3 topLeft = center + up * half - right * half;
+    slib::vec3 topRight = center + up * half + right * half;
+    slib::vec3 bottomLeft = center - up * half - right * half;
+    slib::vec3 bottomRight = center - up * half + right * half;
+    drawAxisLine(scene, topLeft, topRight, color);
+    drawAxisLine(scene, topRight, bottomLeft, color);
+    drawAxisLine(scene, bottomLeft, bottomRight, color);
   }
 
   static bool clipLineNdc(AxisVertex &a, AxisVertex &b) {
