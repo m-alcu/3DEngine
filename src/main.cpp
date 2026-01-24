@@ -513,8 +513,7 @@ int main(int, char **) {
 
     scene->update(io.DeltaTime);
 
-    solidRenderer.drawScene(*scene, scene->zNear, scene->zFar,
-                            scene->viewAngle);
+    solidRenderer.drawScene(*scene);
 
     if (scene->showShadowMapOverlay) {
       solidRenderer.drawShadowMapOverlay(*scene);

@@ -20,6 +20,11 @@ public:
     float orbitAzimuth = 0.0f;
     float orbitElevation = 0.0f;
 
+    // Projection parameters
+    float zNear = 10.0f;      // Near plane distance
+    float zFar = 10000.0f;    // Far plane distance
+    float viewAngle = 45.0f;  // Field of view angle in degrees
+
     Camera() = default;
 
     void setOrbitFromCurrent() {
@@ -30,7 +35,7 @@ public:
     }
 
     void applyOrbit() {
-        const float el = clampf(orbitElevation, -1.5533f, 1.5533f); // ~±89°
+        const float el = clampf(orbitElevation, -1.5533f, 1.5533f); // ~ï¿½89ï¿½
         const float ca = std::cos(orbitAzimuth), sa = std::sin(orbitAzimuth);
         const float ce = std::cos(el), se = std::sin(el);
 

@@ -102,10 +102,6 @@ public:
                               0.f}; // Movement momentum vector (nonzero
                                     // indicates camera is still moving)
 
-  float zNear;     // Near plane distance
-  float zFar;      // Far plane distance
-  float viewAngle; // Field of view angle in degrees
-
   Camera camera; // Camera object to manage camera properties.
   // Store solids in a vector of unique_ptr to handle memory automatically.
   std::vector<std::unique_ptr<Solid>> solids;

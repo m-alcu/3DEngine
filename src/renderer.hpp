@@ -16,7 +16,7 @@
 class Renderer {
 
 public:
-  void drawScene(Scene &scene, float zNear, float zFar, float viewAngle) {
+  void drawScene(Scene &scene) {
 
     // Shadow pass - render depth from light's perspective
     if (scene.shadowMap && scene.shadowsEnabled) {
@@ -25,7 +25,7 @@ public:
 
     scene.drawBackground();
 
-    prepareFrame(scene, zNear, zFar, viewAngle);
+    prepareFrame(scene);
     for (auto &solidPtr : scene.solids) {
       switch (solidPtr->shading) {
       case Shading::Flat:
@@ -114,7 +114,7 @@ public:
     }
   }
 
-  void prepareFrame(Scene &scene, float zNear, float zFar, float viewAngle) {
+  void prepareFrame(Scene &scene) {
 
     // std::fill_n(scene.pixels, scene.screen.width * scene.screen.height, 0);
     std::copy(scene.backg,
@@ -122,16 +122,12 @@ public:
               scene.pixels);
     scene.zBuffer->Clear(); // Clear the zBuffer
 
-    zNear = 10.0f;     // Near plane distance
-    zFar = 10000.0f;   // Far plane distance
-    viewAngle = 45.0f; // Field of view angle in degrees
-
     float aspectRatio =
         (float)scene.screen.width / scene.screen.height; // Width / Height ratio
-    float fovRadians = viewAngle * (PI / 180.0f);
+    float fovRadians = scene.camera.viewAngle * (PI / 180.0f);
 
     slib::mat4 projectionMatrix =
-        smath::perspective(zFar, zNear, aspectRatio, fovRadians);
+        smath::perspective(scene.camera.zFar, scene.camera.zNear, aspectRatio, fovRadians);
 
     slib::mat4 viewMatrix =
         scene.orbiting ? smath::lookAt(scene.camera.pos,
