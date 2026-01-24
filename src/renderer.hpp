@@ -79,10 +79,10 @@ public:
     scene.shadowMap->clear();
 
     // Calculate dynamic scene bounds (AABB in world space)
-    slib::vec3 minV{std::numeric_limits<float>::max(),
+    slib::vec3 worldBoundMin{std::numeric_limits<float>::max(),
                     std::numeric_limits<float>::max(),
                     std::numeric_limits<float>::max()};
-    slib::vec3 maxV{-std::numeric_limits<float>::max(),
+    slib::vec3 worldBoundMax{-std::numeric_limits<float>::max(),
                     -std::numeric_limits<float>::max(),
                     -std::numeric_limits<float>::max()};
     bool hasGeometry = false;
@@ -91,7 +91,7 @@ public:
       if (solidPtr->lightSourceEnabled) {
         continue; // Skip light sources
       }
-      solidPtr->updateWorldBounds(minV, maxV);
+      solidPtr->updateWorldBounds(worldBoundMin, worldBoundMax);
       hasGeometry = true;
     }
 
@@ -100,9 +100,9 @@ public:
     float sceneRadius;
     if (hasGeometry) {
       sceneCenter =
-          slib::vec3{(minV.x + maxV.x) * 0.5f, (minV.y + maxV.y) * 0.5f,
-                     (minV.z + maxV.z) * 0.5f};
-      slib::vec3 diag{maxV.x - minV.x, maxV.y - minV.y, maxV.z - minV.z};
+          slib::vec3{(worldBoundMin.x + worldBoundMax.x) * 0.5f, (worldBoundMin.y + worldBoundMax.y) * 0.5f,
+                     (worldBoundMin.z + worldBoundMax.z) * 0.5f};
+      slib::vec3 diag{worldBoundMax.x - worldBoundMin.x, worldBoundMax.y - worldBoundMin.y, worldBoundMax.z - worldBoundMin.z};
       float diagLen2 = smath::dot(diag, diag);
       sceneRadius = 0.5f * std::sqrt(diagLen2);
       // Padding factor to avoid clipping at frustum edges

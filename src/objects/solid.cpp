@@ -97,7 +97,7 @@ slib::vec3 Solid::getWorldCenter() const {
     return {world.x, world.y, world.z};
 }
 
-void Solid::updateWorldBounds(slib::vec3& minV, slib::vec3& maxV) const {
+void Solid::updateWorldBounds(slib::vec3& worldBoundMin, slib::vec3& worldBoundMax) const {
     // 8 corners of the AABB
     slib::vec3 corners[8] = {
         {minCoord.x, minCoord.y, minCoord.z}, {minCoord.x, minCoord.y, maxCoord.z},
@@ -107,12 +107,12 @@ void Solid::updateWorldBounds(slib::vec3& minV, slib::vec3& maxV) const {
 
     for (const auto& corner : corners) {
         slib::vec4 world = modelMatrix * slib::vec4(corner, 1.0f);
-        minV.x = std::min(minV.x, world.x);
-        minV.y = std::min(minV.y, world.y);
-        minV.z = std::min(minV.z, world.z);
-        maxV.x = std::max(maxV.x, world.x);
-        maxV.y = std::max(maxV.y, world.y);
-        maxV.z = std::max(maxV.z, world.z);
+        worldBoundMin.x = std::min(worldBoundMin.x, world.x);
+        worldBoundMin.y = std::min(worldBoundMin.y, world.y);
+        worldBoundMin.z = std::min(worldBoundMin.z, world.z);
+        worldBoundMax.x = std::max(worldBoundMax.x, world.x);
+        worldBoundMax.y = std::max(worldBoundMax.y, world.y);
+        worldBoundMax.z = std::max(worldBoundMax.z, world.z);
     }
 }
 
