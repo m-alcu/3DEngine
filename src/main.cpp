@@ -36,16 +36,13 @@ int main(int, char **) {
     return -1;
   }
 
-  int width = SCREEN_WIDTH;
-  int height = SCREEN_HEIGHT;
-
   Renderer solidRenderer;
 
   // Create window with SDL_Renderer graphics context
   SDL_WindowFlags window_flags =
       SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN | SDL_WINDOW_HIGH_PIXEL_DENSITY;
   SDL_Window *window =
-      SDL_CreateWindow("3D Engine", width * 2, height * 2, window_flags);
+      SDL_CreateWindow("3D Engine", SCREEN_WIDTH * 2, SCREEN_HEIGHT * 2, window_flags);
   if (window == nullptr) {
     printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
     return -1;
@@ -59,7 +56,7 @@ int main(int, char **) {
 
   SDL_Texture *texture =
       SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,
-                        SDL_TEXTUREACCESS_STREAMING, width, height);
+                        SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
   if (texture == nullptr) {
     SDL_Log("Error: SDL_CreateTexture(): %s\n", SDL_GetError());
     return -1;
@@ -115,7 +112,7 @@ int main(int, char **) {
   // nullptr, io.Fonts->GetGlyphRangesJapanese()); IM_ASSERT(font != nullptr);
 
   auto scene =
-      SceneFactory::createScene(SceneType::SHADOWTEST, {height, width});
+      SceneFactory::createScene(SceneType::SHADOWTEST, {SCREEN_WIDTH, SCREEN_HEIGHT});
   scene->setup();
 
   int selectedSolidIndex = 0;
@@ -262,7 +259,7 @@ int main(int, char **) {
                        IM_ARRAYSIZE(sceneNames))) {
         // unique_pointer does manage memory, no need to delete
         scene = SceneFactory::createScene(static_cast<SceneType>(currentScene),
-                                          {height, width});
+                                          {SCREEN_WIDTH, SCREEN_HEIGHT});
         scene->setup();
         selectedSolidIndex = 0;
         scene->backgroundType = static_cast<BackgroundType>(currentBackground);
@@ -306,7 +303,7 @@ int main(int, char **) {
     // Rendering
     ImGui::Render();
 
-    SDL_UpdateTexture(texture, nullptr, &scene->pixels[0], 4 * width);
+    SDL_UpdateTexture(texture, nullptr, &scene->pixels[0], 4 * SCREEN_WIDTH);
     SDL_RenderTexture(renderer, texture, nullptr, nullptr);
 
     ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);

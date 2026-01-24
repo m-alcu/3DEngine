@@ -39,8 +39,8 @@ static const char *sceneNames[] = {
     "Shadow Test", "Shadow Point Test"};
 
 typedef struct Screen {
-  int32_t height;
   int32_t width;
+  int32_t height;
 } Screen;
 
 class Scene {
