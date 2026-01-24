@@ -55,7 +55,7 @@ public:
         spaceMatrix(smath::identity()) {
     pixels = new uint32_t[screen.width * screen.height];
     backg = new uint32_t[screen.width * screen.height];
-    // Subscribe shadowMap to pcfRadius changes
+    // Subscribe shadow map to pcfRadius changes
     shadowMap->subscribeToPcfRadiusChanges(pcfRadiusChanged, pcfRadius);
   }
 
@@ -97,16 +97,28 @@ public:
     }
 
     // Sync light from first light-source solid, or use defaultLight
+    // Also ensure each light-source solid has a shadow map
     bool foundLightSource = false;
     for (auto &solidPtr : solids) {
       if (solidPtr->lightSourceEnabled) {
-        light = solidPtr->light;
-        light.position = {solidPtr->position.x, solidPtr->position.y, solidPtr->position.z};
-        foundLightSource = true;
-        break;
+        // Create shadow map for this light source if it doesn't exist
+        if (!solidPtr->shadowMap) {
+          solidPtr->shadowMap = std::make_shared<ShadowMap>(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
+          solidPtr->shadowMap->subscribeToPcfRadiusChanges(pcfRadiusChanged, pcfRadius);
+        }
+
+        // Update light position from solid position
+        solidPtr->light.position = {solidPtr->position.x, solidPtr->position.y, solidPtr->position.z};
+
+        // Use first light source as active light
+        if (!foundLightSource) {
+          light = solidPtr->light;
+          foundLightSource = true;
+        }
       }
     }
-    if (!foundLightSource) {
+    usingDefaultLight = !foundLightSource;
+    if (usingDefaultLight) {
       light = defaultLight;
     }
 
@@ -214,11 +226,12 @@ public:
 
   Light light;           // Active light (synced from light-source solid or defaultLight)
   Light defaultLight;     // Fallback light when no solid has lightSourceEnabled
+  bool usingDefaultLight = true;  // True if using defaultLight (no light-source solid)
   slib::vec3 forwardNeg; // Negative forward vector for lighting calculations
   slib::mat4 spaceMatrix;
   std::shared_ptr<ZBuffer> zBuffer; // Use shared_ptr for zBuffer to manage its
                                     // lifetime automatically.
-  std::shared_ptr<ShadowMap> shadowMap; // Shadow map for shadow rendering
+  std::shared_ptr<ShadowMap> shadowMap; // Shadow map for scene lighting
   uint32_t *pixels = nullptr;           // Pointer to the pixel data.
 
   slib::vec3 rotationMomentum{0.f, 0.f,

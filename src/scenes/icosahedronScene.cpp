@@ -3,12 +3,6 @@
 
 void IcosahedronScene::setup() {
 
-    // Light comming from origin towards far y and z
-    defaultLight.type = LightType::Directional;
-    defaultLight.color = { 1.0f, 1.0f, 1.0f };
-    defaultLight.intensity = 1.0f;
-    defaultLight.direction = smath::normalize(slib::vec3{ 1, 1, 1 });
-
     clearAllSolids();
     auto icosahedron = std::make_unique<Icosahedron>();
     icosahedron->name = "Icosahedron";
@@ -28,10 +22,32 @@ void IcosahedronScene::setup() {
     icosahedron->enableCircularOrbit(/*center*/{ icosahedron->position.x,icosahedron->position.y,icosahedron->position.z },
         /*radius*/1000.0f,
         /*planeNormal*/{ 0,1,1 },   // orbit in XZ plane
-        /*omega*/(3.14159265f / 3), // 60�/s
+        /*omega*/(3.14159265f / 3), // 60°/s
         /*initialPhase*/0.0f);
 
+    // Add orbiting icosahedron as point light source
+    auto lightIco = std::make_unique<Icosahedron>();
+    lightIco->name = "Light Icosahedron";
+    lightIco->position.z = -5000;
+    lightIco->position.x = 0;
+    lightIco->position.y = 0;
+    lightIco->position.zoom = 0.2f;
+    lightIco->shading = Shading::Flat;
+    lightIco->lightSourceEnabled = true;
+    lightIco->light.type = LightType::Point;
+    lightIco->light.color = {1.0f, 1.0f, 1.0f};
+    lightIco->light.intensity = 1.0f;
+    lightIco->rotationEnabled = false;
+    lightIco->setup();
+    lightIco->enableCircularOrbit(
+        /*center*/ {0, 0, -5000},
+        /*radius*/ 1500.0f,
+        /*planeNormal*/ {0, 1, 1},
+        /*omega*/ (3.14159265f / 3),
+        /*initialPhase*/ 0.0f);
+
     addSolid(std::move(icosahedron));
+    addSolid(std::move(lightIco));
 
     Scene::setup();
 }

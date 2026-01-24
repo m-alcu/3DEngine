@@ -3,11 +3,13 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <memory>
 #include "../slib.hpp"
 #include "../light.hpp"
 #include "../material.hpp"
 #include "../constants.hpp"
 #include "../smath.hpp"
+#include "../ShadowMap.hpp"
 
 enum class Shading {
     Wireframe,
@@ -108,6 +110,7 @@ public:
     int numFaces;
 	bool lightSourceEnabled = false;
     Light light;  // Light properties when this solid is a light source
+    std::shared_ptr<ShadowMap> shadowMap;  // Shadow map for this light source
 
     // Orthonormal basis of the orbit plane
     slib::vec3 orbitU{ 1,0,0 };

@@ -1,13 +1,8 @@
 #include "tetrakisScene.hpp"
 #include "../objects/tetrakis.hpp"
+#include "../objects/icosahedron.hpp"
 
 void TetrakisScene::setup() {
-
-    // Light comming from origin towards far y and z
-    defaultLight.type = LightType::Directional;
-    defaultLight.color = { 1.0f, 1.0f, 1.0f };
-    defaultLight.intensity = 1.0f;
-    defaultLight.direction = smath::normalize(slib::vec3{ 1, 1, 1 });
 
     clearAllSolids();
     auto tetrakis = std::make_unique<Tetrakis>();
@@ -33,7 +28,29 @@ void TetrakisScene::setup() {
         0.0f
     );
 
+    // Add orbiting icosahedron as point light source
+    auto icosahedron = std::make_unique<Icosahedron>();
+    icosahedron->name = "Light Icosahedron";
+    icosahedron->position.z = -5000;
+    icosahedron->position.x = 0;
+    icosahedron->position.y = 0;
+    icosahedron->position.zoom = 0.2f;
+    icosahedron->shading = Shading::Flat;
+    icosahedron->lightSourceEnabled = true;
+    icosahedron->light.type = LightType::Point;
+    icosahedron->light.color = {1.0f, 1.0f, 1.0f};
+    icosahedron->light.intensity = 1.0f;
+    icosahedron->rotationEnabled = false;
+    icosahedron->setup();
+    icosahedron->enableCircularOrbit(
+        /*center*/ {0, 0, -5000},
+        /*radius*/ 1500.0f,
+        /*planeNormal*/ {0, 1, 1},
+        /*omega*/ (3.14159265f / 3),
+        /*initialPhase*/ 0.0f);
+
     addSolid(std::move(tetrakis));
+    addSolid(std::move(icosahedron));
 
     Scene::setup();
 }

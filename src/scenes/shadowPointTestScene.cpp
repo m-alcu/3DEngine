@@ -1,5 +1,6 @@
 #include "shadowPointTestScene.hpp"
 #include "../objects/plane.hpp"
+#include "../objects/icosahedron.hpp"
 
 void ShadowPointTestScene::setup() {
 
@@ -7,12 +8,6 @@ void ShadowPointTestScene::setup() {
   camera.pitch = 0.0f;
   camera.yaw = 0.0f;
   camera.roll = 0.0f;
-
-  // Initialize as Point Light at camera position
-  defaultLight.type = LightType::Point;
-  defaultLight.color = {1.0f, 1.0f, 1.0f};
-  defaultLight.intensity = 1.0f;
-  defaultLight.position = {0.0f, 0.0f, 0.0f};
 
   clearAllSolids();
 
@@ -46,13 +41,29 @@ void ShadowPointTestScene::setup() {
   front->rotationEnabled = true;
   addSolid(std::move(front));
 
+  // Add orbiting icosahedron as point light source
+  auto icosahedron = std::make_unique<Icosahedron>();
+  icosahedron->name = "Light Icosahedron";
+  icosahedron->position.z = -400;
+  icosahedron->position.x = 0;
+  icosahedron->position.y = 0;
+  icosahedron->position.zoom = 0.2f;
+  icosahedron->shading = Shading::Flat;
+  icosahedron->lightSourceEnabled = true;
+  icosahedron->light.type = LightType::Point;
+  icosahedron->light.color = {1.0f, 1.0f, 1.0f};
+  icosahedron->light.intensity = 1.0f;
+  icosahedron->rotationEnabled = false;
+  icosahedron->setup();
+  icosahedron->enableCircularOrbit(
+      /*center*/ {0, 0, -400},
+      /*radius*/ 200.0f,
+      /*planeNormal*/ {0, 1, 1},
+      /*omega*/ (3.14159265f / 3),
+      /*initialPhase*/ 0.0f);
+  addSolid(std::move(icosahedron));
+
   sceneType = SceneType::SHADOWTEST_POINT;
 
   Scene::setup();
-}
-
-void ShadowPointTestScene::update(float dt) {
-  // Update light position to follow camera
-  //light.position = camera.pos;
-  Scene::update(dt);
 }
