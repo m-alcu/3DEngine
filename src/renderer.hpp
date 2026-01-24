@@ -59,6 +59,10 @@ public:
         flatRasterizer.drawRenderable(*solidPtr, &scene);
       }
     }
+
+    if (scene.showShadowMapOverlay) {
+      drawShadowMapOverlay(scene);
+    }
   }
 
   void renderShadowPass(Scene &scene) {

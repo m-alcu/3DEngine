@@ -187,10 +187,6 @@ int main(int, char **) {
 
     solidRenderer.drawScene(*scene);
 
-    if (scene->showShadowMapOverlay) {
-      solidRenderer.drawShadowMapOverlay(*scene);
-    }
-
     // Rendering
     ImGui::Render();
 
