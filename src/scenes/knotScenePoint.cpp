@@ -10,6 +10,8 @@ void KnotScenePoint::setup() {
   light.intensity = 1.0f;
   light.position = {0, 0, 0}; // Will be updated
 
+  camera.pos = {25.0f, 60.0f, -250.0f};
+
   clearAllSolids();
 
   auto ascLoader = std::make_unique<AscLoader>();
@@ -22,7 +24,7 @@ void KnotScenePoint::setup() {
   ascLoader->position.xAngle = 90.0f;
   ascLoader->position.yAngle = 0.0f;
   ascLoader->position.zAngle = 0.0f;
-  ascLoader->shading = Shading::Flat;
+  ascLoader->shading = Shading::TexturedBlinnPhong;
 
   // Add Orbiting Icosahedron (from TorusScene) acting as light source
   auto icosahedron = std::make_unique<Icosahedron>();

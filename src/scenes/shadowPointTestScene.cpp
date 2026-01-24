@@ -3,7 +3,7 @@
 
 void ShadowPointTestScene::setup() {
 
-  camera.pos = {0.0f, 0.0f, 0.0f};
+  camera.pos = {50.0f, 100.0f, 100.0f};
   camera.pitch = 0.0f;
   camera.yaw = 0.0f;
   camera.roll = 0.0f;
@@ -12,7 +12,7 @@ void ShadowPointTestScene::setup() {
   light.type = LightType::Point;
   light.color = {1.0f, 1.0f, 1.0f};
   light.intensity = 1.0f;
-  light.position = camera.pos; // Will be updated in update()
+  light.position = {0.0f, 0.0f, 0.0f}; // Will be updated in update()
 
   clearAllSolids();
 
