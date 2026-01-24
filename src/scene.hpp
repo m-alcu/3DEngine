@@ -219,6 +219,7 @@ public:
   bool orbiting = false;
   bool shadowsEnabled = true;        // Enable/disable shadow rendering
   bool showShadowMapOverlay = false; // Show/hide shadow map debug overlay
+  bool showAxes = false;             // Show/hide axis helper
 
   // World bounds calculated in update()
   slib::vec3 worldBoundMin{};
@@ -334,6 +335,7 @@ public:
           BackgroundFactory::createBackground(backgroundType));
     }
 
+    ImGui::Checkbox("Show Axis Helper", &showAxes);
     ImGui::Checkbox("Show Shadow Map Overlay", &showShadowMapOverlay);
 
     static const char* pcfLabels[] = {"Off (0)", "3x3 (1)", "5x5 (2)"};
