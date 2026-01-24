@@ -67,4 +67,6 @@ void KnotScenePoint::update(float dt) {
     light.position = {lightSource->position.x, lightSource->position.y,
                       lightSource->position.z};
   }
+
+  Scene::update(dt);
 }
