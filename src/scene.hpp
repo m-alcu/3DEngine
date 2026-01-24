@@ -77,6 +77,15 @@ public:
   }
 
   virtual void update(float dt) {
+
+    bool hasGeometry = false;
+    worldBoundMin = {std::numeric_limits<float>::max(),
+                     std::numeric_limits<float>::max(),
+                     std::numeric_limits<float>::max()};
+    worldBoundMax = {-std::numeric_limits<float>::max(),
+                     -std::numeric_limits<float>::max(),
+                     -std::numeric_limits<float>::max()};
+
     // Update all solids (rotation, orbit, transform matrix)
     for (auto &solidPtr : solids) {
       if (solidPtr->rotationEnabled) {
@@ -84,23 +93,16 @@ public:
       }
       solidPtr->updateOrbit(dt);
       solidPtr->calculateTransformMat();
+      hasGeometry = true;
     }
 
     // Calculate world bounds
-    worldBoundMin = {std::numeric_limits<float>::max(),
-                     std::numeric_limits<float>::max(),
-                     std::numeric_limits<float>::max()};
-    worldBoundMax = {-std::numeric_limits<float>::max(),
-                     -std::numeric_limits<float>::max(),
-                     -std::numeric_limits<float>::max()};
-    bool hasGeometry = false;
 
     for (auto &solidPtr : solids) {
       if (solidPtr->lightSourceEnabled) {
         continue; // Skip light sources
       }
       solidPtr->updateWorldBounds(worldBoundMin, worldBoundMax);
-      hasGeometry = true;
     }
 
     // Calculate scene center and radius
