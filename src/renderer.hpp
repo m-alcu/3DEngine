@@ -34,34 +34,34 @@ public:
     for (auto &solidPtr : scene.solids) {
       switch (solidPtr->shading) {
       case Shading::Flat:
-        flatRasterizer.drawRenderable(*solidPtr, &scene);
+        flatRasterizer.drawRenderable(solidPtr.get(), &scene);
         break;
       case Shading::Wireframe:
-        flatRasterizer.drawRenderable(*solidPtr, &scene);
+        flatRasterizer.drawRenderable(solidPtr.get(), &scene);
         break;
       case Shading::TexturedFlat:
-        texturedFlatRasterizer.drawRenderable(*solidPtr, &scene);
+        texturedFlatRasterizer.drawRenderable(solidPtr.get(), &scene);
         break;
       case Shading::Gouraud:
-        gouraudRasterizer.drawRenderable(*solidPtr, &scene);
+        gouraudRasterizer.drawRenderable(solidPtr.get(), &scene);
         break;
       case Shading::TexturedGouraud:
-        texturedGouraudRasterizer.drawRenderable(*solidPtr, &scene);
+        texturedGouraudRasterizer.drawRenderable(solidPtr.get(), &scene);
         break;
       case Shading::BlinnPhong:
-        blinnPhongRasterizer.drawRenderable(*solidPtr, &scene);
+        blinnPhongRasterizer.drawRenderable(solidPtr.get(), &scene);
         break;
       case Shading::TexturedBlinnPhong:
-        texturedBlinnPhongRasterizer.drawRenderable(*solidPtr, &scene);
+        texturedBlinnPhongRasterizer.drawRenderable(solidPtr.get(), &scene);
         break;
       case Shading::Phong:
-        phongRasterizer.drawRenderable(*solidPtr, &scene);
+        phongRasterizer.drawRenderable(solidPtr.get(), &scene);
         break;
       case Shading::TexturedPhong:
-        texturedPhongRasterizer.drawRenderable(*solidPtr, &scene);
+        texturedPhongRasterizer.drawRenderable(solidPtr.get(), &scene);
         break;
       default:
-        flatRasterizer.drawRenderable(*solidPtr, &scene);
+        flatRasterizer.drawRenderable(solidPtr.get(), &scene);
       }
     }
 
@@ -71,14 +71,14 @@ public:
   }
 
   void renderShadowPass(Scene &scene) {
-    for (auto &lightSolid : scene.lightSources()) {
-      lightSolid->shadowMap->clear();
-      lightSolid->shadowMap->buildLightMatrices(lightSolid->light,
+    for (auto &lightSource : scene.lightSources()) {
+      lightSource->shadowMap->clear();
+      lightSource->shadowMap->buildLightMatrices(lightSource->light,
                                                 scene.sceneCenter,
                                                 scene.sceneRadius);
       for (auto &solidPtr : scene.renderables()) {
-          shadowRasterizer.drawRenderable(*solidPtr, &scene,
-                                          lightSolid->shadowMap.get());
+          shadowRasterizer.drawRenderable(solidPtr.get(), &scene,
+                                          lightSource->shadowMap.get());
       }
     }
   }

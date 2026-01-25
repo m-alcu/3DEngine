@@ -78,16 +78,13 @@ public:
   class VertexShader {
   public:
     Vertex operator()(const VertexData &vData,
-                      const slib::mat4 &modelMatrix,
-                      const slib::mat4 &normalMatrix,
-                      const Scene *scene,
-                      const ShadowMap */*shadowMap*/) const {
+                      const Solid *solid,
+                      const Scene *scene) const {
       Vertex vertex;
-      slib::vec3 normal{};
-      vertex.world = modelMatrix * slib::vec4(vData.vertex, 1);
+      vertex.world = solid->modelMatrix * slib::vec4(vData.vertex, 1);
       vertex.ndc = slib::vec4(vertex.world, 1) * scene->spaceMatrix;
       vertex.tex = slib::zvec2(vData.texCoord.x, vData.texCoord.y, 1);
-      vertex.normal = normalMatrix * slib::vec4(vData.normal, 0);
+      vertex.normal = solid->normalMatrix * slib::vec4(vData.normal, 0);
       Projection<Vertex>::view(scene->screen.width, scene->screen.height, vertex, true);
       return vertex;
     }

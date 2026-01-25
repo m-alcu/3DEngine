@@ -30,8 +30,8 @@ class Rasterizer {
         using vertex = typename Effect::Vertex;
         static constexpr bool isShadowEffect = is_shadow_effect_v<Effect>;
 
-        void drawRenderable(Solid& sol, Scene* scn = nullptr, ShadowMap* map = nullptr) {
-            solid = &sol;
+        void drawRenderable(Solid* sol, Scene* scn, ShadowMap* map = nullptr) {
+            solid = sol;
             scene = scn;
             shadowMap = map;
             if constexpr (isShadowEffect) {
@@ -64,7 +64,11 @@ class Rasterizer {
                 solid->vertexData.end(),
                 projectedPoints.begin(),
                 [&](const auto& vData) {
-                    return effect.vs(vData, solid->modelMatrix, solid->normalMatrix, scene, shadowMap);
+                    if constexpr (isShadowEffect) {
+                        return effect.vs(vData, solid, scene, shadowMap);
+                    } else {
+                        return effect.vs(vData, solid, scene);
+                    }
                 }
             );
         }

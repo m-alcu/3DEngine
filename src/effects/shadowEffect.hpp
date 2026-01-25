@@ -68,13 +68,12 @@ public:
     class VertexShader {
     public:
         Vertex operator()(const VertexData& vData,
-                          const slib::mat4& modelMatrix,
-                          const slib::mat4& /*normalMatrix*/,
+                          const Solid* solid,
                           const Scene* /*scene*/,
                           const ShadowMap* shadowMap) const {
             Vertex vertex;
             // Transform to world space
-            vertex.world = modelMatrix * slib::vec4(vData.vertex, 1);
+            vertex.world = solid->modelMatrix * slib::vec4(vData.vertex, 1);
 
             // Transform to light clip space
             vertex.ndc = slib::vec4(vertex.world, 1) * shadowMap->lightSpaceMatrix;
