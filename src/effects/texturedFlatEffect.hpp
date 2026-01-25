@@ -116,32 +116,16 @@ public:
       slib::vec3 texColor{r, g, b};
 
       slib::vec3 color{0.0f, 0.0f, 0.0f};
-      bool hasLightSource = false;
       for (const auto &solidPtr : scene.solids) {
         if (!solidPtr->lightSourceEnabled) {
           continue;
         }
-        hasLightSource = true;
         const Light &light = solidPtr->light;
         slib::vec3 luxDirection = light.getDirection(vRaster.world);
         float attenuation = light.getAttenuation(vRaster.world);
         float shadow = 1.0f;
         if (scene.shadowsEnabled && solidPtr->shadowMap) {
           shadow = solidPtr->shadowMap->sampleShadow(vRaster.world, diff);
-        }
-
-        float factor = light.intensity * attenuation * shadow;
-        slib::vec3 lightColor = light.color * factor;
-        color += texColor * lightColor * diff;
-      }
-
-      if (!hasLightSource) {
-        const Light &light = scene.light;
-        slib::vec3 luxDirection = light.getDirection(vRaster.world);
-        float attenuation = light.getAttenuation(vRaster.world);
-        float shadow = 1.0f;
-        if (scene.shadowsEnabled && scene.shadowMap) {
-          shadow = scene.shadowMap->sampleShadow(vRaster.world, diff);
         }
 
         float factor = light.intensity * attenuation * shadow;

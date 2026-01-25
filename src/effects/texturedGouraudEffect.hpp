@@ -43,6 +43,7 @@ public:
       tex += v.tex;
       world += v.world;
       normal += v.normal;
+      return *this;
     }
 
     Vertex &vraster(const Vertex &v) {
@@ -111,12 +112,10 @@ public:
       slib::vec3 texColor{r, g, b};
 
       slib::vec3 color{0.0f, 0.0f, 0.0f};
-      bool hasLightSource = false;
       for (const auto &solidPtr : scene.solids) {
         if (!solidPtr->lightSourceEnabled) {
           continue;
         }
-        hasLightSource = true;
         const Light &light = solidPtr->light;
         slib::vec3 luxDirection = light.getDirection(vRaster.world);
         float diff = std::max(0.0f, smath::dot(vRaster.normal, luxDirection));
@@ -125,17 +124,6 @@ public:
         float factor = light.intensity * attenuation * shadow;
         slib::vec3 lightColor = light.color * factor;
         color += texColor * lightColor * diff;
-      }
-
-      if (!hasLightSource) {
-        const Light &light = scene.light;
-        slib::vec3 luxDirection = light.getDirection(vRaster.world);
-        float diff = std::max(0.0f, smath::dot(vRaster.normal, luxDirection));
-        float attenuation = light.getAttenuation(vRaster.world);
-        float shadow = scene.shadowsEnabled && scene.shadowMap ? scene.shadowMap->sampleShadow(vRaster.world, diff) : 1.0f;
-        float factor = light.intensity * attenuation * shadow;
-        slib::vec3 lightColor = light.color * factor;
-        color = texColor * lightColor * diff;
       }
       return Color(color).toBgra();
     }

@@ -79,22 +79,6 @@ public:
   public:
     void operator()(Polygon<Vertex> &poly, int32_t width, int32_t height, const Scene &scene) const {
 
-      bool hasLightSource = false;
-      for (const auto &solidPtr : scene.solids) {
-        if (!solidPtr->lightSourceEnabled) {
-          continue;
-        }
-        hasLightSource = true;
-        const Light &light = solidPtr->light;
-        poly.flatDiffuse =
-          std::max(0.0f, smath::dot(poly.rotatedFaceNormal, light.getDirection(poly.points[0].world)));
-      }
-
-      if (!hasLightSource) {
-        const Light &light = scene.light;
-        poly.flatDiffuse =
-          std::max(0.0f, smath::dot(poly.rotatedFaceNormal, light.getDirection(poly.points[0].world)));
-      }
       /*
       All vertex faces are counterwise (cw), so normal is pointing towards the
       screen, Light is also set to point towards the screen. So, it's resulting
@@ -119,27 +103,18 @@ public:
 
                           
       slib::vec3 diffuseColor{0.0f, 0.0f, 0.0f};
-      bool hasLightSource = false;
       for (const auto &solidPtr : scene.solids) {
         if (!solidPtr->lightSourceEnabled) {
           continue;
         }
-        hasLightSource = true;
         const Light &light = solidPtr->light;
         float attenuation = light.getAttenuation(poly.points[0].world);
         float shadow = scene.shadowsEnabled && solidPtr->shadowMap ? solidPtr->shadowMap->sampleShadow(vRaster.world, poly.flatDiffuse) : 1.0f;
         float factor = light.intensity * attenuation * shadow;
         slib::vec3 lightColor = light.color * factor;
-        diffuseColor += lightColor * poly.flatDiffuse;
-      }
-
-      if (!hasLightSource) {
-        const Light &light = scene.light;
-        float attenuation = light.getAttenuation(poly.points[0].world);
-        float shadow = scene.shadowsEnabled && scene.shadowMap ? scene.shadowMap->sampleShadow(vRaster.world, poly.flatDiffuse) : 1.0f;
-        float factor = light.intensity * attenuation * shadow;
-        slib::vec3 lightColor = light.color * factor;
-        diffuseColor += lightColor * poly.flatDiffuse;
+        float diff =
+          std::max(0.0f, smath::dot(poly.rotatedFaceNormal, light.getDirection(poly.points[0].world)));
+        diffuseColor += lightColor * diff;
       }
 
       return Color(poly.material->Ka + poly.material->Kd * diffuseColor).toBgra();

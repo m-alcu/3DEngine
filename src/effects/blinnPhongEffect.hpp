@@ -105,13 +105,10 @@ public:
       const auto &Ks = poly.material->Ks; // vec3
       slib::vec3 N = smath::normalize(vRaster.normal); // Normal at the fragment
       slib::vec3 color = Ka;
-      bool hasLightSource = false;
-
       for (const auto &solidPtr : scene.solids) {
         if (!solidPtr->lightSourceEnabled) {
           continue;
         }
-        hasLightSource = true;
         const Light &light = solidPtr->light;
         slib::vec3 luxDirection = light.getDirection(vRaster.world);
         slib::vec3 L = luxDirection;
@@ -124,25 +121,6 @@ public:
         float shadow = 1.0f;
         if (scene.shadowsEnabled && solidPtr->shadowMap) {
           shadow = solidPtr->shadowMap->sampleShadow(vRaster.world, diff);
-        }
-        float factor = light.intensity * attenuation * shadow;
-        slib::vec3 lightColor = light.color * factor;
-        color += (Kd * diff + Ks * spec) * lightColor;
-      }
-
-      if (!hasLightSource) {
-        const Light &light = scene.light;
-        slib::vec3 luxDirection = light.getDirection(vRaster.world);
-        slib::vec3 L = luxDirection;
-        float diff = std::max(0.0f, smath::dot(N, L));
-        slib::vec3 halfwayVector =
-            smath::normalize(luxDirection - scene.camera.forward);
-        float specAngle = std::max(0.0f, smath::dot(N, halfwayVector));
-        float spec = std::pow(specAngle, poly.material->Ns);
-        float attenuation = light.getAttenuation(vRaster.world);
-        float shadow = 1.0f;
-        if (scene.shadowsEnabled && scene.shadowMap) {
-          shadow = scene.shadowMap->sampleShadow(vRaster.world, diff);
         }
         float factor = light.intensity * attenuation * shadow;
         slib::vec3 lightColor = light.color * factor;
