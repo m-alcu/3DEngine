@@ -134,7 +134,7 @@ public:
         if (scene.shadowsEnabled && solidPtr->shadowMap) {
           shadow = solidPtr->shadowMap->sampleShadow(vRaster.world, diff);
         }
-        float factor = attenuation * shadow;
+        float factor = light.intensity * attenuation * shadow;
         slib::vec3 lightColor = light.color * factor;
         color += texColor * lightColor * diff;
         color += Ks * lightColor * spec;
@@ -154,7 +154,7 @@ public:
         if (scene.shadowsEnabled && scene.shadowMap) {
           shadow = scene.shadowMap->sampleShadow(vRaster.world, diff);
         }
-        float factor = attenuation * shadow;
+        float factor = light.intensity * attenuation * shadow;
         slib::vec3 lightColor = light.color * factor;
         color += texColor * lightColor * diff;
         color += Ks * lightColor * spec;

@@ -138,10 +138,28 @@ public:
   // Draw the shadow map as a small overlay in the corner of the screen
   void drawShadowMapOverlay(Scene &scene, int overlaySize = SHADOW_MAP_OVERVIEW_SIZE,
                             int margin = 10) {
-    if (!scene.shadowMap || !scene.shadowsEnabled)
+    if (!scene.shadowsEnabled)
       return;
 
-    const ShadowMap &sm = *scene.shadowMap;
+    // Use shadow map from selected solid if it has one, otherwise use scene's shadow map
+    ShadowMap* shadowMapPtr = nullptr;
+    if (scene.selectedSolidIndex >= 0 &&
+        scene.selectedSolidIndex < static_cast<int>(scene.solids.size())) {
+      auto& selectedSolid = scene.solids[scene.selectedSolidIndex];
+      if (selectedSolid->lightSourceEnabled && selectedSolid->shadowMap) {
+        shadowMapPtr = selectedSolid->shadowMap.get();
+      }
+    }
+
+    // Fall back to scene shadow map if selected solid doesn't have one
+    if (!shadowMapPtr && scene.shadowMap) {
+      shadowMapPtr = scene.shadowMap.get();
+    }
+
+    if (!shadowMapPtr)
+      return;
+
+    const ShadowMap &sm = *shadowMapPtr;
 
     // Position in bottom-left corner
     int startX = margin;

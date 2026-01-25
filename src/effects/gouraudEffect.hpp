@@ -108,7 +108,7 @@ public:
           if (scene.shadowsEnabled && solidPtr->shadowMap) {
             shadow = solidPtr->shadowMap->sampleShadow(point.world, diff);
           }
-          diffuseColor += light.color * (diff * attenuation * shadow);
+          diffuseColor += light.color * (diff * light.intensity * attenuation * shadow);
         }
 
         if (!hasLightSource) {
@@ -120,7 +120,7 @@ public:
           if (scene.shadowsEnabled && scene.shadowMap) {
             shadow = scene.shadowMap->sampleShadow(point.world, diff);
           }
-          diffuseColor += light.color * (diff * attenuation * shadow);
+          diffuseColor += light.color * (diff * light.intensity * attenuation * shadow);
         }
         point.diffuse = diffuseColor;
         Projection<Vertex>::view(width, height, point, false);

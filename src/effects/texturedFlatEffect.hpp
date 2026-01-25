@@ -89,39 +89,9 @@ public:
   public:
     void operator()(Polygon<Vertex> &poly, int32_t width, int32_t height, const Scene &scene) const {
 
-      slib::vec3 diffuseColor{0.0f, 0.0f, 0.0f};
-      bool hasLightSource = false;
-      for (const auto &solidPtr : scene.solids) {
-        if (!solidPtr->lightSourceEnabled) {
-          continue;
-        }
-        hasLightSource = true;
-        const Light &light = solidPtr->light;
-        slib::vec3 luxDirection = light.getDirection(poly.points[0].world);
-        float diff =
-            std::max(0.0f, smath::dot(poly.rotatedFaceNormal, luxDirection));
-        float attenuation = light.getAttenuation(poly.points[0].world);
-        float shadow = 1.0f;
-        if (scene.shadowsEnabled && solidPtr->shadowMap) {
-          shadow = solidPtr->shadowMap->sampleShadow(poly.points[0].world, diff);
-        }
-        diffuseColor += light.color * (diff * attenuation * shadow);
-      }
+      const auto &luxDirection = scene.light.getDirection(poly.points[0].world); // any point aproximately the same
+      poly.flatDiffuse = std::max(0.0f, smath::dot(poly.rotatedFaceNormal, luxDirection));
 
-      if (!hasLightSource) {
-        const Light &light = scene.light;
-        slib::vec3 luxDirection = light.getDirection(poly.points[0].world);
-        float diff =
-            std::max(0.0f, smath::dot(poly.rotatedFaceNormal, luxDirection));
-        float attenuation = light.getAttenuation(poly.points[0].world);
-        float shadow = 1.0f;
-        if (scene.shadowsEnabled && scene.shadowMap) {
-          shadow = scene.shadowMap->sampleShadow(poly.points[0].world, diff);
-        }
-        diffuseColor += light.color * (diff * attenuation * shadow);
-      }
-
-      poly.flatDiffuseColor = diffuseColor;
       for (auto &point : poly.points) {
         Projection<Vertex>::view(width, height, point, false);
       }
@@ -132,11 +102,47 @@ public:
   public:
     uint32_t operator()(const Vertex &vRaster, const Scene &scene,
                         const Polygon<Vertex> &poly) const {
+
+      float diff = poly.flatDiffuse;
+
       float w = 1.0f / vRaster.tex.w;
       float r, g, b;
       poly.material->map_Kd.sample(vRaster.tex.x * w, vRaster.tex.y * w, r, g, b);
-      slib::vec3 texColor{r, g, b};
-      slib::vec3 color = texColor * poly.flatDiffuseColor;
+      slib::vec3 texColor{r, g, b};      
+
+      slib::vec3 color{0.0f, 0.0f, 0.0f};
+      bool hasLightSource = false;
+      for (const auto &solidPtr : scene.solids) {
+        if (!solidPtr->lightSourceEnabled) {
+          continue;
+        }
+        hasLightSource = true;
+        const Light &light = solidPtr->light;
+        slib::vec3 luxDirection = light.getDirection(poly.points[0].world);
+        float attenuation = light.getAttenuation(poly.points[0].world);
+        float shadow = 1.0f;
+        if (scene.shadowsEnabled && solidPtr->shadowMap) {
+          shadow = solidPtr->shadowMap->sampleShadow(poly.points[0].world, diff);
+        }
+
+        float factor = light.intensity * attenuation * shadow;
+        slib::vec3 lightColor = light.color * factor;
+        color += texColor * lightColor * diff;
+      }
+
+      if (!hasLightSource) {
+        const Light &light = scene.light;
+        slib::vec3 luxDirection = light.getDirection(poly.points[0].world);
+        float attenuation = light.getAttenuation(poly.points[0].world);
+        float shadow = 1.0f;
+        if (scene.shadowsEnabled && scene.shadowMap) {
+          shadow = scene.shadowMap->sampleShadow(poly.points[0].world, diff);
+        }
+
+        float factor = light.intensity * attenuation * shadow;
+        slib::vec3 lightColor = light.color * factor;
+        color += texColor * lightColor * diff;
+      }
 
       return Color(color).toBgra();
     }
