@@ -17,23 +17,23 @@ public:
     Vertex() {}
 
     Vertex(int32_t px, int32_t py, float pz, slib::vec3 n, slib::vec4 vp,
-           slib::vec3 _world, float _diffuse, bool _broken)
+           slib::vec3 _world, bool _broken)
         : p_x(px), p_y(py), p_z(pz), normal(n), ndc(vp), world(_world),
-          diffuse(_diffuse), broken(_broken) {}
+          broken(_broken) {}
 
     Vertex operator+(const Vertex &v) const {
       return Vertex(p_x + v.p_x, p_y, p_z + v.p_z, normal + v.normal,
-                    ndc + v.ndc, world + v.world, diffuse + v.diffuse, true);
+                    ndc + v.ndc, world + v.world, true);
     }
 
     Vertex operator-(const Vertex &v) const {
       return Vertex(p_x - v.p_x, p_y, p_z - v.p_z, normal - v.normal,
-                    ndc - v.ndc, world - v.world, diffuse - v.diffuse, true);
+                    ndc - v.ndc, world - v.world, true);
     }
 
     Vertex operator*(const float &rhs) const {
       return Vertex(p_x * rhs, p_y, p_z * rhs, normal * rhs, ndc * rhs,
-                    world * rhs, diffuse * rhs, true);
+                    world * rhs, true);
     }
 
     Vertex &operator+=(const Vertex &v) {
@@ -42,7 +42,6 @@ public:
       normal += v.normal;
       ndc += v.ndc;
       world += v.world;
-      diffuse += v.diffuse;
       return *this;
     }
 
@@ -50,14 +49,14 @@ public:
       p_x += v.p_x;
       p_z += v.p_z;
       world += v.world;
-      diffuse += v.diffuse;
+      normal += v.normal;
       return *this;
     }
 
     Vertex &hraster(const Vertex &v) {
       p_z += v.p_z;
       world += v.world;
-      diffuse += v.diffuse;
+      normal += v.normal;
       return *this;
     }
 
@@ -68,7 +67,6 @@ public:
     slib::vec3 world;
     slib::vec3 normal;
     slib::vec4 ndc;
-    float diffuse;
     bool broken = false;
   };
 
@@ -93,26 +91,6 @@ public:
     void operator()(Polygon<Vertex> &poly, int32_t width, int32_t height, const Scene &scene) const {
 
       for (auto &point : poly.points) {
-
-        bool hasLightSource = false;
-        for (const auto &solidPtr : scene.solids) {
-          if (!solidPtr->lightSourceEnabled) {
-            continue;
-          }
-          hasLightSource = true;
-          const Light &light = solidPtr->light;
-          const slib::vec3 &luxDirection = light.getDirection(point.world);
-          point.diffuse = std::max(0.0f, smath::dot(point.normal, luxDirection)); // diffuse scalar
-
-          //error no se puede calcular el diffuse con varios lights, no es la suma
-        }
-
-        if (!hasLightSource) {
-          const Light &light = scene.light;
-          const slib::vec3 &luxDirection = scene.light.getDirection(point.world);
-          point.diffuse = std::max(0.0f, smath::dot(point.normal, luxDirection)); // diffuse scalar
-        }
-
         Projection<Vertex>::view(width, height, point, false);
       }
     }
@@ -132,21 +110,19 @@ public:
         hasLightSource = true;
         const Light &light = solidPtr->light;
         float attenuation = light.getAttenuation(vRaster.world);
-        float shadow = 1.0f;
-        if (scene.shadowsEnabled && solidPtr->shadowMap) {
-          shadow = solidPtr->shadowMap->sampleShadow(vRaster.world, vRaster.diffuse);
-        }
-        diffuseColor += light.color * (vRaster.diffuse * light.intensity * attenuation * shadow);
+        const slib::vec3 &luxDirection = light.getDirection(vRaster.world);
+        float diff = std::max(0.0f, smath::dot(vRaster.normal, luxDirection));           
+        float shadow = scene.shadowsEnabled && solidPtr->shadowMap ? solidPtr->shadowMap->sampleShadow(vRaster.world, diff) : 1.0f;
+        diffuseColor += light.color * (diff * light.intensity * attenuation * shadow);
       }
 
       if (!hasLightSource) {
         const Light &light = scene.light;
         float attenuation = light.getAttenuation(vRaster.world);
-        float shadow = 1.0f;
-        if (scene.shadowsEnabled && scene.shadowMap) {
-          shadow = scene.shadowMap->sampleShadow(vRaster.world, vRaster.diffuse);
-        }
-        diffuseColor += light.color * (vRaster.diffuse * light.intensity * attenuation * shadow);
+        const slib::vec3 &luxDirection = light.getDirection(vRaster.world);
+        float diff = std::max(0.0f, smath::dot(vRaster.normal, luxDirection));           
+        float shadow = scene.shadowsEnabled && scene.shadowMap ? scene.shadowMap->sampleShadow(vRaster.world, diff) : 1.0f;
+        diffuseColor += light.color * (diff * light.intensity * attenuation * shadow);
       }
       return Color(poly.material->Ka + poly.material->Kd * diffuseColor).toBgra();
     }

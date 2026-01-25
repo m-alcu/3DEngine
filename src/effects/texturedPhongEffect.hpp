@@ -130,10 +130,7 @@ public:
             std::max(0.0f, smath::dot(R, scene.forwardNeg));
         float spec = std::pow(specAngle, poly.material->Ns);
         float attenuation = light.getAttenuation(vRaster.world);
-        float shadow = 1.0f;
-        if (scene.shadowsEnabled && solidPtr->shadowMap) {
-          shadow = solidPtr->shadowMap->sampleShadow(vRaster.world, diff);
-        }
+        float shadow = scene.shadowsEnabled && solidPtr->shadowMap ? solidPtr->shadowMap->sampleShadow(vRaster.world, diff) : 1.0f;
         float factor = light.intensity * attenuation * shadow;
         slib::vec3 lightColor = light.color * factor;
         color += texColor * lightColor * diff;
@@ -150,10 +147,7 @@ public:
             std::max(0.0f, smath::dot(R, scene.forwardNeg));
         float spec = std::pow(specAngle, poly.material->Ns);
         float attenuation = light.getAttenuation(vRaster.world);
-        float shadow = 1.0f;
-        if (scene.shadowsEnabled && scene.shadowMap) {
-          shadow = scene.shadowMap->sampleShadow(vRaster.world, diff);
-        }
+        float shadow = scene.shadowsEnabled && scene.shadowMap ? scene.shadowMap->sampleShadow(vRaster.world, diff) : 1.0f;
         float factor = light.intensity * attenuation * shadow;
         slib::vec3 lightColor = light.color * factor;
         color += texColor * lightColor * diff;

@@ -17,23 +17,23 @@ public:
     Vertex() {}
 
     Vertex(int32_t px, int32_t py, float pz, slib::vec4 vp, slib::zvec2 _tex,
-           slib::vec3 _diffuse, slib::vec3 _world, slib::vec3 _normal, bool _broken)
-        : p_x(px), p_y(py), p_z(pz), ndc(vp), tex(_tex), diffuse(_diffuse), world(_world),
+           slib::vec3 _world, slib::vec3 _normal, bool _broken)
+        : p_x(px), p_y(py), p_z(pz), ndc(vp), tex(_tex), world(_world),
           normal(_normal), broken(_broken) {}
 
     Vertex operator+(const Vertex &v) const {
       return Vertex(p_x + v.p_x, p_y, p_z + v.p_z, ndc + v.ndc, tex + v.tex, 
-                    diffuse + v.diffuse, world + v.world, normal + v.normal, true);
+                    world + v.world, normal + v.normal, true);
     }
 
     Vertex operator-(const Vertex &v) const {
       return Vertex(p_x - v.p_x, p_y, p_z - v.p_z, ndc - v.ndc, tex - v.tex, 
-                    diffuse - v.diffuse, world - v.world, normal - v.normal, true);
+                    world - v.world, normal - v.normal, true);
     }
 
     Vertex operator*(const float &rhs) const {
       return Vertex(p_x * rhs, p_y, p_z * rhs, ndc * rhs, tex * rhs,
-                    diffuse * rhs, world * rhs, normal * rhs, true);
+                    world * rhs, normal * rhs, true);
     }
 
     Vertex &operator+=(const Vertex &v) {
@@ -41,7 +41,6 @@ public:
       p_z += v.p_z;
       ndc += v.ndc;
       tex += v.tex;
-      diffuse += v.diffuse;
       world += v.world;
       normal += v.normal;
     }
@@ -50,7 +49,6 @@ public:
       p_x += v.p_x;
       p_z += v.p_z;
       tex += v.tex;
-      diffuse += v.diffuse;
       world += v.world;
       normal += v.normal;
       return *this;
@@ -59,7 +57,6 @@ public:
     Vertex &hraster(const Vertex &v) {
       p_z += v.p_z;
       tex += v.tex;
-      diffuse += v.diffuse;
       world += v.world;
       normal += v.normal;
       return *this;
@@ -73,7 +70,6 @@ public:
     slib::vec3 normal;
     slib::vec4 ndc;
     slib::zvec2 tex; // Texture coordinates
-    slib::vec3 diffuse;   // Diffuse color
     slib::zvec2 texOverW;
     bool broken = false;
   };
@@ -109,7 +105,6 @@ public:
   public:
     uint32_t operator()(const Vertex &vRaster, const Scene &scene,
                         const Polygon<Vertex> &poly) const {
-      slib::vec3 diff = vRaster.diffuse;
       float w = 1.0f / vRaster.tex.w;
       float r, g, b;
       poly.material->map_Kd.sample(vRaster.tex.x * w, vRaster.tex.y * w, r, g, b);
@@ -126,10 +121,7 @@ public:
         slib::vec3 luxDirection = light.getDirection(vRaster.world);
         float diff = std::max(0.0f, smath::dot(vRaster.normal, luxDirection));
         float attenuation = light.getAttenuation(vRaster.world);
-        float shadow = 1.0f;
-        if (scene.shadowsEnabled && solidPtr->shadowMap) {
-          shadow = solidPtr->shadowMap->sampleShadow(vRaster.world, diff);
-        }
+        float shadow = scene.shadowsEnabled && solidPtr->shadowMap ? solidPtr->shadowMap->sampleShadow(vRaster.world, diff) : 1.0f;
         float factor = light.intensity * attenuation * shadow;
         slib::vec3 lightColor = light.color * factor;
         color += texColor * lightColor * diff;
@@ -140,10 +132,7 @@ public:
         slib::vec3 luxDirection = light.getDirection(vRaster.world);
         float diff = std::max(0.0f, smath::dot(vRaster.normal, luxDirection));
         float attenuation = light.getAttenuation(vRaster.world);
-        float shadow = 1.0f;
-        if (scene.shadowsEnabled && scene.shadowMap) {
-          shadow = scene.shadowMap->sampleShadow(vRaster.world, diff);
-        }
+        float shadow = scene.shadowsEnabled && scene.shadowMap ? scene.shadowMap->sampleShadow(vRaster.world, diff) : 1.0f;
         float factor = light.intensity * attenuation * shadow;
         slib::vec3 lightColor = light.color * factor;
         color = texColor * lightColor * diff;
