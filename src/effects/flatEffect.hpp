@@ -100,6 +100,13 @@ public:
     uint32_t operator()(const Vertex &vRaster, const Scene &scene,
                         const Polygon<Vertex> &poly) const {
 
+      if (poly.material->illum == 1) {
+        // Emissive material - use emissive color
+        slib::vec3 emissiveColor = poly.material->Ke;
+        return Color(emissiveColor).toBgra();
+      }
+
+                          
       slib::vec3 diffuseColor{0.0f, 0.0f, 0.0f};
       bool hasLightSource = false;
       for (const auto &solidPtr : scene.solids) {

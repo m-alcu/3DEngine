@@ -52,6 +52,8 @@ void Icosahedron::loadFaces() {
     mat.map_Kd = DecodePng(std::string(RES_PATH + mtlPath).c_str());
     mat.map_Kd.setFilter(TextureFilter::NEIGHBOUR);
     mat.Ns = props.shininess;
+    mat.illum = 1; // Emissive material
+    mat.Ke = { props.k_a * 0xff, props.k_a * 0xff, props.k_a * 0xff }; // Emissive color
     materials.insert({ "white", mat });
 
     // 20 triangular faces of the icosahedron (indices match the vertex order above)
