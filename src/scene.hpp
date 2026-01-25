@@ -51,12 +51,9 @@ public:
   // Constructor that initializes the Screen and allocates zBuffer arrays.
   Scene(const Screen &scr)
       : screen(scr), zBuffer(std::make_shared<ZBuffer>(scr.width, scr.height)),
-        shadowMap(std::make_shared<ShadowMap>(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE)),
         spaceMatrix(smath::identity()) {
     pixels = new uint32_t[screen.width * screen.height];
     backg = new uint32_t[screen.width * screen.height];
-    // Subscribe shadow map to pcfRadius changes
-    shadowMap->subscribeToPcfRadiusChanges(pcfRadiusChanged, pcfRadius);
   }
 
   // Destructor to free the allocated memory.
@@ -231,7 +228,6 @@ public:
   slib::mat4 spaceMatrix;
   std::shared_ptr<ZBuffer> zBuffer; // Use shared_ptr for zBuffer to manage its
                                     // lifetime automatically.
-  std::shared_ptr<ShadowMap> shadowMap; // Shadow map for scene lighting
   uint32_t *pixels = nullptr;           // Pointer to the pixel data.
 
   slib::vec3 rotationMomentum{0.f, 0.f,

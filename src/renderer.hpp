@@ -24,8 +24,8 @@ public:
       AxisRenderer::drawAxes(scene);
     }
 
-    // Shadow pass - render depth from light's perspective
-    if (scene.shadowMap && scene.shadowsEnabled) {
+    // Shadow pass - render depth from light's perspective for each light source
+    if (scene.shadowsEnabled) {
       renderShadowPass(scene);
     }
 
@@ -86,19 +86,6 @@ public:
                                           lightSolid->shadowMap.get());
         }
       }
-      rendered = true;
-    }
-
-    if (!rendered && scene.shadowMap) {
-      scene.shadowMap->clear();
-      scene.shadowMap->buildLightMatrices(scene.light, scene.sceneCenter,
-                                          scene.sceneRadius);
-      for (auto &solidPtr : scene.solids) {
-        if (!solidPtr->lightSourceEnabled) {
-          shadowRasterizer.drawRenderable(*solidPtr, &scene,
-                                          scene.shadowMap.get());
-        }
-      }
     }
   }
 
@@ -141,7 +128,7 @@ public:
     if (!scene.shadowsEnabled)
       return;
 
-    // Use shadow map from selected solid if it has one, otherwise use scene's shadow map
+    // Use shadow map from selected solid if it has one
     ShadowMap* shadowMapPtr = nullptr;
     if (scene.selectedSolidIndex >= 0 &&
         scene.selectedSolidIndex < static_cast<int>(scene.solids.size())) {
@@ -151,9 +138,14 @@ public:
       }
     }
 
-    // Fall back to scene shadow map if selected solid doesn't have one
-    if (!shadowMapPtr && scene.shadowMap) {
-      shadowMapPtr = scene.shadowMap.get();
+    // Fall back to first light source solid's shadow map
+    if (!shadowMapPtr) {
+      for (const auto& solidPtr : scene.solids) {
+        if (solidPtr->lightSourceEnabled && solidPtr->shadowMap) {
+          shadowMapPtr = solidPtr->shadowMap.get();
+          break;
+        }
+      }
     }
 
     if (!shadowMapPtr)
