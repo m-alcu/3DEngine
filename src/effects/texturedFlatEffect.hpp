@@ -2,8 +2,8 @@
 #include "../color.hpp"
 #include "../polygon.hpp"
 #include "../projection.hpp"
-#include "../slib.hpp"
 #include "../scene.hpp"
+#include "../slib.hpp"
 
 class ShadowMap;
 
@@ -15,22 +15,24 @@ public:
   public:
     Vertex() {}
 
-    Vertex(int32_t px, int32_t py, float pz, slib::vec4 vp, slib::zvec2 _tex, slib::vec3 _world,
-           bool _broken)
-        : p_x(px), p_y(py), p_z(pz), ndc(vp), tex(_tex), world(_world), broken(_broken) {}
+    Vertex(int32_t px, int32_t py, float pz, slib::vec4 vp, slib::zvec2 _tex,
+           slib::vec3 _world, bool _broken)
+        : p_x(px), p_y(py), p_z(pz), ndc(vp), tex(_tex), world(_world),
+          broken(_broken) {}
 
     Vertex operator+(const Vertex &v) const {
-      return Vertex(p_x + v.p_x, p_y, p_z + v.p_z, ndc + v.ndc, tex + v.tex, world + v.world,
-                    true);
+      return Vertex(p_x + v.p_x, p_y, p_z + v.p_z, ndc + v.ndc, tex + v.tex,
+                    world + v.world, true);
     }
 
     Vertex operator-(const Vertex &v) const {
-      return Vertex(p_x - v.p_x, p_y, p_z - v.p_z, ndc - v.ndc, tex - v.tex, world - v.world,
-                    true);
+      return Vertex(p_x - v.p_x, p_y, p_z - v.p_z, ndc - v.ndc, tex - v.tex,
+                    world - v.world, true);
     }
 
     Vertex operator*(const float &rhs) const {
-      return Vertex(p_x * rhs, p_y, p_z * rhs, ndc * rhs, tex * rhs, world * rhs, true);
+      return Vertex(p_x * rhs, p_y, p_z * rhs, ndc * rhs, tex * rhs,
+                    world * rhs, true);
     }
 
     Vertex &operator+=(const Vertex &v) {
@@ -71,26 +73,28 @@ public:
 
   class VertexShader {
   public:
-    Vertex operator()(const VertexData &vData,
-                      const slib::mat4 &modelMatrix,
-                      const slib::mat4 &/*normalMatrix*/,
-                      const Scene *scene,
-                      const ShadowMap */*shadowMap*/) const {
+    Vertex operator()(const VertexData &vData, const slib::mat4 &modelMatrix,
+                      const slib::mat4 & /*normalMatrix*/, const Scene *scene,
+                      const ShadowMap * /*shadowMap*/) const {
       Vertex vertex;
       vertex.world = modelMatrix * slib::vec4(vData.vertex, 1);
       vertex.ndc = slib::vec4(vertex.world, 1) * scene->spaceMatrix;
       vertex.tex = slib::zvec2(vData.texCoord.x, vData.texCoord.y, 1);
-      Projection<Vertex>::view(scene->screen.width, scene->screen.height, vertex, true);
+      Projection<Vertex>::view(scene->screen.width, scene->screen.height,
+                               vertex, true);
       return vertex;
     }
   };
 
   class GeometryShader {
   public:
-    void operator()(Polygon<Vertex> &poly, int32_t width, int32_t height, const Scene &scene) const {
+    void operator()(Polygon<Vertex> &poly, int32_t width, int32_t height,
+                    const Scene &scene) const {
 
-      const auto &luxDirection = scene.light.getDirection(poly.points[0].world); // any point aproximately the same
-      poly.flatDiffuse = std::max(0.0f, smath::dot(poly.rotatedFaceNormal, luxDirection));
+      const auto &luxDirection = scene.light.getDirection(
+          poly.points[0].world); // any point aproximately the same
+      poly.flatDiffuse =
+          std::max(0.0f, smath::dot(poly.rotatedFaceNormal, luxDirection));
 
       for (auto &point : poly.points) {
         Projection<Vertex>::view(width, height, point, false);
@@ -107,8 +111,9 @@ public:
 
       float w = 1.0f / vRaster.tex.w;
       float r, g, b;
-      poly.material->map_Kd.sample(vRaster.tex.x * w, vRaster.tex.y * w, r, g, b);
-      slib::vec3 texColor{r, g, b};      
+      poly.material->map_Kd.sample(vRaster.tex.x * w, vRaster.tex.y * w, r, g,
+                                   b);
+      slib::vec3 texColor{r, g, b};
 
       slib::vec3 color{0.0f, 0.0f, 0.0f};
       bool hasLightSource = false;
@@ -118,11 +123,11 @@ public:
         }
         hasLightSource = true;
         const Light &light = solidPtr->light;
-        slib::vec3 luxDirection = light.getDirection(poly.points[0].world);
-        float attenuation = light.getAttenuation(poly.points[0].world);
+        slib::vec3 luxDirection = light.getDirection(vRaster.world);
+        float attenuation = light.getAttenuation(vRaster.world);
         float shadow = 1.0f;
         if (scene.shadowsEnabled && solidPtr->shadowMap) {
-          shadow = solidPtr->shadowMap->sampleShadow(poly.points[0].world, diff);
+          shadow = solidPtr->shadowMap->sampleShadow(vRaster.world, diff);
         }
 
         float factor = light.intensity * attenuation * shadow;
@@ -132,11 +137,11 @@ public:
 
       if (!hasLightSource) {
         const Light &light = scene.light;
-        slib::vec3 luxDirection = light.getDirection(poly.points[0].world);
-        float attenuation = light.getAttenuation(poly.points[0].world);
+        slib::vec3 luxDirection = light.getDirection(vRaster.world);
+        float attenuation = light.getAttenuation(vRaster.world);
         float shadow = 1.0f;
         if (scene.shadowsEnabled && scene.shadowMap) {
-          shadow = scene.shadowMap->sampleShadow(poly.points[0].world, diff);
+          shadow = scene.shadowMap->sampleShadow(vRaster.world, diff);
         }
 
         float factor = light.intensity * attenuation * shadow;
