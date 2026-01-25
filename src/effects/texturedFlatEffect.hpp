@@ -116,10 +116,7 @@ public:
       slib::vec3 texColor{r, g, b};
 
       slib::vec3 color{0.0f, 0.0f, 0.0f};
-      for (const auto &solidPtr : scene.solids) {
-        if (!solidPtr->lightSourceEnabled) {
-          continue;
-        }
+      for (const auto &solidPtr : scene.lightSources()) {
         const Light &light = solidPtr->light;
         slib::vec3 luxDirection = light.getDirection(vRaster.world);
         float attenuation = light.getAttenuation(vRaster.world);

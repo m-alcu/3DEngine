@@ -71,20 +71,14 @@ public:
   }
 
   void renderShadowPass(Scene &scene) {
-    bool rendered = false;
-    for (auto &lightSolid : scene.solids) {
-      if (!lightSolid->lightSourceEnabled || !lightSolid->shadowMap) {
-        continue;
-      }
+    for (auto &lightSolid : scene.lightSources()) {
       lightSolid->shadowMap->clear();
       lightSolid->shadowMap->buildLightMatrices(lightSolid->light,
                                                 scene.sceneCenter,
                                                 scene.sceneRadius);
-      for (auto &solidPtr : scene.solids) {
-        if (!solidPtr->lightSourceEnabled) {
+      for (auto &solidPtr : scene.renderables()) {
           shadowRasterizer.drawRenderable(*solidPtr, &scene,
                                           lightSolid->shadowMap.get());
-        }
       }
     }
   }

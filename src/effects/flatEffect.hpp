@@ -103,10 +103,7 @@ public:
 
                           
       slib::vec3 diffuseColor{0.0f, 0.0f, 0.0f};
-      for (const auto &solidPtr : scene.solids) {
-        if (!solidPtr->lightSourceEnabled) {
-          continue;
-        }
+      for (const auto &solidPtr : scene.lightSources()) {
         const Light &light = solidPtr->light;
         float attenuation = light.getAttenuation(poly.points[0].world);
         float shadow = scene.shadowsEnabled && solidPtr->shadowMap ? solidPtr->shadowMap->sampleShadow(vRaster.world, poly.flatDiffuse) : 1.0f;

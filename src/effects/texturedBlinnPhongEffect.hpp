@@ -115,10 +115,7 @@ public:
       slib::vec3 N = smath::normalize(vRaster.normal); // Normal at the fragment
       slib::vec3 color{0.0f, 0.0f, 0.0f};
 
-      for (const auto &solidPtr : scene.solids) {
-        if (!solidPtr->lightSourceEnabled) {
-          continue;
-        }
+      for (const auto &solidPtr : scene.lightSources()) {
         const Light &light = solidPtr->light;
         slib::vec3 luxDirection = light.getDirection(vRaster.world);
         slib::vec3 L = luxDirection;

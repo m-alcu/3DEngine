@@ -102,10 +102,7 @@ public:
                         const Polygon<Vertex> &poly) const {
 
       slib::vec3 diffuseColor{0.0f, 0.0f, 0.0f};
-      for (const auto &solidPtr : scene.solids) {
-        if (!solidPtr->lightSourceEnabled) {
-          continue;
-        }
+      for (const auto &solidPtr : scene.lightSources()) {
         const Light &light = solidPtr->light;
         float attenuation = light.getAttenuation(vRaster.world);
         const slib::vec3 &luxDirection = light.getDirection(vRaster.world);

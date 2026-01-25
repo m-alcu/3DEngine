@@ -115,10 +115,7 @@ public:
       slib::vec3 normal = smath::normalize(vRaster.normal);
       slib::vec3 color{0.0f, 0.0f, 0.0f};
 
-      for (const auto &solidPtr : scene.solids) {
-        if (!solidPtr->lightSourceEnabled) {
-          continue;
-        }
+      for (const auto &solidPtr : scene.lightSources()) {
         const Light &light = solidPtr->light;
         slib::vec3 luxDirection = light.getDirection(vRaster.world);
         float diff = std::max(0.0f, smath::dot(normal, luxDirection));

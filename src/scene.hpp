@@ -5,6 +5,7 @@
 #include <limits>
 #include <map>
 #include <memory>    // for std::unique_ptr
+#include <ranges>
 #include <string>
 #include <vector>
 #include <SDL3/SDL_keycode.h>
@@ -240,6 +241,17 @@ public:
   Camera camera; // Camera object to manage camera properties.
   // Store solids in a vector of unique_ptr to handle memory automatically.
   std::vector<std::unique_ptr<Solid>> solids;
+
+  // Returns a filtered view of solids that are light sources
+  auto lightSources() const {
+    return solids | std::views::filter([](const auto& s) { return s->lightSourceEnabled; });
+  }
+
+    // Returns a filtered view of solids that are not light sources (renderables)
+  auto renderables() const {
+    return solids | std::views::filter([](const auto& s) { return !s->lightSourceEnabled; });
+  }
+
   bool orbiting = false;
   bool shadowsEnabled = true;        // Enable/disable shadow rendering
   bool showShadowMapOverlay = false; // Show/hide shadow map debug overlay
