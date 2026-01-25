@@ -79,11 +79,6 @@ public:
   public:
     void operator()(Polygon<Vertex> &poly, int32_t width, int32_t height, const Scene &scene) const {
 
-      /*
-      All vertex faces are counterwise (cw), so normal is pointing towards the
-      screen, Light is also set to point towards the screen. So, it's resulting
-      in a positive dot product.
-      */
       for (auto &point : poly.points) {
         Projection<Vertex>::view(width, height, point, false);
       }

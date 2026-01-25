@@ -91,11 +91,6 @@ public:
     void operator()(Polygon<Vertex> &poly, int32_t width, int32_t height,
                     const Scene &scene) const {
 
-      const auto &luxDirection = scene.light.getDirection(
-          poly.points[0].world); // any point aproximately the same
-      poly.flatDiffuse =
-          std::max(0.0f, smath::dot(poly.rotatedFaceNormal, luxDirection));
-
       for (auto &point : poly.points) {
         Projection<Vertex>::view(width, height, point, false);
       }
@@ -107,12 +102,9 @@ public:
     uint32_t operator()(const Vertex &vRaster, const Scene &scene,
                         const Polygon<Vertex> &poly) const {
 
-      float diff = poly.flatDiffuse;
-
       float w = 1.0f / vRaster.tex.w;
       float r, g, b;
-      poly.material->map_Kd.sample(vRaster.tex.x * w, vRaster.tex.y * w, r, g,
-                                   b);
+      poly.material->map_Kd.sample(vRaster.tex.x * w, vRaster.tex.y * w, r, g, b);
       slib::vec3 texColor{r, g, b};
 
       slib::vec3 color{0.0f, 0.0f, 0.0f};
@@ -120,11 +112,8 @@ public:
         const Light &light = solidPtr->light;
         slib::vec3 luxDirection = light.getDirection(vRaster.world);
         float attenuation = light.getAttenuation(vRaster.world);
-        float shadow = 1.0f;
-        if (scene.shadowsEnabled && solidPtr->shadowMap) {
-          shadow = solidPtr->shadowMap->sampleShadow(vRaster.world, diff);
-        }
-
+        float diff = std::max(0.0f, smath::dot(poly.rotatedFaceNormal, luxDirection));
+        float shadow = scene.shadowsEnabled && solidPtr->shadowMap ? solidPtr->shadowMap->sampleShadow(vRaster.world, diff) : 1.0f;   
         float factor = light.intensity * attenuation * shadow;
         slib::vec3 lightColor = light.color * factor;
         color += texColor * lightColor * diff;
