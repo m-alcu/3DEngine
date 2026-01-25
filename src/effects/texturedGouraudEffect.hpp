@@ -17,23 +17,23 @@ public:
     Vertex() {}
 
     Vertex(int32_t px, int32_t py, float pz, slib::vec4 vp, slib::zvec2 _tex,
-           slib::vec3 _diffuse, slib::vec3 _world, bool _broken)
+           slib::vec3 _diffuse, slib::vec3 _world, slib::vec3 _normal, bool _broken)
         : p_x(px), p_y(py), p_z(pz), ndc(vp), tex(_tex), diffuse(_diffuse), world(_world),
-          broken(_broken) {}
+          normal(_normal), broken(_broken) {}
 
     Vertex operator+(const Vertex &v) const {
       return Vertex(p_x + v.p_x, p_y, p_z + v.p_z, ndc + v.ndc, tex + v.tex, 
-                    diffuse + v.diffuse, world + v.world, true);
+                    diffuse + v.diffuse, world + v.world, normal + v.normal, true);
     }
 
     Vertex operator-(const Vertex &v) const {
       return Vertex(p_x - v.p_x, p_y, p_z - v.p_z, ndc - v.ndc, tex - v.tex, 
-                    diffuse - v.diffuse, world - v.world, true);
+                    diffuse - v.diffuse, world - v.world, normal - v.normal, true);
     }
 
     Vertex operator*(const float &rhs) const {
       return Vertex(p_x * rhs, p_y, p_z * rhs, ndc * rhs, tex * rhs,
-                    diffuse * rhs, world * rhs, true);
+                    diffuse * rhs, world * rhs, normal * rhs, true);
     }
 
     Vertex &operator+=(const Vertex &v) {
@@ -43,7 +43,7 @@ public:
       tex += v.tex;
       diffuse += v.diffuse;
       world += v.world;
-      return *this;
+      normal += v.normal;
     }
 
     Vertex &vraster(const Vertex &v) {
@@ -52,6 +52,7 @@ public:
       tex += v.tex;
       diffuse += v.diffuse;
       world += v.world;
+      normal += v.normal;
       return *this;
     }
 
@@ -60,6 +61,7 @@ public:
       tex += v.tex;
       diffuse += v.diffuse;
       world += v.world;
+      normal += v.normal;
       return *this;
     }
 
@@ -68,6 +70,7 @@ public:
     int32_t p_y;
     float p_z;
     slib::vec3 world;
+    slib::vec3 normal;
     slib::vec4 ndc;
     slib::zvec2 tex; // Texture coordinates
     slib::vec3 diffuse;   // Diffuse color
@@ -87,38 +90,7 @@ public:
       vertex.world = modelMatrix * slib::vec4(vData.vertex, 1);
       vertex.ndc = slib::vec4(vertex.world, 1) * scene->spaceMatrix;
       vertex.tex = slib::zvec2(vData.texCoord.x, vData.texCoord.y, 1);
-      normal = normalMatrix * slib::vec4(vData.normal, 0);
-      normal = smath::normalize(normal);
-      slib::vec3 diffuseColor{0.0f, 0.0f, 0.0f};
-      bool hasLightSource = false;
-      for (const auto &solidPtr : scene->solids) {
-        if (!solidPtr->lightSourceEnabled) {
-          continue;
-        }
-        hasLightSource = true;
-        const Light &light = solidPtr->light;
-        slib::vec3 luxDirection = light.getDirection(vertex.world);
-        float diff = std::max(0.0f, smath::dot(normal, luxDirection));
-        float attenuation = light.getAttenuation(vertex.world);
-        float shadow = 1.0f;
-        if (scene->shadowsEnabled && solidPtr->shadowMap) {
-          shadow = solidPtr->shadowMap->sampleShadow(vertex.world, diff);
-        }
-        diffuseColor += light.color * (diff * light.intensity * attenuation * shadow);
-      }
-
-      if (!hasLightSource) {
-        const Light &light = scene->light;
-        slib::vec3 luxDirection = light.getDirection(vertex.world);
-        float diff = std::max(0.0f, smath::dot(normal, luxDirection));
-        float attenuation = light.getAttenuation(vertex.world);
-        float shadow = 1.0f;
-        if (scene->shadowsEnabled && scene->shadowMap) {
-          shadow = scene->shadowMap->sampleShadow(vertex.world, diff);
-        }
-        diffuseColor += light.color * (diff * light.intensity * attenuation * shadow);
-      }
-      vertex.diffuse = diffuseColor;
+      vertex.normal = normalMatrix * slib::vec4(vData.normal, 0);
       Projection<Vertex>::view(scene->screen.width, scene->screen.height, vertex, true);
       return vertex;
     }
@@ -141,7 +113,41 @@ public:
       float w = 1.0f / vRaster.tex.w;
       float r, g, b;
       poly.material->map_Kd.sample(vRaster.tex.x * w, vRaster.tex.y * w, r, g, b);
-      slib::vec3 color = slib::vec3{r, g, b} * diff;
+      slib::vec3 texColor{r, g, b};
+
+      slib::vec3 color{0.0f, 0.0f, 0.0f};
+      bool hasLightSource = false;
+      for (const auto &solidPtr : scene.solids) {
+        if (!solidPtr->lightSourceEnabled) {
+          continue;
+        }
+        hasLightSource = true;
+        const Light &light = solidPtr->light;
+        slib::vec3 luxDirection = light.getDirection(vRaster.world);
+        float diff = std::max(0.0f, smath::dot(vRaster.normal, luxDirection));
+        float attenuation = light.getAttenuation(vRaster.world);
+        float shadow = 1.0f;
+        if (scene.shadowsEnabled && solidPtr->shadowMap) {
+          shadow = solidPtr->shadowMap->sampleShadow(vRaster.world, diff);
+        }
+        float factor = light.intensity * attenuation * shadow;
+        slib::vec3 lightColor = light.color * factor;
+        color += texColor * lightColor * diff;
+      }
+
+      if (!hasLightSource) {
+        const Light &light = scene.light;
+        slib::vec3 luxDirection = light.getDirection(vRaster.world);
+        float diff = std::max(0.0f, smath::dot(vRaster.normal, luxDirection));
+        float attenuation = light.getAttenuation(vRaster.world);
+        float shadow = 1.0f;
+        if (scene.shadowsEnabled && scene.shadowMap) {
+          shadow = scene.shadowMap->sampleShadow(vRaster.world, diff);
+        }
+        float factor = light.intensity * attenuation * shadow;
+        slib::vec3 lightColor = light.color * factor;
+        color = texColor * lightColor * diff;
+      }
       return Color(color).toBgra();
     }
   };

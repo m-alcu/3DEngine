@@ -103,6 +103,8 @@ public:
           const Light &light = solidPtr->light;
           const slib::vec3 &luxDirection = light.getDirection(point.world);
           point.diffuse = std::max(0.0f, smath::dot(point.normal, luxDirection)); // diffuse scalar
+
+          //error no se puede calcular el diffuse con varios lights, no es la suma
         }
 
         if (!hasLightSource) {
