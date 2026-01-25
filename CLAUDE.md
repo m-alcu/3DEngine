@@ -61,6 +61,51 @@ This is a software 3D rendering engine (no GPU/OpenGL) using SDL3 for windowing 
 
 Selectable via ImGui combo: Wireframe, Flat, Gouraud, Phong, Blinn-Phong, plus textured variants of each.
 
+Each shading mode is implemented as an Effect class with three pipeline stages:
+
+1. **VertexShader** - Transforms object vertices to world space, computes NDC coordinates, calculates rotated normals, and projects to screen coordinates.
+
+2. **GeometryShader** - Recalculates broken vertices that result from clipping (polygons can gain vertices when clipped against the view frustum).
+
+3. **PixelShader** - Per-pixel calculations specific to the shading mode (lighting, shadows, texture sampling).
+
+### Lighting System
+
+The engine supports multiple dynamic light sources. Any `Solid` can act as a light source by setting `lightSourceEnabled = true`.
+
+**Light properties** (`src/light.hpp`):
+- `LightType` - Directional, Point, or Spot
+- `color` - RGB light color
+- `intensity` - Light brightness multiplier
+- `position` - World position (for Point/Spot lights)
+- `direction` - Light direction (for Directional/Spot lights)
+- Attenuation parameters for distance falloff
+
+**Multi-light rendering**:
+- Scene provides `lightSources()` method returning a C++20 filtered view of all light-source solids
+- PixelShaders iterate over all light sources and accumulate color contributions
+- Each light's contribution includes diffuse, specular (for Phong/BlinnPhong), attenuation, and shadow factors
+
+### Shadow Mapping
+
+Each light-source solid maintains its own shadow map for shadow calculations.
+
+**Key components**:
+- `ShadowMap` (`src/ShadowMap.hpp`) - Depth buffer rendered from light's perspective
+- `Solid::shadowMap` - Each light-source solid owns a `std::shared_ptr<ShadowMap>`
+- `Renderer::renderShadowPass()` - Renders depth from each light source before main rendering
+
+**Shadow rendering flow**:
+1. For each solid with `lightSourceEnabled`, build light matrices and render scene depth to its shadow map
+2. During main rendering, PixelShaders sample shadow maps to determine shadow factor per light
+3. PCF (Percentage Closer Filtering) support with configurable radius for soft shadow edges
+
+**ImGui controls**:
+- Toggle shadows on/off
+- PCF radius selection (Off, 3x3, 5x5)
+- Shadow map debug overlay display
+- Per-solid light intensity slider (when solid is a light source)
+
 ### Camera Controls
 
 Descent-style 6DOF movement with momentum/hysteresis. Right-click drag for orbit mode around the target solid.
