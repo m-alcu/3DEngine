@@ -145,8 +145,6 @@ public:
     if (!shadowMapPtr)
       return;
 
-    const ShadowMap &sm = *shadowMapPtr;
-
     // Position in bottom-left corner
     int startX = margin;
     int startY = scene.screen.height - overlaySize - margin;
@@ -155,8 +153,8 @@ public:
     float minDepth = 1.0f;
     float maxDepth = -1.0f;
 
-    for (int i = 0; i < sm.width * sm.height; ++i) {
-      float d = sm.getDepth(i);
+    for (int i = 0; i < shadowMapPtr->width * shadowMapPtr->height; ++i) {
+      float d = shadowMapPtr->getDepth(i);
       minDepth = std::min(minDepth, d);
       maxDepth = std::max(maxDepth, d);
     }
@@ -167,8 +165,8 @@ public:
       depthRange = 1.0f;
 
     // Scale factors for sampling the shadow map
-    float scaleX = static_cast<float>(sm.width) / overlaySize;
-    float scaleY = static_cast<float>(sm.height) / overlaySize;
+    float scaleX = static_cast<float>(shadowMapPtr->width) / overlaySize;
+    float scaleY = static_cast<float>(shadowMapPtr->height) / overlaySize;
 
     for (int y = 0; y < overlaySize; ++y) {
       for (int x = 0; x < overlaySize; ++x) {
@@ -184,10 +182,10 @@ public:
         // Sample from shadow map
         int smX = static_cast<int>(x * scaleX);
         int smY = static_cast<int>(y * scaleY);
-        smX = std::clamp(smX, 0, sm.width - 1);
-        smY = std::clamp(smY, 0, sm.height - 1);
+        smX = std::clamp(smX, 0, shadowMapPtr->width - 1);
+        smY = std::clamp(smY, 0, shadowMapPtr->height - 1);
 
-        float depth = sm.getDepth(smY * sm.width + smX);
+        float depth = shadowMapPtr->getDepth(smY * shadowMapPtr->width + smX);
 
         uint8_t gray = 0;
         if (depth < 1.0f) {
