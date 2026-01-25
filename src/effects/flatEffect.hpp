@@ -79,16 +79,27 @@ public:
   public:
     void operator()(Polygon<Vertex> &poly, int32_t width, int32_t height, const Scene &scene) const {
 
-      const slib::vec3 &luxDirection = scene.light.getDirection(
-          poly.points[0].world); // any point aproximately the same
+      bool hasLightSource = false;
+      for (const auto &solidPtr : scene.solids) {
+        if (!solidPtr->lightSourceEnabled) {
+          continue;
+        }
+        hasLightSource = true;
+        const Light &light = solidPtr->light;
+        poly.flatDiffuse =
+          std::max(0.0f, smath::dot(poly.rotatedFaceNormal, light.getDirection(poly.points[0].world)));
+      }
+
+      if (!hasLightSource) {
+        const Light &light = scene.light;
+        poly.flatDiffuse =
+          std::max(0.0f, smath::dot(poly.rotatedFaceNormal, light.getDirection(poly.points[0].world)));
+      }
       /*
       All vertex faces are counterwise (cw), so normal is pointing towards the
       screen, Light is also set to point towards the screen. So, it's resulting
       in a positive dot product.
       */
-      poly.flatDiffuse =
-          std::max(0.0f, smath::dot(poly.rotatedFaceNormal, luxDirection));
-
       for (auto &point : poly.points) {
         Projection<Vertex>::view(width, height, point, false);
       }
@@ -131,7 +142,7 @@ public:
         diffuseColor += lightColor * poly.flatDiffuse;
       }
 
-      return Color(diffuseColor).toBgra();
+      return Color(poly.material->Ka + poly.material->Kd * diffuseColor).toBgra();
     }
   };
 
