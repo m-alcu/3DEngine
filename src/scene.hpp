@@ -351,6 +351,13 @@ public:
 
     ImGui::DragFloat("Orbit Radius", &selectedSolid->orbit_.radius, 0.1f, 0.0f, 10000.0f);
     ImGui::DragFloat("Orbit Speed", &selectedSolid->orbit_.omega, 0.01f, -10.0f, 10.0f);
+
+    // Light properties (only shown if solid is a light source)
+    if (selectedSolid->lightSourceEnabled) {
+      ImGui::Separator();
+      ImGui::Text("Light Source");
+      ImGui::SliderFloat("Light Intensity", &selectedSolid->light.intensity, 0.0f, 100.0f);
+    }
   }
 
   // Draw ImGui controls for scene-level settings
