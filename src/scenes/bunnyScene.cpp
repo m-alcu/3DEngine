@@ -29,12 +29,12 @@ void BunnyScene::setup() {
     icosahedron->lightSourceEnabled = true;
     icosahedron->light.type = LightType::Point;
     icosahedron->light.color = {1.0f, 1.0f, 1.0f};
-    icosahedron->light.intensity = 1.0f;
+    icosahedron->light.intensity = 2.0f;
     icosahedron->rotationEnabled = false;
     icosahedron->setup();
     icosahedron->enableCircularOrbit(
-        /*center*/ {100, -250, -500},
-        /*radius*/ 200.0f,
+        /*center*/ {100, 350, -500},
+        /*radius*/ 500.0f,
         /*planeNormal*/ {0, 1, 1},
         /*omega*/ (3.14159265f / 3),
         /*initialPhase*/ 0.0f);
