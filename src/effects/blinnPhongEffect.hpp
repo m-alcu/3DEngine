@@ -105,18 +105,14 @@ public:
       slib::vec3 color = Ka;
       for (const auto &solidPtr : scene.lightSources()) {
         const Light &light = solidPtr->light;
-        slib::vec3 luxDirection = light.getDirection(vRaster.world);
-        slib::vec3 L = luxDirection;
+        slib::vec3 L = light.getDirection(vRaster.world);
         float diff = std::max(0.0f, smath::dot(N, L));
         slib::vec3 halfwayVector =
-            smath::normalize(luxDirection - scene.camera.forward);
+            smath::normalize(L - scene.camera.forward);
         float specAngle = std::max(0.0f, smath::dot(N, halfwayVector));
         float spec = std::pow(specAngle, poly.material->Ns);
         float attenuation = light.getAttenuation(vRaster.world);
-        float shadow = 1.0f;
-        if (scene.shadowsEnabled && solidPtr->shadowMap) {
-          shadow = solidPtr->shadowMap->sampleShadow(vRaster.world, diff);
-        }
+        float shadow = scene.shadowsEnabled && solidPtr->shadowMap ? solidPtr->shadowMap->sampleShadow(vRaster.world, diff) : 1.0f;
         float factor = light.intensity * attenuation * shadow;
         slib::vec3 lightColor = light.color * factor;
         color += (Kd * diff + Ks * spec) * lightColor;
