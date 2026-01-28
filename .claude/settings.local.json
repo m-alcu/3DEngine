@@ -5,7 +5,9 @@
       "Bash(cmake:*)",
       "Bash(make:*)",
       "Bash(ls:*)",
-      "Bash(dir c:/proy/render/3DEngine/build*)"
+      "Bash(dir c:/proy/render/3DEngine/build*)",
+      "Bash(wc:*)",
+      "Bash(\"c:\\\\proy\\\\render\\\\3DEngine\\\\build-test\\\\bin\\\\Release\\\\test_math.exe\")"
     ]
   }
 }

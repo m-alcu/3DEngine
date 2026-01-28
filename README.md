@@ -24,6 +24,30 @@ Software 3D engine using SDL3, Dear ImGui, and modern CMake.
 
 Ejecuta el binario desde la raíz del repositorio para que los paths relativos de `resources/` funcionen correctamente.
 
+## Tests
+
+El proyecto incluye tests unitarios usando Google Test. Para compilar y ejecutar los tests:
+
+```bash
+# Configurar (incluye tests por defecto)
+cmake -S . -B build
+
+# Compilar solo los tests
+cmake --build build --target test_math --config Release
+
+# Ejecutar tests directamente
+./build/bin/Release/test_math.exe   # Windows
+./build/bin/test_math               # Linux/macOS
+
+# O usar CTest
+cd build && ctest -C Release --output-on-failure
+```
+
+Para desactivar la compilación de tests:
+```bash
+cmake -S . -B build -DBUILD_TESTS=OFF
+```
+
 ## Escenas disponibles
 Seleccionables desde el combo "Scene" en la ventana de ImGui:
 - **Torus**, **Tetrakis**, **Icosahedron**, **Cube**, **Knot**, **Star**: primitivas/solids paramétricos con rotación automática opcional.
