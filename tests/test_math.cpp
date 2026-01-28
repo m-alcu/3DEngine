@@ -119,6 +119,22 @@ TEST(Vec3Test, Equality) {
     EXPECT_FALSE(a == c);
 }
 
+TEST(Vec3Test, EqualityWithEpsilon) {
+    // Values within epsilon should be equal
+    slib::vec3 a{1.0f, 2.0f, 3.0f};
+    slib::vec3 b{1.0f + 1e-7f, 2.0f - 1e-7f, 3.0f + 1e-7f};
+    EXPECT_TRUE(a == b);
+
+    // Normalized vector should equal unit vector
+    slib::vec3 unit{1.0f, 0.0f, 0.0f};
+    slib::vec3 normalized = smath::normalize({5.0f, 0.0f, 0.0f});
+    EXPECT_TRUE(unit == normalized);
+
+    // Scalar comparison with epsilon
+    slib::vec3 almostZero{1e-7f, -1e-7f, 1e-7f};
+    EXPECT_TRUE(almostZero == 0.0f);
+}
+
 // ============================================================================
 // vec4 Tests
 // ============================================================================
@@ -224,6 +240,26 @@ TEST(SmathTest, NormalizeUnitLength) {
 
     float length = smath::distance(n);
     EXPECT_NEAR(length, 1.0f, EPSILON);
+}
+
+TEST(SmathTest, NormalizeZeroVector) {
+    // Normalizing zero vector should return zero vector (not crash)
+    slib::vec3 zero{0.0f, 0.0f, 0.0f};
+    slib::vec3 result = smath::normalize(zero);
+
+    EXPECT_FLOAT_EQ(result.x, 0.0f);
+    EXPECT_FLOAT_EQ(result.y, 0.0f);
+    EXPECT_FLOAT_EQ(result.z, 0.0f);
+}
+
+TEST(SmathTest, NormalizeNearZeroVector) {
+    // Very small vector should also return zero (avoid division by tiny number)
+    slib::vec3 tiny{1e-8f, 1e-8f, 1e-8f};
+    slib::vec3 result = smath::normalize(tiny);
+
+    EXPECT_FLOAT_EQ(result.x, 0.0f);
+    EXPECT_FLOAT_EQ(result.y, 0.0f);
+    EXPECT_FLOAT_EQ(result.z, 0.0f);
 }
 
 TEST(SmathTest, DotProduct) {
