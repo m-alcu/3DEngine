@@ -117,13 +117,8 @@ class Rasterizer {
                     slib::vec3 normal = getRotatedNormal(faceDataEntry);
                     vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];
 
-                    if (solid->shading == Shading::Wireframe || isFaceVisibleFromCamera(p1.world, normal)) {
-                        float avgDepth = 0.0f;
-                        for (int j : faceDataEntry.face.vertexIndices)
-                            avgDepth += projectedPoints[j].p_z;
-                        avgDepth /= static_cast<float>(faceDataEntry.face.vertexIndices.size());
-                        visibleFaces.push_back({i, avgDepth});
-                    }
+                    if (solid->shading == Shading::Wireframe || isFaceVisibleFromCamera(p1.world, normal))
+                        visibleFaces.push_back({i, p1.p_z});
                 }
 
                 std::sort(visibleFaces.begin(), visibleFaces.end(),
