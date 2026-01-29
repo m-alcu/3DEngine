@@ -51,9 +51,9 @@ class Rasterizer {
         std::vector<vertex> projectedPoints;
         Solid* solid = nullptr;
         Scene* scene = nullptr;
+        ShadowMap* shadowMap = nullptr;
         int32_t screenWidth = 0;
         int32_t screenHeight = 0;
-        ShadowMap* shadowMap = nullptr;
         Effect effect;
 		Projection<vertex> projection;
 
@@ -74,30 +74,37 @@ class Rasterizer {
             );
         }
 
+        slib::vec3 getRotatedNormal(const FaceData& faceDataEntry) {
+            slib::vec4 rotated = solid->normalMatrix * slib::vec4(faceDataEntry.faceNormal, 0);
+            return {rotated.x, rotated.y, rotated.z};
+        }
+
+        std::vector<vertex> collectPolyVerts(const FaceData& faceDataEntry) {
+            std::vector<vertex> polyVerts;
+            polyVerts.reserve(faceDataEntry.face.vertexIndices.size());
+            for (int j : faceDataEntry.face.vertexIndices)
+                polyVerts.push_back(projectedPoints[j]);
+            return polyVerts;
+        }
+
+        void clipAndDraw(Polygon<vertex>& poly) {
+            auto clippedPoly = ClipCullPolygon(poly);
+            if (!clippedPoly.points.empty())
+                drawPolygon(clippedPoly);
+        }
+
         void drawFaces() {
             if constexpr (isShadowEffect) {
-                // Shadow pass: no sorting needed, just render all visible faces
-                for (int i = 0; i < static_cast<int>(solid->faceData.size()); ++i) {
-                    const auto& faceDataEntry = solid->faceData[i];
-                    slib::vec3 rotatedFaceNormal{};
-                    rotatedFaceNormal = solid->normalMatrix * slib::vec4(faceDataEntry.faceNormal, 0);
+                for (const auto& faceDataEntry : solid->faceData) {
+                    slib::vec3 normal = getRotatedNormal(faceDataEntry);
                     vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];
 
-                    if (isFaceVisibleFromLight(p1.world, rotatedFaceNormal)) {
-                        std::vector<vertex> polyVerts;
-                        polyVerts.reserve(faceDataEntry.face.vertexIndices.size());
-                        for (int j : faceDataEntry.face.vertexIndices)
-                            polyVerts.push_back(projectedPoints[j]);
-
-                        Polygon<vertex> poly(std::move(polyVerts), rotatedFaceNormal);
-                        auto clippedPoly = ClipCullPolygon(poly);
-                        if (!clippedPoly.points.empty()) {
-                            drawPolygon(clippedPoly);
-                        }
+                    if (isFaceVisibleFromLight(p1.world, normal)) {
+                        Polygon<vertex> poly(collectPolyVerts(faceDataEntry), normal);
+                        clipAndDraw(poly);
                     }
                 }
             } else {
-                // Regular rendering: collect visible faces and sort front-to-back for early Z-rejection
                 struct FaceDepth {
                     int faceIndex;
                     float depth;
@@ -105,56 +112,34 @@ class Rasterizer {
                 std::vector<FaceDepth> visibleFaces;
                 visibleFaces.reserve(solid->faceData.size());
 
-                // First pass: collect visible faces with their depths
                 for (int i = 0; i < static_cast<int>(solid->faceData.size()); ++i) {
                     const auto& faceDataEntry = solid->faceData[i];
-                    slib::vec3 rotatedFaceNormal{};
-                    rotatedFaceNormal = solid->normalMatrix * slib::vec4(faceDataEntry.faceNormal, 0);
+                    slib::vec3 normal = getRotatedNormal(faceDataEntry);
                     vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];
 
-                    bool shouldRender = solid->shading == Shading::Wireframe ||
-                                        isFaceVisibleFromCamera(p1.world, rotatedFaceNormal);
-
-                    if (shouldRender) {
-                        // Compute average depth of face vertices (in view space, smaller = closer)
+                    if (solid->shading == Shading::Wireframe || isFaceVisibleFromCamera(p1.world, normal)) {
                         float avgDepth = 0.0f;
-                        for (int j : faceDataEntry.face.vertexIndices) {
+                        for (int j : faceDataEntry.face.vertexIndices)
                             avgDepth += projectedPoints[j].p_z;
-                        }
                         avgDepth /= static_cast<float>(faceDataEntry.face.vertexIndices.size());
-
                         visibleFaces.push_back({i, avgDepth});
                     }
                 }
 
-                // Sort front-to-back (smaller depth = closer to camera = render first)
                 std::sort(visibleFaces.begin(), visibleFaces.end(),
-                    [](const FaceDepth& a, const FaceDepth& b) {
-                        return a.depth < b.depth;
-                    });
+                    [](const FaceDepth& a, const FaceDepth& b) { return a.depth < b.depth; });
 
-                // Second pass: render in sorted order
                 for (const auto& fd : visibleFaces) {
                     const auto& faceDataEntry = solid->faceData[fd.faceIndex];
-                    slib::vec3 rotatedFaceNormal{};
-                    rotatedFaceNormal = solid->normalMatrix * slib::vec4(faceDataEntry.faceNormal, 0);
-
-                    std::vector<vertex> polyVerts;
-                    polyVerts.reserve(faceDataEntry.face.vertexIndices.size());
-                    for (int j : faceDataEntry.face.vertexIndices)
-                        polyVerts.push_back(projectedPoints[j]);
+                    slib::vec3 normal = getRotatedNormal(faceDataEntry);
 
                     Polygon<vertex> poly(
-                        std::move(polyVerts),
+                        collectPolyVerts(faceDataEntry),
                         faceDataEntry.face,
-                        rotatedFaceNormal,
+                        normal,
                         solid->materials.at(faceDataEntry.face.materialKey)
                     );
-
-                    auto clippedPoly = ClipCullPolygon(poly);
-                    if (!clippedPoly.points.empty()) {
-                        drawPolygon(clippedPoly);
-                    }
+                    clipAndDraw(poly);
                 }
             }
         }
