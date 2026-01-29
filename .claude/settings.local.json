@@ -5,7 +5,12 @@
       "Bash(cmake:*)",
       "Bash(make:*)",
       "Bash(ls:*)",
-      "Bash(dir c:/proy/render/3DEngine/build*)"
+      "Bash(dir c:/proy/render/3DEngine/build*)",
+      "Bash(wc:*)",
+      "Bash(\"c:\\\\proy\\\\render\\\\3DEngine\\\\build-test\\\\bin\\\\Release\\\\test_math.exe\")",
+      "Bash(\"./build-test/bin/Release/test_math.exe\" --gtest_filter=\"Vec3Test.*\")",
+      "Bash(\"./build-test/bin/Release/test_math.exe\" --gtest_filter=\"Vec3Test.EqualityWithEpsilon\")",
+      "Bash(\"./build-test/bin/Release/test_math.exe\" --gtest_filter=\"SmathTest.Normalize*\")"
     ]
   }
 }

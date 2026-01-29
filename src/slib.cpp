@@ -1,4 +1,5 @@
 #include "slib.hpp"
+#include <cmath>
 #include <iostream>
 
 namespace slib
@@ -187,12 +188,18 @@ namespace slib
 
     bool vec3::operator==(const vec3& rhs) const
     {
-        return x == rhs.x && y == rhs.y && z == rhs.z;
+        constexpr float EPSILON = 1e-6f;
+        return std::abs(x - rhs.x) < EPSILON &&
+               std::abs(y - rhs.y) < EPSILON &&
+               std::abs(z - rhs.z) < EPSILON;
     }
 
     bool vec3::operator==(float rhs) const
     {
-        return x == rhs && y == rhs && z == rhs;
+        constexpr float EPSILON = 1e-6f;
+        return std::abs(x - rhs) < EPSILON &&
+               std::abs(y - rhs) < EPSILON &&
+               std::abs(z - rhs) < EPSILON;
     }
 
     bool vec3::operator<(const vec3& rhs) const

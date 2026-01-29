@@ -21,6 +21,28 @@ cmake --build build-wasm
 
 The binary must be run from the repository root so relative paths to `resources/` work correctly.
 
+## Testing
+
+Unit tests use Google Test (fetched automatically via CMake FetchContent).
+
+```bash
+# Build tests (included by default)
+cmake --build build --target test_math --config Release
+
+# Run tests directly
+./build/bin/Release/test_math.exe   # Windows
+./build/bin/test_math               # Linux/macOS
+
+# Run via CTest
+cd build && ctest -C Release --output-on-failure
+
+# Disable tests during configuration
+cmake -S . -B build -DBUILD_TESTS=OFF
+```
+
+Test files are in `tests/`. Current test coverage:
+- `test_math.cpp` - Tests for math library (slib vectors/matrices, smath transforms)
+
 ## Architecture Overview
 
 This is a software 3D rendering engine (no GPU/OpenGL) using SDL3 for windowing and pixel buffer display, Dear ImGui for the UI, and a custom software rasterizer.
@@ -115,4 +137,5 @@ Descent-style 6DOF movement with momentum/hysteresis. Right-click drag for orbit
 - SDL3 (as git submodule in `submodules/SDL/`)
 - Dear ImGui (vendored in `src/vendor/imgui/`)
 - LodePNG (vendored in `src/vendor/lodepng/`)
+- Google Test (fetched via CMake FetchContent for testing)
 - C++23 standard required
