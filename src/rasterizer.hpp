@@ -130,7 +130,6 @@ class Rasterizer {
 
                     Polygon<vertex> poly(
                         collectPolyVerts(faceDataEntry),
-                        faceDataEntry.face,
                         normal,
                         solid->materials.at(faceDataEntry.face.materialKey)
                     );
