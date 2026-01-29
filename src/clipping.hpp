@@ -94,6 +94,33 @@ std::vector<Vertex> ClipAgainstPlane(const std::vector<Vertex>& poly, ClipPlane 
 }
 
 template<typename Vertex>
+static bool clipLineNdc(Vertex &a, Vertex &b) {
+    for (ClipPlane plane : {ClipPlane::Left, ClipPlane::Right,
+                            ClipPlane::Bottom, ClipPlane::Top,
+                            ClipPlane::Near, ClipPlane::Far}) {
+        bool aInside = IsInside(a, plane);
+        bool bInside = IsInside(b, plane);
+
+        if (aInside && bInside) {
+        continue;
+        }
+
+        if (!aInside && !bInside) {
+        return false;
+        }
+
+        if (aInside) {
+        float alpha = ComputeAlpha(a, b, plane);
+        b.ndc = a.ndc + (b.ndc - a.ndc) * alpha;
+        } else {
+        float alpha = ComputeAlpha(b, a, plane);
+        a.ndc = b.ndc + (a.ndc - b.ndc) * alpha;
+        }
+    }
+    return true;
+}
+
+template<typename Vertex>
 bool IsInside(const Vertex& v, ClipPlane plane) {
     const auto& p = v.ndc;
     switch (plane) {

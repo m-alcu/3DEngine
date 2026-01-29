@@ -104,12 +104,12 @@ public:
     uint32_t operator()(const Vertex &vRaster, const Scene &scene,
                         const Polygon<Vertex> &poly) const {
 
-      const auto &Ks = poly.material->Ks; // vec3
       float w = 1.0f / vRaster.tex.w;
       float r, g, b;
       poly.material->map_Kd.sample(vRaster.tex.x * w, vRaster.tex.y * w, r, g, b);
       slib::vec3 texColor{r, g, b};
 
+      const auto &Ks = poly.material->Ks; // vec3
       slib::vec3 normal = smath::normalize(vRaster.normal);
       slib::vec3 color{0.0f, 0.0f, 0.0f};
 
