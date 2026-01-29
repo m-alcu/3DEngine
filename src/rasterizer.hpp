@@ -161,15 +161,13 @@ class Rasterizer {
 
         bool isFaceVisibleFromCamera(const slib::vec3& world, const slib::vec3& faceNormal) {
             slib::vec3 viewDir = scene->camera.pos - world;
-            viewDir = smath::normalize(viewDir);
-            float dotResult = smath::dot(faceNormal, viewDir);
+            float dotResult = smath::dot(faceNormal, smath::normalize(viewDir));
             return dotResult > 0.0f;
         }
 
         bool isFaceVisibleFromLight(const slib::vec3& world, const slib::vec3& faceNormal) {
-            slib::vec3 lightDir = scene->light.getDirection(world);
-            lightDir = smath::normalize(lightDir);
-            float dotResult = smath::dot(faceNormal, lightDir);
+            slib::vec3 normalizedLightDir = scene->light.getDirection(world);
+            float dotResult = smath::dot(faceNormal, normalizedLightDir);
             return dotResult > 0.0f;
         }
 
