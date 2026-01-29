@@ -74,12 +74,12 @@ class Rasterizer {
             );
         }
 
-        slib::vec3 getRotatedNormal(const FaceData& faceDataEntry) {
+        slib::vec3 getRotatedNormal(const FaceData& faceDataEntry) const {
             slib::vec4 rotated = solid->normalMatrix * slib::vec4(faceDataEntry.faceNormal, 0);
             return {rotated.x, rotated.y, rotated.z};
         }
 
-        std::vector<vertex> collectPolyVerts(const FaceData& faceDataEntry) {
+        std::vector<vertex> collectPolyVerts(const FaceData& faceDataEntry) const {
             std::vector<vertex> polyVerts;
             polyVerts.reserve(faceDataEntry.face.vertexIndices.size());
             for (int j : faceDataEntry.face.vertexIndices)
@@ -139,13 +139,13 @@ class Rasterizer {
             }
         }
 
-        bool isFaceVisibleFromCamera(const slib::vec3& world, const slib::vec3& faceNormal) {
+        bool isFaceVisibleFromCamera(const slib::vec3& world, const slib::vec3& faceNormal) const {
             slib::vec3 viewDir = scene->camera.pos - world;
             float dotResult = smath::dot(faceNormal, smath::normalize(viewDir));
             return dotResult > 0.0f;
         }
 
-        bool isFaceVisibleFromLight(const slib::vec3& world, const slib::vec3& faceNormal) {
+        bool isFaceVisibleFromLight(const slib::vec3& world, const slib::vec3& faceNormal) const {
             slib::vec3 normalizedLightDir = scene->light.getDirection(world);
             float dotResult = smath::dot(faceNormal, normalizedLightDir);
             return dotResult > 0.0f;
