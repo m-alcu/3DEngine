@@ -167,18 +167,8 @@ class Rasterizer {
         }
 
         bool isFaceVisibleFromLight(const slib::vec3& world, const slib::vec3& faceNormal) {
-            // Calculate direction from surface to light
-            slib::vec3 lightDir;
-            if (scene->light.type == LightType::Directional) {
-                // For directional lights, direction is constant
-                lightDir = scene->light.direction;
-            } else {
-                // For point/spot lights, calculate direction from surface to light position
-                lightDir = scene->light.position - world;
-            }
+            slib::vec3 lightDir = scene->light.getDirection(world);
             lightDir = smath::normalize(lightDir);
-
-            // Face is visible from light if it's pointing toward the light
             float dotResult = smath::dot(faceNormal, lightDir);
             return dotResult > 0.0f;
         }
