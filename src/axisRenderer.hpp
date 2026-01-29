@@ -177,9 +177,7 @@ private:
     uint32_t *pixels = static_cast<uint32_t *>(scene.pixels);
 
     for (int i = 0; i <= steps; ++i) {
-      int xi = x >> 16;
-      int yi = y >> 16;
-      int pos = yi * scene.screen.width + xi;
+      int pos = (y >> 16) * scene.screen.width + (x >> 16);
       if (scene.zBuffer->TestAndSet(pos, z)) {
         pixels[pos] = color;
       }
