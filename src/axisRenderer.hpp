@@ -175,13 +175,11 @@ private:
     float z = v0.p_z;
 
     uint32_t *pixels = static_cast<uint32_t *>(scene.pixels);
-    int width = scene.screen.width;
-    int height = scene.screen.height;
 
     for (int i = 0; i <= steps; ++i) {
       int xi = x >> 16;
       int yi = y >> 16;
-      int pos = yi * width + xi;
+      int pos = yi * scene.screen.width + xi;
       if (scene.zBuffer->TestAndSet(pos, z)) {
         pixels[pos] = color;
       }
