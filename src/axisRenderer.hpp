@@ -3,6 +3,7 @@
 #include "clipping.hpp"
 #include "projection.hpp"
 #include "scene.hpp"
+#include "bresenham.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -83,7 +84,11 @@ private:
       return;
     }
 
-    drawLineWithDepth(scene, v0, v1, color);
+    //drawLineWithDepth(scene, v0, v1, color);
+    drawBresenhamLine(v0.p_x >> 16, v0.p_y >> 16,
+                      v1.p_x >> 16, v1.p_y >> 16,
+                      static_cast<uint32_t *>(scene.pixels), color,
+                      scene.screen.width, scene.screen.height);
   }
 
   static void drawLetterX(Scene &scene, const slib::vec3 &center, float size,
@@ -150,45 +155,4 @@ private:
     return true;
   }
 
-  static void drawLineWithDepth(Scene &scene, const AxisVertex &v0,
-                                const AxisVertex &v1, uint32_t color) {
-    int x0 = v0.p_x >> 16;
-    int y0 = v0.p_y >> 16;
-    int x1 = v1.p_x >> 16;
-    int y1 = v1.p_y >> 16;
-    int dx = x1 - x0;
-    int dy = y1 - y0;
-    int steps = std::max(std::abs(dx), std::abs(dy));
-
-    if (steps == 0) {
-      return;
-    }
-
-    float invSteps = 1.0f / static_cast<float>(steps);
-    float xStep = static_cast<float>(dx) * invSteps;
-    float yStep = static_cast<float>(dy) * invSteps;
-    float zStep = (v1.p_z - v0.p_z) * invSteps;
-
-    float x = static_cast<float>(x0);
-    float y = static_cast<float>(y0);
-    float z = v0.p_z;
-
-    uint32_t *pixels = static_cast<uint32_t *>(scene.pixels);
-    int width = scene.screen.width;
-    int height = scene.screen.height;
-
-    for (int i = 0; i <= steps; ++i) {
-      int xi = static_cast<int>(std::round(x));
-      int yi = static_cast<int>(std::round(y));
-      if (xi >= 0 && xi < width && yi >= 0 && yi < height) {
-        int pos = yi * width + xi;
-        if (scene.zBuffer->TestAndSet(pos, z)) {
-          pixels[pos] = color;
-        }
-      }
-      x += xStep;
-      y += yStep;
-      z += zStep;
-    }
-  }
 };
