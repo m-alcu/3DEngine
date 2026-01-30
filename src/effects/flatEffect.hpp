@@ -98,12 +98,12 @@ public:
       slib::vec3 diffuseColor{0.0f, 0.0f, 0.0f};
       for (const auto &solidPtr : scene.lightSources()) {
         const Light &light = solidPtr->light;
-        float attenuation = light.getAttenuation(poly.points[0].world);
-        float shadow = scene.shadowsEnabled && solidPtr->shadowMap ? solidPtr->shadowMap->sampleShadow(vRaster.world, poly.flatDiffuse) : 1.0f;
-        float factor = light.intensity * attenuation * shadow;
-        slib::vec3 lightColor = light.color * factor;
         float diff =
           std::max(0.0f, smath::dot(poly.rotatedFaceNormal, light.getDirection(poly.points[0].world)));
+        float attenuation = light.getAttenuation(poly.points[0].world);
+        float shadow = scene.shadowsEnabled && solidPtr->shadowMap ? solidPtr->shadowMap->sampleShadow(vRaster.world, diff) : 1.0f;
+        float factor = light.intensity * attenuation * shadow;
+        slib::vec3 lightColor = light.color * factor;
         diffuseColor += lightColor * diff;
       }
 

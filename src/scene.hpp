@@ -379,6 +379,7 @@ public:
     }
 
     ImGui::Checkbox("Show Axis Helper", &showAxes);
+    ImGui::Checkbox("Shadows Enabled", &shadowsEnabled);
     ImGui::Checkbox("Show Shadow Map Overlay", &showShadowMapOverlay);
 
     static const char* pcfLabels[] = {"Off (0)", "3x3 (1)", "5x5 (2)"};

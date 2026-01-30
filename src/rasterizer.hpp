@@ -74,12 +74,12 @@ class Rasterizer {
             );
         }
 
-        slib::vec3 getRotatedNormal(const FaceData& faceDataEntry) const {
+        inline slib::vec3 getRotatedNormal(const FaceData& faceDataEntry) const {
             slib::vec4 rotated = solid->normalMatrix * slib::vec4(faceDataEntry.faceNormal, 0);
             return {rotated.x, rotated.y, rotated.z};
         }
 
-        std::vector<vertex> collectPolyVerts(const FaceData& faceDataEntry) const {
+        inline std::vector<vertex> collectPolyVerts(const FaceData& faceDataEntry) const {
             std::vector<vertex> polyVerts;
             polyVerts.reserve(faceDataEntry.face.vertexIndices.size());
             for (int j : faceDataEntry.face.vertexIndices)
@@ -87,7 +87,7 @@ class Rasterizer {
             return polyVerts;
         }
 
-        void clipAndDraw(Polygon<vertex>& poly) {
+        inline void clipAndDraw(Polygon<vertex>& poly) {
             auto clippedPoly = ClipCullPolygon(poly);
             if (!clippedPoly.points.empty())
                 drawPolygon(clippedPoly);
