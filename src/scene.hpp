@@ -94,9 +94,6 @@ public:
       hasGeometry = true;
     }
 
-    // Sync light from first light-source solid, or use defaultLight
-    // Also ensure each light-source solid has a shadow map
-    bool foundLightSource = false;
     for (auto &solidPtr : solids) {
       if (solidPtr->lightSourceEnabled) {
         // Create shadow map for this light source if it doesn't exist
@@ -108,16 +105,7 @@ public:
         // Update light position from solid position
         solidPtr->light.position = {solidPtr->position.x, solidPtr->position.y, solidPtr->position.z};
 
-        // Use first light source as active light
-        if (!foundLightSource) {
-          light = solidPtr->light;
-          foundLightSource = true;
-        }
       }
-    }
-    usingDefaultLight = !foundLightSource;
-    if (usingDefaultLight) {
-      light = defaultLight;
     }
 
     // Calculate world bounds
@@ -222,9 +210,6 @@ public:
   Screen screen;
   SceneType sceneType = SceneType::TETRAKIS; // Default scene type
 
-  Light light;           // Active light (synced from light-source solid or defaultLight)
-  Light defaultLight;     // Fallback light when no solid has lightSourceEnabled
-  bool usingDefaultLight = true;  // True if using defaultLight (no light-source solid)
   slib::vec3 forwardNeg; // Negative forward vector for lighting calculations
   slib::mat4 spaceMatrix;
   std::shared_ptr<ZBuffer> zBuffer; // Use shared_ptr for zBuffer to manage its
