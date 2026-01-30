@@ -18,30 +18,29 @@ public:
 
   static void drawGridPlanes(Scene &scene, float halfSize = 500.0f,
                              float spacing = 50.0f) {
-    const uint32_t gridColor = 0xff404040;
 
     for (float t = -halfSize; t <= halfSize + 0.001f; t += spacing) {
 
       if (t == 0.0f) {
-          drawAxisLine(scene, {-halfSize, 0, 0.0f}, {0, 0, 0.0f}, gridColor);
-          drawAxisLine(scene, {0, 0, 0.0f}, {halfSize, 0, 0.0f}, 0xffff0000);
+          drawAxisLine(scene, {-halfSize, 0, 0.0f}, {0, 0, 0.0f}, GREY_COLOR);
+          drawAxisLine(scene, {0, 0, 0.0f}, {halfSize, 0, 0.0f}, BLUE_COLOR);
 
-          drawAxisLine(scene, {0.0f, -halfSize, 0}, {0.0f, 0, 0}, gridColor);
-          drawAxisLine(scene, {0.0f, 0, 0}, {0.0f, halfSize, 0}, 0xff00ff00);
+          drawAxisLine(scene, {0.0f, -halfSize, 0}, {0.0f, 0, 0}, GREY_COLOR);
+          drawAxisLine(scene, {0.0f, 0, 0}, {0.0f, halfSize, 0}, GREEN_COLOR);
           
-          drawAxisLine(scene, {0.0f, 0.0f, -halfSize}, {0.0f, 0.0f, 0}, gridColor);
-          drawAxisLine(scene, {0.0f, 0.0f, 0}, {0.0f, 0.0f, halfSize}, 0xff0000ff);
+          drawAxisLine(scene, {0.0f, 0.0f, -halfSize}, {0.0f, 0.0f, 0}, GREY_COLOR);
+          drawAxisLine(scene, {0.0f, 0.0f, 0}, {0.0f, 0.0f, halfSize}, RED_COLOR);
           continue;
       }
 
-      drawAxisLine(scene, {-halfSize, t, 0.0f}, {halfSize, t, 0.0f}, gridColor);
-      drawAxisLine(scene, {t, -halfSize, 0.0f}, {t, halfSize, 0.0f}, gridColor);
+      drawAxisLine(scene, {-halfSize, t, 0.0f}, {halfSize, t, 0.0f}, GREY_COLOR);
+      drawAxisLine(scene, {t, -halfSize, 0.0f}, {t, halfSize, 0.0f}, GREY_COLOR);
 
-      drawAxisLine(scene, {-halfSize, 0.0f, t}, {halfSize, 0.0f, t}, gridColor);
-      drawAxisLine(scene, {t, 0.0f, -halfSize}, {t, 0.0f, halfSize}, gridColor);
-
-      drawAxisLine(scene, {0.0f, -halfSize, t}, {0.0f, halfSize, t}, gridColor);
-      drawAxisLine(scene, {0.0f, t, -halfSize}, {0.0f, t, halfSize}, gridColor);
+      drawAxisLine(scene, {-halfSize, 0.0f, t}, {halfSize, 0.0f, t}, GREY_COLOR);
+      drawAxisLine(scene, {t, 0.0f, -halfSize}, {t, 0.0f, halfSize}, GREY_COLOR);
+      
+      drawAxisLine(scene, {0.0f, -halfSize, t}, {0.0f, halfSize, t}, GREY_COLOR);
+      drawAxisLine(scene, {0.0f, t, -halfSize}, {0.0f, t, halfSize}, GREY_COLOR);
     }
   }
 

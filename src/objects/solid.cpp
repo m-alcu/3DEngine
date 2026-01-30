@@ -1,6 +1,7 @@
 #include <iostream>
 #include <math.h>
 #include "solid.hpp"
+#include "../slib.hpp"
 #include "../smath.hpp"
 #include "../vendor/lodepng/lodepng.h"
 
@@ -226,4 +227,11 @@ void Solid::updateOrbit(float dt)
     position.y = P.y;
     position.z = P.z;
 
+}
+
+// Set emissive color for all materials
+void Solid::setEmissiveColor(const slib::vec3& color) {
+    for (auto& kv : materials) {
+        kv.second.Ke = color * 255.0f;
+    }
 }

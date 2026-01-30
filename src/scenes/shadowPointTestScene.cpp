@@ -51,14 +51,15 @@ void ShadowPointTestScene::setup() {
   icosahedron->shading = Shading::Flat;
   icosahedron->lightSourceEnabled = true;
   icosahedron->light.type = LightType::Point;
-  icosahedron->light.color = {1.0f, 0.0f, 0.0f};
-  icosahedron->light.intensity = 1.0f;
+  icosahedron->light.intensity = 4.0f;
   icosahedron->rotationEnabled = false;
   icosahedron->setup();
+  icosahedron->light.color = {1.0f, 0.0f, 0.0f};
+  icosahedron->setEmissiveColor({1.0f, 0.0f, 0.0f});
   icosahedron->enableCircularOrbit(
       /*center*/ {0, 0, -400},
-      /*radius*/ 200.0f,
-      /*planeNormal*/ {0, 1, 1},
+      /*radius*/ 266.0f,
+      /*planeNormal*/ {1, 0, 0},
       /*omega*/ (3.14159265f / 3),
       /*initialPhase*/ 0.0f);
   addSolid(std::move(icosahedron));

@@ -22,9 +22,9 @@ void TetrakisScene::setup() {
 
     tetrakis->enableCircularOrbit(
         { tetrakis->position.x, tetrakis->position.y, tetrakis->position.z },
-        1000.0f,
+        100.0f,
         { 0,1,1 },
-        (3.14159265f / 30),
+        (3.14159265f / 3),
         0.0f
     );
 
@@ -38,15 +38,15 @@ void TetrakisScene::setup() {
     icosahedron->shading = Shading::Flat;
     icosahedron->lightSourceEnabled = true;
     icosahedron->light.type = LightType::Point;
-    icosahedron->light.color = {1.0f, 1.0f, 1.0f};
-    icosahedron->light.intensity = 50.0f;
+    icosahedron->light.color = {1.0f, 0.0f, 0.0f};
+    icosahedron->light.intensity = 12.0f;
     icosahedron->rotationEnabled = false;
     icosahedron->setup();
     icosahedron->enableCircularOrbit(
         /*center*/ {0, 0, -500},
         /*radius*/ 400.0f,
         /*planeNormal*/ {0, 0, 1},
-        /*omega*/ (3.14159265f / 30),
+        /*omega*/ (3.14159265f / 3),
         /*initialPhase*/ 0.0f);
 
     addSolid(std::move(tetrakis));

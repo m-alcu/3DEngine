@@ -47,6 +47,8 @@ typedef struct Face
 	std::vector<int> vertexIndices; // For wireframe rendering
     std::string materialKey;
 } Face;
+        // Set emissive color for all materials
+        void setEmissiveColor(const slib::vec3& color);
 
 struct FaceData {
     Face face;
@@ -174,6 +176,8 @@ public:
     virtual void disableCircularOrbit();
 
     virtual void updateOrbit(float dt);
+
+    void setEmissiveColor(const slib::vec3& color);
 
 protected:
     // Protected virtual methods to be implemented by derived classes.
