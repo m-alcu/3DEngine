@@ -105,13 +105,13 @@ public:
                                         scene.camera.yaw, scene.camera.roll);
     scene.spaceMatrix = viewMatrix * projectionMatrix;
 
-    // Used in BlinnPhong shading
+    // Used in Phong shading
     // NOTE: For performance we approximate the per-fragment view vector V with
     // -camera.forward. This assumes all view rays are parallel (like an
     // orthographic camera). Works well when the camera is far away or objects
     // are small on screen. Not physically correct: highlights will "stick" to
     // the camera instead of sliding across surfaces when moving in perspective,
-    // but it�s often a good enough approximation.d
+    // but it’s often a good enough approximation.
     scene.forwardNeg = {-scene.camera.forward.x, -scene.camera.forward.y,
                         -scene.camera.forward.z};
   }
