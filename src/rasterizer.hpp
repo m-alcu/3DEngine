@@ -31,13 +31,13 @@ class Rasterizer {
         using vertex = typename Effect::Vertex;
         static constexpr bool isShadowEffect = is_shadow_effect_v<Effect>;
 
-        void drawRenderable(Solid* sol, Scene* scn, ShadowMap* map = nullptr) {
+        void drawRenderable(Solid* sol, Scene* scn, Solid* lightSrc = nullptr) {
             solid = sol;
             scene = scn;
-            shadowMap = map;
+            lightSource = lightSrc;
             if constexpr (isShadowEffect) {
-                screenWidth = shadowMap->width;
-                screenHeight = shadowMap->height;
+                screenWidth = lightSource->shadowMap->width;
+                screenHeight = lightSource->shadowMap->height;
             } else {
                 screenWidth = scene->screen.width;
                 screenHeight = scene->screen.height;
@@ -51,7 +51,7 @@ class Rasterizer {
         std::vector<vertex> projectedPoints;
         Solid* solid = nullptr;
         Scene* scene = nullptr;
-        ShadowMap* shadowMap = nullptr;
+        Solid* lightSource = nullptr;
         int32_t screenWidth = 0;
         int32_t screenHeight = 0;
         Effect effect;
@@ -66,7 +66,7 @@ class Rasterizer {
                 projectedPoints.begin(),
                 [&](const auto& vData) {
                     if constexpr (isShadowEffect) {
-                        return effect.vs(vData, solid, scene, shadowMap);
+                        return effect.vs(vData, solid, scene, lightSource);
                     } else {
                         return effect.vs(vData, solid, scene);
                     }
@@ -145,7 +145,7 @@ class Rasterizer {
         }
 
         bool isFaceVisibleFromLight(const slib::vec3& world, const slib::vec3& faceNormal) const {
-            slib::vec3 normalizedLightDir = scene->light.getDirection(world);
+            slib::vec3 normalizedLightDir = lightSource->light.getDirection(world);
             float dotResult = smath::dot(faceNormal, normalizedLightDir);
             return dotResult > 0.0f;
         }
@@ -204,7 +204,7 @@ class Rasterizer {
                     float p_z = left.get().p_z;
                     float p_z_step = (right.get().p_z - p_z) * invDx;
                     for (int x = xStart; x < xEnd; ++x) {
-                        effect.ps(x, p_z, *shadowMap);
+                        effect.ps(x, p_z, *lightSource->shadowMap);
                         p_z += p_z_step;
                     }
                 }

@@ -70,12 +70,13 @@ public:
         Vertex operator()(const VertexData& vData,
                           const Solid* solid,
                           const Scene* /*scene*/,
-                          const ShadowMap* shadowMap) const {
+                          const Solid* lightSource) const {
             Vertex vertex;
             // Transform to world space
             vertex.world = solid->modelMatrix * slib::vec4(vData.vertex, 1);
 
             // Transform to light clip space
+            const auto& shadowMap = lightSource->shadowMap;
             vertex.ndc = slib::vec4(vertex.world, 1) * shadowMap->lightSpaceMatrix;
             Projection<Vertex>::view(shadowMap->width, shadowMap->height, vertex, true);
 

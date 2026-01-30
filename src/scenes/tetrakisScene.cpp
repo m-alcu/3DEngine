@@ -38,10 +38,11 @@ void TetrakisScene::setup() {
     icosahedron->shading = Shading::Flat;
     icosahedron->lightSourceEnabled = true;
     icosahedron->light.type = LightType::Point;
-    icosahedron->light.color = {1.0f, 0.0f, 0.0f};
-    icosahedron->light.intensity = 12.0f;
+    icosahedron->light.intensity = 4.0f;
     icosahedron->rotationEnabled = false;
     icosahedron->setup();
+    icosahedron->light.color = {1.0f, 0.0f, 0.0f};
+    icosahedron->setEmissiveColor({1.0f, 0.0f, 0.0f});
     icosahedron->enableCircularOrbit(
         /*center*/ {0, 0, -500},
         /*radius*/ 400.0f,

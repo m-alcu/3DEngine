@@ -77,8 +77,7 @@ public:
                                                 scene.sceneCenter,
                                                 scene.sceneRadius);
       for (auto &solidPtr : scene.renderables()) {
-          shadowRasterizer.drawRenderable(solidPtr.get(), &scene,
-                                          lightSource->shadowMap.get());
+          shadowRasterizer.drawRenderable(solidPtr.get(), &scene, lightSource.get());
       }
     }
   }
