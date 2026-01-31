@@ -121,8 +121,10 @@ class Rasterizer {
                         visibleFaces.push_back({i, p1.p_z});
                 }
 
-                std::sort(visibleFaces.begin(), visibleFaces.end(),
-                    [](const FaceDepth& a, const FaceDepth& b) { return a.depth < b.depth; });
+                if (scene->depthSortEnabled) {
+                    std::sort(visibleFaces.begin(), visibleFaces.end(),
+                        [](const FaceDepth& a, const FaceDepth& b) { return a.depth < b.depth; });
+                }
 
                 for (const auto& fd : visibleFaces) {
                     const auto& faceDataEntry = solid->faceData[fd.faceIndex];
@@ -154,6 +156,9 @@ class Rasterizer {
         void drawPolygon(Polygon<vertex>& polygon) {
             uint32_t* pixels = static_cast<uint32_t*>(scene->pixels);
             effect.gs(polygon, screenWidth, screenHeight, *scene);
+            if constexpr (!isShadowEffect) {
+                scene->stats.addPoly();
+            }
 
             if constexpr (!isShadowEffect) {
                 if (solid->shading == Shading::Wireframe) {
@@ -217,6 +222,7 @@ class Rasterizer {
                     for (int x = xStart; x < xEnd; ++x) {
                         if (scene->zBuffer->TestAndSet(x, vStart.p_z)) {
                             pixels[x] = effect.ps(vStart, *scene, polygon);
+                            scene->stats.addPixel();
                         }
                         vStart.hraster(vStep);
                     }

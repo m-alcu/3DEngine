@@ -89,6 +89,7 @@ public:
               scene.backg + scene.screen.width * scene.screen.height,
               scene.pixels);
     scene.zBuffer->Clear(); // Clear the zBuffer
+    scene.stats.reset();
 
     float aspectRatio =
         (float)scene.screen.width / scene.screen.height; // Width / Height ratio

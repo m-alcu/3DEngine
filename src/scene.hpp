@@ -21,6 +21,7 @@
 #include "objects/solid.hpp"
 #include "slib.hpp"
 #include "smath.hpp"
+#include "stats.hpp"
 
 enum class SceneType {
   TORUS,
@@ -228,6 +229,8 @@ public:
   bool shadowsEnabled = true;        // Enable/disable shadow rendering
   bool showShadowMapOverlay = false; // Show/hide shadow map debug overlay
   bool showAxes = false;             // Show/hide axis helper
+  Stats stats;                       // Rendering statistics  
+  bool depthSortEnabled = true;      // Enable/disable face depth sorting
 
   // World bounds calculated in update()
   slib::vec3 worldBoundMin{};
@@ -351,6 +354,7 @@ public:
     }
 
     ImGui::Checkbox("Show Axis Helper", &showAxes);
+    ImGui::Checkbox("Face Depth Sorting", &depthSortEnabled);
     ImGui::Checkbox("Shadows Enabled", &shadowsEnabled);
     ImGui::Checkbox("Show Shadow Map Overlay", &showShadowMapOverlay);
 
@@ -369,4 +373,12 @@ public:
     ImGui::Text("OrbitTarget: (%.2f, %.2f, %.2f)", camera.orbitTarget.x, camera.orbitTarget.y, camera.orbitTarget.z);
     ImGui::Text("Camera Pitch: %.2f, Yaw: %.2f, Roll: %.2f", camera.pitch, camera.yaw, camera.roll);
   }
+
+  // Draw rendering stats
+  void drawStats() {
+    ImGui::Text("Polys rendered: %u", stats.polysRendered);
+    ImGui::Text("Pixels rasterized: %u", stats.pixelsRasterized);
+  }
+
+  
 };
