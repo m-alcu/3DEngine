@@ -97,12 +97,17 @@ public:
     slib::mat4 projectionMatrix =
         smath::perspective(scene.camera.zFar, scene.camera.zNear, aspectRatio, fovRadians);
 
-    slib::mat4 viewMatrix =
-        scene.orbiting ? smath::lookAt(scene.camera.pos,
-                                       scene.camera.orbitTarget, {0, 1, 0})
-                       : smath::fpsview(scene.camera.pos, scene.camera.pitch,
-                                        scene.camera.yaw, scene.camera.roll);
-    scene.spaceMatrix = viewMatrix * projectionMatrix;
+    if (scene.orbiting) {
+      slib::vec3 up = {0.0f, 1.0f, 0.0f};
+      slib::vec3 lightDir = smath::normalize(scene.camera.orbitTarget - scene.camera.pos);
+      // gimbal lock avoidance check https://en.wikipedia.org/wiki/Gimbal_lock
+      if (std::abs(smath::dot(lightDir, up)) > 0.99f) {
+        up = {1.0f, 0.0f, 0.0f};
+      }
+      scene.spaceMatrix = smath::lookAt(scene.camera.pos, scene.camera.orbitTarget, up) * projectionMatrix;
+    } else {
+      scene.spaceMatrix = smath::fpsview(scene.camera.pos, scene.camera.pitch, scene.camera.yaw, scene.camera.roll) * projectionMatrix;      
+    }
 
     // Used in Phong shading
     // NOTE: For performance we approximate the per-fragment view vector V with

@@ -223,6 +223,7 @@ private:
 
     // Choose an up vector that isn't parallel to light direction
     slib::vec3 up = {0.0f, 1.0f, 0.0f};
+    // gimbal lock avoidance check https://en.wikipedia.org/wiki/Gimbal_lock
     if (std::abs(smath::dot(lightDir, up)) > 0.99f) {
       up = {1.0f, 0.0f, 0.0f};
     }
@@ -244,6 +245,7 @@ private:
 
     slib::vec3 up = {0.0f, 1.0f, 0.0f};
     slib::vec3 lightDir = smath::normalize(sceneCenter - light.position);
+    // gimbal lock avoidance check https://en.wikipedia.org/wiki/Gimbal_lock
     if (std::abs(smath::dot(lightDir, up)) > 0.99f) {
       up = {1.0f, 0.0f, 0.0f};
     }
@@ -274,6 +276,7 @@ private:
     slib::vec3 target = light.position + lightDir * light.radius;
 
     slib::vec3 up = {0.0f, 1.0f, 0.0f};
+    // gimbal lock avoidance check https://en.wikipedia.org/wiki/Gimbal_lock
     if (std::abs(smath::dot(lightDir, up)) > 0.99f) {
       up = {1.0f, 0.0f, 0.0f};
     }
