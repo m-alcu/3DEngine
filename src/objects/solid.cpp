@@ -25,15 +25,22 @@ void Solid::calculateNormals() {
 
     for (int i = 0; i < numFaces; i++) {
         const Face &face = Solid::faceData[i].face;
-        slib::vec3 v1 = Solid::vertexData[face.vertexIndices[0]].vertex;
-        slib::vec3 v2 = Solid::vertexData[face.vertexIndices[1]].vertex;
-        slib::vec3 v3 = Solid::vertexData[face.vertexIndices[2]].vertex;
+        const size_t n = face.vertexIndices.size();
 
-        // Calculate the edge vectors.
-        slib::vec3 v21 = v2 - v1;
-        slib::vec3 v32 = v3 - v2;
+        // Newell's method: works for any polygon (tri, quad, n-gon)
+        // and handles degenerate edges gracefully
+        // https://every-algorithm.github.io/2024/03/06/newells_algorithm.html
+        slib::vec3 normal = {0.0f, 0.0f, 0.0f};
 
-        Solid::faceData[i].faceNormal = smath::normalize(smath::cross(v21, v32));
+        for (size_t j = 0; j < n; ++j) {
+            const slib::vec3& curr = Solid::vertexData[face.vertexIndices[j]].vertex;
+            const slib::vec3& next = Solid::vertexData[face.vertexIndices[(j + 1) % n]].vertex;
+
+            normal.x += (curr.y - next.y) * (curr.z + next.z);
+            normal.y += (curr.z - next.z) * (curr.x + next.x);
+            normal.z += (curr.x - next.x) * (curr.y + next.y);
+        }
+        Solid::faceData[i].faceNormal = smath::normalize(normal);
     }
 }
 
