@@ -4,6 +4,7 @@
 #include <cmath>
 #include <algorithm>
 #include <type_traits>
+#include <omp.h>
 #include "scene.hpp"
 #include "objects/solid.hpp"
 #include "slib.hpp"
@@ -112,13 +113,20 @@ class Rasterizer {
                 std::vector<FaceDepth> visibleFaces;
                 visibleFaces.reserve(solid->faceData.size());
 
-                for (int i = 0; i < static_cast<int>(solid->faceData.size()); ++i) {
-                    const auto& faceDataEntry = solid->faceData[i];
-                    slib::vec3 normal = getRotatedNormal(faceDataEntry);
-                    vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];
+                #pragma omp parallel
+                {
+                    std::vector<FaceDepth> localVisible;
+                    #pragma omp for nowait
+                    for (int i = 0; i < static_cast<int>(solid->faceData.size()); ++i) {
+                        const auto& faceDataEntry = solid->faceData[i];
+                        slib::vec3 normal = getRotatedNormal(faceDataEntry);
+                        vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];
 
-                    if (solid->shading == Shading::Wireframe || isFaceVisibleFromCamera(p1.world, normal))
-                        visibleFaces.push_back({i, p1.p_z});
+                        if (solid->shading == Shading::Wireframe || isFaceVisibleFromCamera(p1.world, normal))
+                            localVisible.push_back({i, p1.p_z});
+                    }
+                    #pragma omp critical
+                    visibleFaces.insert(visibleFaces.end(), localVisible.begin(), localVisible.end());
                 }
 
                 if (scene->depthSortEnabled) {
@@ -126,6 +134,8 @@ class Rasterizer {
                         [](const FaceDepth& a, const FaceDepth& b) { return a.depth < b.depth; });
                 }
 
+                //#pragma omp parallel for
+                //This will wait until we develop a tile-based rasterizer
                 for (const auto& fd : visibleFaces) {
                     const auto& faceDataEntry = solid->faceData[fd.faceIndex];
                     slib::vec3 normal = getRotatedNormal(faceDataEntry);
