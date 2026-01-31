@@ -1,5 +1,6 @@
 #pragma once
-
+#include <algorithm>
+#include <cmath>
 #include "ZBuffer.hpp"
 #include "constants.hpp"
 #include "events/EventManager.hpp"
@@ -9,8 +10,6 @@
 #include "slib.hpp"
 #include "smath.hpp"
 #include "color.hpp"
-#include <algorithm>
-#include <cmath>
 
 class ShadowMap {
 public:

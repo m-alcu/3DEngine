@@ -83,19 +83,31 @@ void ObjLoader::loadVertices(const std::string& filename) {
             }
         }
 
-        if (line.find("f") != std::string::npos) {
-            // Example line: f 791 763 645
-            std::regex faceRegex(R"(^f\s+(\d+)\s+(\d+)\s+(\d+)$)");
-            std::smatch match;
+        if (line[0] == 'f' && (line[1] == ' ' || line[1] == '\t')) {
+            // Parse face line - handles all OBJ formats:
+            // f v1 v2 v3 ... (vertex only)
+            // f v1/vt1 v2/vt2 v3/vt3 ... (vertex / texture coords)
+            // f v1/vt1/vn1 v2/vt2/vn2 v3/vt3/vn3 ... (vertex / texture coords / normals)
+            // f v1//vn1 v2//vn2 v3//vn3 ... (vertex / normals)
+            FaceData faceData;
+            std::istringstream iss(line.substr(2)); // Skip "f "
+            std::string token;
 
-            if (std::regex_search(line, match, faceRegex)) {
+            while (iss >> token) {
+                // Extract vertex index (first number before any '/')
+                size_t slashPos = token.find('/');
+                std::string vertexStr = (slashPos != std::string::npos)
+                    ? token.substr(0, slashPos)
+                    : token;
 
-                FaceData faceData;
+                if (!vertexStr.empty()) {
+                    int vertexIndex = std::stoi(vertexStr) - 1; // OBJ indices are 1-based
+                    faceData.face.vertexIndices.push_back(vertexIndex);
+                }
+            }
 
-				faceData.face.vertexIndices.push_back(std::stoi(match[1]) - 1);
-				faceData.face.vertexIndices.push_back(std::stoi(match[2]) - 1);
-				faceData.face.vertexIndices.push_back(std::stoi(match[3]) - 1);
-                faceData.face.materialKey = "blue"; // Default material key
+            if (faceData.face.vertexIndices.size() >= 3) {
+                faceData.face.materialKey = "blue";
                 faces.push_back(faceData);
             }
         }

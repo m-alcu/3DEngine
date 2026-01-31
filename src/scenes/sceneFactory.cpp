@@ -8,6 +8,7 @@
 #include "shadowPointTestScene.hpp"
 #include "shadowTestScene.hpp"
 #include "starScene.hpp"
+#include "suzanneScene.hpp"
 #include "tetrakisScene.hpp"
 #include "torusScene.hpp"
 #include "worldScene.hpp"
@@ -26,6 +27,8 @@ std::unique_ptr<Scene> SceneFactory::createScene(SceneType type, Screen scr) {
     return std::make_unique<KnotScenePoint>(scr);
   case SceneType::BUNNY:
     return std::make_unique<BunnyScene>(scr);
+  case SceneType::SUZANNE:
+    return std::make_unique<SuzanneScene>(scr);
   case SceneType::STAR:
     return std::make_unique<StarScene>(scr);
   case SceneType::TETRAKIS:
