@@ -45,7 +45,12 @@ class Rasterizer {
             }
 
             processVertices();
-            drawFaces();
+
+            if constexpr (isShadowEffect) {
+                drawShadowFaces();
+            } else {
+                drawFaces();
+            }
         }
 
     private:
@@ -95,56 +100,59 @@ class Rasterizer {
         }
 
         void drawFaces() {
-            if constexpr (isShadowEffect) {
-                for (const auto& faceDataEntry : solid->faceData) {
+            struct FaceDepth {
+                int faceIndex;
+                float depth;
+            };
+            std::vector<FaceDepth> visibleFaces;
+            visibleFaces.reserve(solid->faceData.size());
+
+            //#pragma omp parallel
+            {
+                std::vector<FaceDepth> localVisible;
+                //#pragma omp for nowait
+                for (int i = 0; i < static_cast<int>(solid->faceData.size()); ++i) {
+                    const auto& faceDataEntry = solid->faceData[i];
                     slib::vec3 normal = getRotatedNormal(faceDataEntry);
                     vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];
 
-                    if (isFaceVisibleFromLight(p1.world, normal)) {
-                        Polygon<vertex> poly(collectPolyVerts(faceDataEntry), normal);
-                        clipAndDraw(poly);
-                    }
+                    if (solid->shading == Shading::Wireframe || isFaceVisibleFromCamera(p1.world, normal))
+                        localVisible.push_back({i, p1.p_z});
                 }
-            } else {
-                struct FaceDepth {
-                    int faceIndex;
-                    float depth;
-                };
-                std::vector<FaceDepth> visibleFaces;
-                visibleFaces.reserve(solid->faceData.size());
+                //#pragma omp critical
+                visibleFaces.insert(visibleFaces.end(), localVisible.begin(), localVisible.end());
+            }
 
-                //#pragma omp parallel
+            if (scene->depthSortEnabled) {
+                std::sort(visibleFaces.begin(), visibleFaces.end(),
+                    [](const FaceDepth& a, const FaceDepth& b) { return a.depth < b.depth; });
+            }
+
+            //#pragma omp parallel for
+            //This will wait until we develop a tile-based rasterizer
+            for (const auto& fd : visibleFaces) {
+                const auto& faceDataEntry = solid->faceData[fd.faceIndex];
+                slib::vec3 normal = getRotatedNormal(faceDataEntry);
+
+                Polygon<vertex> poly(
+                    collectPolyVerts(faceDataEntry),
+                    normal,
+                    solid->materials.at(faceDataEntry.face.materialKey)
+                );
+                clipAndDraw(poly);
+            }
+        }
+
+        void drawShadowFaces()
+        {
+            for (const auto &faceDataEntry : solid->faceData)
+            {
+                slib::vec3 normal = getRotatedNormal(faceDataEntry);
+                vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];
+
+                if (isFaceVisibleFromLight(p1.world, normal))
                 {
-                    std::vector<FaceDepth> localVisible;
-                    //#pragma omp for nowait
-                    for (int i = 0; i < static_cast<int>(solid->faceData.size()); ++i) {
-                        const auto& faceDataEntry = solid->faceData[i];
-                        slib::vec3 normal = getRotatedNormal(faceDataEntry);
-                        vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];
-
-                        if (solid->shading == Shading::Wireframe || isFaceVisibleFromCamera(p1.world, normal))
-                            localVisible.push_back({i, p1.p_z});
-                    }
-                    //#pragma omp critical
-                    visibleFaces.insert(visibleFaces.end(), localVisible.begin(), localVisible.end());
-                }
-
-                if (scene->depthSortEnabled) {
-                    std::sort(visibleFaces.begin(), visibleFaces.end(),
-                        [](const FaceDepth& a, const FaceDepth& b) { return a.depth < b.depth; });
-                }
-
-                //#pragma omp parallel for
-                //This will wait until we develop a tile-based rasterizer
-                for (const auto& fd : visibleFaces) {
-                    const auto& faceDataEntry = solid->faceData[fd.faceIndex];
-                    slib::vec3 normal = getRotatedNormal(faceDataEntry);
-
-                    Polygon<vertex> poly(
-                        collectPolyVerts(faceDataEntry),
-                        normal,
-                        solid->materials.at(faceDataEntry.face.materialKey)
-                    );
+                    Polygon<vertex> poly(collectPolyVerts(faceDataEntry), normal);
                     clipAndDraw(poly);
                 }
             }
