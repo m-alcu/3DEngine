@@ -55,7 +55,8 @@ void Solid::calculateVertexNormals() {
                 if (vi == i) {
                     vertexNormal += Solid::faceData[j].faceNormal;
                 }
-            }        }
+            }        
+        }
         Solid::vertexData[i].normal = smath::normalize(vertexNormal);
     }
 
