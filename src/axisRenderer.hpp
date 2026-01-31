@@ -23,13 +23,13 @@ public:
 
       if (t == 0.0f) {
           drawAxisLine(scene, {-halfSize, 0, 0.0f}, {0, 0, 0.0f}, GREY_COLOR);
-          drawAxisLine(scene, {0, 0, 0.0f}, {halfSize, 0, 0.0f}, BLUE_COLOR);
+          drawAxisLine(scene, {0, 0, 0.0f}, {halfSize, 0, 0.0f}, RED_COLOR);
 
           drawAxisLine(scene, {0.0f, -halfSize, 0}, {0.0f, 0, 0}, GREY_COLOR);
           drawAxisLine(scene, {0.0f, 0, 0}, {0.0f, halfSize, 0}, GREEN_COLOR);
           
           drawAxisLine(scene, {0.0f, 0.0f, -halfSize}, {0.0f, 0.0f, 0}, GREY_COLOR);
-          drawAxisLine(scene, {0.0f, 0.0f, 0}, {0.0f, 0.0f, halfSize}, RED_COLOR);
+          drawAxisLine(scene, {0.0f, 0.0f, 0}, {0.0f, 0.0f, halfSize}, BLUE_COLOR);
           continue;
       }
 
@@ -49,11 +49,11 @@ public:
     float labelSize = axisLength * 0.14f;
 
     drawLetterX(scene, {axisLength + labelOffset, 0.0f, 0.0f}, labelSize,
-                {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, 0xffff0000);
+                {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, RED_COLOR);
     drawLetterY(scene, {0.0f, axisLength + labelOffset, 0.0f}, labelSize,
-                {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 0.0f}, 0xff00ff00);
+                {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 0.0f}, GREEN_COLOR);
     drawLetterZ(scene, {0.0f, 0.0f, axisLength + labelOffset}, labelSize,
-                {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, 0xff0000ff);
+                {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, BLUE_COLOR);
   }
 
 private:

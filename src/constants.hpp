@@ -16,9 +16,9 @@ constexpr float CAMERA_DEFAULT_VIEW_ANGLE = 45.0f;
 constexpr int SCREEN_WIDTH = 640;
 constexpr int SCREEN_HEIGHT = 480;
 
-constexpr uint32_t RED_COLOR = 0xff0000ff;
+constexpr uint32_t RED_COLOR = 0xffff0000;
 constexpr uint32_t GREEN_COLOR = 0xff00ff00;
-constexpr uint32_t BLUE_COLOR = 0xffff0000;
+constexpr uint32_t BLUE_COLOR = 0xff0000ff;
 constexpr uint32_t WHITE_COLOR = 0xffffffff;
 constexpr uint32_t BLACK_COLOR = 0xff000000;
 constexpr uint32_t YELLOW_COLOR = 0xff00ffff;
