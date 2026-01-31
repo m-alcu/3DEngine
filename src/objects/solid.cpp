@@ -177,7 +177,7 @@ Texture Solid::DecodePng(const char* filename)
     return {static_cast<int>(width), static_cast<int>(height), image};
 }
 
-void Solid::rotate(float xAngle, float yAngle, float zAngle) {
+void Solid::incAngles(float xAngle, float yAngle, float zAngle) {
 	position.xAngle += xAngle;
 	position.yAngle += yAngle;
 	position.zAngle += zAngle;

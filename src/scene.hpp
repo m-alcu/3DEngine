@@ -99,7 +99,7 @@ public:
 
       } else {
         if (solidPtr->rotationEnabled) {
-          solidPtr->rotate(solidPtr->incXangle, solidPtr->incYangle, 0.0f);
+          solidPtr->incAngles(solidPtr->incXangle, solidPtr->incYangle, 0.0f);
         }
         solidPtr->updateWorldBounds(worldBoundMin, worldBoundMax);
       }
