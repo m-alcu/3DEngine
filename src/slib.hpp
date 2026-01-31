@@ -1,6 +1,7 @@
 #pragma once
 #include <array>
 #include <iostream>
+#include <limits>
 #include <string>
 #include <utility>
 #include <vector>
@@ -67,6 +68,9 @@ namespace slib
         bool operator<=(const vec3& rhs) const;
         bool operator>=(const vec3& rhs) const;
         vec3& operator=(const vec4& rhs);
+
+        static vec3 boundMin();
+        static vec3 boundMax();
     };
 
     struct vec4

@@ -77,24 +77,15 @@ public:
   virtual void update(float dt) {
 
     bool hasGeometry = false;
-    worldBoundMin = {std::numeric_limits<float>::max(),
-                     std::numeric_limits<float>::max(),
-                     std::numeric_limits<float>::max()};
-    worldBoundMax = {-std::numeric_limits<float>::max(),
-                     -std::numeric_limits<float>::max(),
-                     -std::numeric_limits<float>::max()};
+    worldBoundMin = slib::vec3::boundMin();
+    worldBoundMax = slib::vec3::boundMax();
 
-    // Update all solids (rotation, orbit, transform matrix)
     for (auto &solidPtr : solids) {
-      if (solidPtr->rotationEnabled) {
-        solidPtr->rotate(solidPtr->incXangle, solidPtr->incYangle, 0.0f);
-      }
+
       solidPtr->updateOrbit(dt);
       solidPtr->calculateTransformMat();
       hasGeometry = true;
-    }
 
-    for (auto &solidPtr : solids) {
       if (solidPtr->lightSourceEnabled) {
         // Create shadow map for this light source if it doesn't exist
         if (!solidPtr->shadowMap) {
@@ -105,16 +96,12 @@ public:
         // Update light position from solid position
         solidPtr->light.position = {solidPtr->position.x, solidPtr->position.y, solidPtr->position.z};
 
+      } else {
+        if (solidPtr->rotationEnabled) {
+          solidPtr->rotate(solidPtr->incXangle, solidPtr->incYangle, 0.0f);
+        }
+        solidPtr->updateWorldBounds(worldBoundMin, worldBoundMax);
       }
-    }
-
-    // Calculate world bounds
-
-    for (auto &solidPtr : solids) {
-      if (solidPtr->lightSourceEnabled) {
-        continue; // Skip light sources
-      }
-      solidPtr->updateWorldBounds(worldBoundMin, worldBoundMax);
     }
 
     // Calculate scene center and radius
