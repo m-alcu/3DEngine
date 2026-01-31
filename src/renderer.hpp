@@ -11,6 +11,7 @@
 #include "effects/texturedPhongEffect.hpp"
 #include "objects/solid.hpp"
 #include "axisRenderer.hpp"
+#include "bresenham.hpp"
 #include "rasterizer.hpp"
 #include <cstdint>
 
@@ -207,29 +208,13 @@ public:
     }
 
     // Draw border around the overlay
-    uint32_t borderColor =
-        (255 << 24) | (255 << 16) | (255 << 8) | 255; // White border
-    for (int x = 0; x < overlaySize; ++x) {
-      int topY = startY;
-      int bottomY = startY + overlaySize - 1;
-      if (startX + x >= 0 && startX + x < scene.screen.width) {
-        if (topY >= 0 && topY < scene.screen.height)
-          scene.pixels[topY * scene.screen.width + startX + x] = borderColor;
-        if (bottomY >= 0 && bottomY < scene.screen.height)
-          scene.pixels[bottomY * scene.screen.width + startX + x] = borderColor;
-      }
-    }
-    for (int y = 0; y < overlaySize; ++y) {
-      int leftX = startX;
-      int rightX = startX + overlaySize - 1;
-      if (startY + y >= 0 && startY + y < scene.screen.height) {
-        if (leftX >= 0 && leftX < scene.screen.width)
-          scene.pixels[(startY + y) * scene.screen.width + leftX] = borderColor;
-        if (rightX >= 0 && rightX < scene.screen.width)
-          scene.pixels[(startY + y) * scene.screen.width + rightX] =
-              borderColor;
-      }
-    }
+    uint32_t borderColor = WHITE_COLOR;
+    int endX = startX + overlaySize - 1;
+    int endY = startY + overlaySize - 1;
+    drawBresenhamLine(startX, startY, endX, startY, scene.pixels, borderColor, scene.screen.width, scene.screen.height);
+    drawBresenhamLine(startX, endY, endX, endY, scene.pixels, borderColor, scene.screen.width, scene.screen.height);
+    drawBresenhamLine(startX, startY, startX, endY, scene.pixels, borderColor, scene.screen.width, scene.screen.height);
+    drawBresenhamLine(endX, startY, endX, endY, scene.pixels, borderColor, scene.screen.width, scene.screen.height);
   }
 
   Rasterizer<FlatEffect> flatRasterizer;

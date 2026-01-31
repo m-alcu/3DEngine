@@ -113,10 +113,10 @@ class Rasterizer {
                 std::vector<FaceDepth> visibleFaces;
                 visibleFaces.reserve(solid->faceData.size());
 
-                #pragma omp parallel
+                //#pragma omp parallel
                 {
                     std::vector<FaceDepth> localVisible;
-                    #pragma omp for nowait
+                    //#pragma omp for nowait
                     for (int i = 0; i < static_cast<int>(solid->faceData.size()); ++i) {
                         const auto& faceDataEntry = solid->faceData[i];
                         slib::vec3 normal = getRotatedNormal(faceDataEntry);
@@ -125,7 +125,7 @@ class Rasterizer {
                         if (solid->shading == Shading::Wireframe || isFaceVisibleFromCamera(p1.world, normal))
                             localVisible.push_back({i, p1.p_z});
                     }
-                    #pragma omp critical
+                    //#pragma omp critical
                     visibleFaces.insert(visibleFaces.end(), localVisible.begin(), localVisible.end());
                 }
 
