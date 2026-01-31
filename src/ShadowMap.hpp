@@ -23,8 +23,8 @@ public:
   slib::mat4 lightSpaceMatrix;
 
   // Shadow bias parameters for slope-scaled bias
-  float minBias = 0.025f; // Minimum bias (surfaces facing the light)
-  float maxBias = 0.05f;  // Maximum bias (surfaces at grazing angles)
+  float minBias = MIN_BIAS_DEFAULT; // Minimum bias (surfaces facing the light)
+  float maxBias = MAX_BIAS_DEFAULT; // Maximum bias (surfaces at grazing angles)
 
   // PCF kernel size (0 = no filtering, 1 = 3x3, 2 = 5x5, etc.)
   int pcfRadius = SHADOW_PCF_RADIUS;
