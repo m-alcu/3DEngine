@@ -259,7 +259,7 @@ private:
     float effectiveRadius = sceneRadius * EFFECTIVE_LIGHT_RADIUS_FACTOR;
     float fov = 2.0f * std::atan(effectiveRadius / distToScene);
     // Clamp to reasonable range
-    fov = std::clamp(fov, 20.0f * (PI / 180.0f), 90.0f * (PI / 180.0f));
+    fov = std::clamp(fov, 20.0f * RAD, 90.0f * RAD);
 
     float aspect = static_cast<float>(width) / height;
     float zNear = std::max(1.0f, distToScene - sceneRadius);

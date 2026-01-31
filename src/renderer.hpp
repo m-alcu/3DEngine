@@ -92,7 +92,7 @@ public:
 
     float aspectRatio =
         (float)scene.screen.width / scene.screen.height; // Width / Height ratio
-    float fovRadians = scene.camera.viewAngle * (PI / 180.0f);
+    float fovRadians = scene.camera.viewAngle * RAD;
 
     slib::mat4 projectionMatrix =
         smath::perspective(scene.camera.zFar, scene.camera.zNear, aspectRatio, fovRadians);
