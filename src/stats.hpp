@@ -5,10 +5,14 @@ class Stats {
 public:
     uint32_t polysRendered = 0;
     uint32_t pixelsRasterized = 0;
+    uint32_t drawCalls = 0;
+    uint32_t verticesProcessed = 0;
 
     void reset() {
         polysRendered = 0;
         pixelsRasterized = 0;
+        drawCalls = 0;
+        verticesProcessed = 0;
     }
 
     void addPoly() {
@@ -17,5 +21,13 @@ public:
 
     void addPixel() {
         ++pixelsRasterized;
+    }
+
+    void addDrawCall() {
+        ++drawCalls;
+    }
+
+    void addProcessedVertex() {
+        ++verticesProcessed;
     }
 };

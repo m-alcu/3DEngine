@@ -376,8 +376,11 @@ public:
 
   // Draw rendering stats
   void drawStats() {
+    ImGui::Separator();
     ImGui::Text("Polys rendered: %u", stats.polysRendered);
     ImGui::Text("Pixels rasterized: %u", stats.pixelsRasterized);
+    ImGui::Text("Draw calls: %u", stats.drawCalls);
+    ImGui::Text("Vertices processed: %u", stats.verticesProcessed);
   }
 
   

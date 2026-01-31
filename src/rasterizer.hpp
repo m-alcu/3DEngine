@@ -60,19 +60,17 @@ class Rasterizer {
 
         void processVertices() {
             projectedPoints.resize(solid->numVertices);
+            const int n = static_cast<int>(solid->vertexData.size());
 
-            std::transform(
-                solid->vertexData.begin(),
-                solid->vertexData.end(),
-                projectedPoints.begin(),
-                [&](const auto& vData) {
-                    if constexpr (isShadowEffect) {
-                        return effect.vs(vData, solid, scene, lightSource);
-                    } else {
-                        return effect.vs(vData, solid, scene);
-                    }
+            #pragma omp parallel for if(n > 1000)
+            for (int i = 0; i < n; ++i) {
+                if constexpr (isShadowEffect) {
+                    projectedPoints[i] = effect.vs(solid->vertexData[i], solid, scene, lightSource);
+                } else {
+                    projectedPoints[i] = effect.vs(solid->vertexData[i], solid, scene);
+                    scene->stats.addProcessedVertex();
                 }
-            );
+            }
         }
 
         inline slib::vec3 getRotatedNormal(const FaceData& faceDataEntry) const {
@@ -90,8 +88,10 @@ class Rasterizer {
 
         inline void clipAndDraw(Polygon<vertex>& poly) {
             auto clippedPoly = ClipCullPolygon(poly);
-            if (!clippedPoly.points.empty())
+            if (!clippedPoly.points.empty()) {
                 drawPolygon(clippedPoly);
+                scene->stats.addDrawCall();
+            }
         }
 
         void drawFaces() {
