@@ -12,6 +12,7 @@
 #include "objects/solid.hpp"
 #include "axisRenderer.hpp"
 #include "bresenham.hpp"
+#include "scaler.hpp"
 #include "rasterizer.hpp"
 #include <cstdint>
 
@@ -155,57 +156,27 @@ public:
     int startX = margin;
     int startY = scene.screen.height - overlaySize - margin;
 
-    // Find min/max depth for normalization (excluding max float values)
+    // Find min/max depth for normalization
     float minDepth = 1.0f;
     float maxDepth = -1.0f;
-
     for (int i = 0; i < shadowMapPtr->width * shadowMapPtr->height; ++i) {
       float d = shadowMapPtr->getDepth(i);
       minDepth = std::min(minDepth, d);
       maxDepth = std::max(maxDepth, d);
     }
+    float depthRange = std::max(maxDepth - minDepth, 0.0001f);
 
-    // Avoid division by zero
-    float depthRange = maxDepth - minDepth;
-    if (depthRange < 0.0001f)
-      depthRange = 1.0f;
-
-    // Scale factors for sampling the shadow map
-    float scaleX = static_cast<float>(shadowMapPtr->width) / overlaySize;
-    float scaleY = static_cast<float>(shadowMapPtr->height) / overlaySize;
-
-    for (int y = 0; y < overlaySize; ++y) {
-      for (int x = 0; x < overlaySize; ++x) {
-        int screenX = startX + x;
-        int screenY = startY + y;
-
-        // Bounds check
-        if (screenX < 0 || screenX >= scene.screen.width || screenY < 0 ||
-            screenY >= scene.screen.height) {
-          continue;
-        }
-
-        // Sample from shadow map
-        int smX = static_cast<int>(x * scaleX);
-        int smY = static_cast<int>(y * scaleY);
-        smX = std::clamp(smX, 0, shadowMapPtr->width - 1);
-        smY = std::clamp(smY, 0, shadowMapPtr->height - 1);
-
-        float depth = shadowMapPtr->getDepth(smY * shadowMapPtr->width + smX);
-
-        uint8_t gray = 0;
-        if (depth < 1.0f) {
-          // Normalize depth to 255-0 (inverse: closer = brighter)
-          float normalized = (maxDepth - depth) / depthRange;
-          gray = static_cast<uint8_t>(
-              std::clamp(normalized * 255.0f, 0.0f, 255.0f));
-        }
-
-        // ARGB format
-        uint32_t color = (255 << 24) | (gray << 16) | (gray << 8) | gray;
-        scene.pixels[screenY * scene.screen.width + screenX] = color;
-      }
-    }
+    // Blit shadow map with depth-to-grayscale conversion
+    blitScaled(scene.pixels, scene.screen.width, scene.screen.height,
+               startX, startY, overlaySize, overlaySize,
+               shadowMapPtr->width, shadowMapPtr->height,
+               [&](int srcX, int srcY) -> uint32_t {
+                 float depth = shadowMapPtr->getDepth(srcY * shadowMapPtr->width + srcX);
+                 uint8_t gray = (depth < 1.0f)
+                     ? static_cast<uint8_t>(std::clamp((maxDepth - depth) / depthRange * 255.0f, 0.0f, 255.0f))
+                     : 0;
+                 return (255 << 24) | (gray << 16) | (gray << 8) | gray;
+               });
 
     // Draw border around the overlay
     uint32_t borderColor = WHITE_COLOR;
