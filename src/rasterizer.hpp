@@ -13,7 +13,6 @@
 #include "clipping.hpp"
 #include "slope.hpp"
 #include "projection.hpp"
-#include "bresenham.hpp"
 
 // Trait to detect shadow effects
 template<typename T, typename = void>
