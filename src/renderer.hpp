@@ -12,7 +12,6 @@
 #include "objects/solid.hpp"
 #include "axisRenderer.hpp"
 #include "bresenham.hpp"
-#include "scaler.hpp"
 #include "rasterizer.hpp"
 #include <cstdint>
 
@@ -152,40 +151,11 @@ public:
     if (!shadowMapPtr)
       return;
 
-    // Position in bottom-left corner
     int startX = margin;
     int startY = scene.screen.height - overlaySize - margin;
+    shadowMapPtr->drawOverlay(scene.pixels, scene.screen.width, scene.screen.height,
+                              startX, startY, overlaySize);
 
-    // Find min/max depth for normalization
-    float minDepth = 1.0f;
-    float maxDepth = -1.0f;
-    for (int i = 0; i < shadowMapPtr->width * shadowMapPtr->height; ++i) {
-      float d = shadowMapPtr->getDepth(i);
-      minDepth = std::min(minDepth, d);
-      maxDepth = std::max(maxDepth, d);
-    }
-    float depthRange = std::max(maxDepth - minDepth, 0.0001f);
-
-    // Blit shadow map with depth-to-grayscale conversion
-    blitScaled(scene.pixels, scene.screen.width, scene.screen.height,
-               startX, startY, overlaySize, overlaySize,
-               shadowMapPtr->width, shadowMapPtr->height,
-               [&](int srcX, int srcY) -> uint32_t {
-                 float depth = shadowMapPtr->getDepth(srcY * shadowMapPtr->width + srcX);
-                 uint8_t gray = (depth < 1.0f)
-                     ? static_cast<uint8_t>(std::clamp((maxDepth - depth) / depthRange * 255.0f, 0.0f, 255.0f))
-                     : 0;
-                 return (255 << 24) | (gray << 16) | (gray << 8) | gray;
-               });
-
-    // Draw border around the overlay
-    uint32_t borderColor = WHITE_COLOR;
-    int endX = startX + overlaySize - 1;
-    int endY = startY + overlaySize - 1;
-    drawBresenhamLine(startX, startY, endX, startY, scene.pixels, borderColor, scene.screen.width, scene.screen.height);
-    drawBresenhamLine(startX, endY, endX, endY, scene.pixels, borderColor, scene.screen.width, scene.screen.height);
-    drawBresenhamLine(startX, startY, startX, endY, scene.pixels, borderColor, scene.screen.width, scene.screen.height);
-    drawBresenhamLine(endX, startY, endX, endY, scene.pixels, borderColor, scene.screen.width, scene.screen.height);
   }
 
   Rasterizer<FlatEffect> flatRasterizer;

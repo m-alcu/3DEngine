@@ -172,7 +172,7 @@ class Rasterizer {
 
             if constexpr (!isShadowEffect) {
                 if (solid->shading == Shading::Wireframe) {
-                    drawWireframePolygon(polygon, 0xffffffff, pixels, screenWidth, screenHeight, scene->zBuffer.get());
+                    polygon.drawWireframe(WHITE_COLOR, pixels, screenWidth, screenHeight, scene->zBuffer.get());
                     return;
                 }
             }

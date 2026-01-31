@@ -4,6 +4,8 @@
 #include "constants.hpp"
 #include "events/EventManager.hpp"
 #include "light.hpp"
+#include "scaler.hpp"
+#include "bresenham.hpp"
 #include "slib.hpp"
 #include "smath.hpp"
 #include <algorithm>
@@ -38,6 +40,41 @@ public:
   }
 
   void clear() { zbuffer.Clear(); }
+
+  // Draw shadow map as overlay on screen (without border)
+  void drawOverlay(uint32_t* pixels, int screenW, int screenH,
+                   int startX, int startY, int overlaySize) {
+    // Find min/max depth for normalization
+    float minDepth = 1.0f;
+    float maxDepth = -1.0f;
+    for (int i = 0; i < width * height; ++i) {
+      float d = getDepth(i);
+      minDepth = std::min(minDepth, d);
+      maxDepth = std::max(maxDepth, d);
+    }
+    float depthRange = std::max(maxDepth - minDepth, 0.0001f);
+
+    // Blit with depth-to-grayscale conversion
+    blitScaled(pixels, screenW, screenH,
+               startX, startY, overlaySize, overlaySize,
+               width, height,
+               [&](int srcX, int srcY) -> uint32_t {
+                 float depth = getDepth(srcY * width + srcX);
+                 uint8_t gray = (depth < 1.0f)
+                     ? static_cast<uint8_t>(std::clamp((maxDepth - depth) / depthRange * 255.0f, 0.0f, 255.0f))
+                     : 0;
+                 return (255 << 24) | (gray << 16) | (gray << 8) | gray;
+               });
+
+    // Draw border
+    int endX = startX + overlaySize - 1;
+    int endY = startY + overlaySize - 1;
+    drawBresenhamLine(startX, startY, endX, startY, pixels, WHITE_COLOR, screenW, screenH);
+    drawBresenhamLine(startX, endY, endX, endY, pixels, WHITE_COLOR, screenW, screenH);
+    drawBresenhamLine(startX, startY, startX, endY, pixels, WHITE_COLOR, screenW, screenH);
+    drawBresenhamLine(endX, startY, endX, endY, pixels, WHITE_COLOR, screenW, screenH);
+
+  }
 
   // Subscribe to pcfRadius changes from a source (e.g., Scene)
   void subscribeToPcfRadiusChanges(sage::Event& event, int& sourceRadius) {

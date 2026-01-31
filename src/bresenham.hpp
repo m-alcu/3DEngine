@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <cstdint>
 #include <cmath>
-#include "polygon.hpp"
 #include "ZBuffer.hpp"
 
 inline void drawBresenhamLine(int x0, int y0, float z0, int x1, int y1, float z1,
@@ -49,17 +48,3 @@ inline void drawBresenhamLine(int x0, int y0, int x1, int y1,
     }
 }
 
-template<typename Vertex>
-void drawWireframePolygon(Polygon<Vertex>& polygon, uint32_t color,
-                          uint32_t* pixels, int screenWidth, int screenHeight,
-                          ZBuffer* zBuffer) {
-    const size_t n = polygon.points.size();
-    for (size_t i = 0, j = n - 1; i < n; j = i++) {
-        auto& v0 = polygon.points[j];
-        auto& v1 = polygon.points[i];
-
-        drawBresenhamLine(v0.p_x >> 16, v0.p_y >> 16, v0.p_z,
-                          v1.p_x >> 16, v1.p_y >> 16, v1.p_z,
-                          pixels, color, screenWidth, screenHeight, zBuffer);
-    }
-}
