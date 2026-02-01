@@ -14,6 +14,7 @@ class ObjLoader : public Solid {
 
     private:
         void loadVertices(const std::string& filename);
+        bool hasLoadedNormals = false;
 
     protected:   
         void loadVertices() override;

@@ -148,7 +148,10 @@ void ObjLoader::setup(const std::string& filename) {
     loadVertices(filename);
     loadFaces();
     calculateNormals();
-    calculateVertexNormals();
+    // Only calculate vertex normals if they weren't provided in the OBJ file
+    if (!hasLoadedNormals) {
+        calculateVertexNormals();
+    }
     calculateMinMaxCoords();
     this->scaleToRadius(400.0f);
 }
@@ -338,10 +341,13 @@ void ObjLoader::loadVertices(const std::string& filename) {
         }
     }
 
+    // Track if normals were loaded from the file
+    hasLoadedNormals = !rawNormals.empty();
+
     std::cout << "Loaded OBJ: " << filename << "\n";
     std::cout << "  Raw vertices: " << rawVertices.size() << "\n";
     std::cout << "  Texture coords: " << rawTexCoords.size() << "\n";
-    std::cout << "  Normals: " << rawNormals.size() << "\n";
+    std::cout << "  Normals: " << rawNormals.size() << (hasLoadedNormals ? " (using file normals)" : " (will calculate)") << "\n";
     std::cout << "  Final vertices: " << finalVertices.size() << "\n";
     std::cout << "  Faces: " << faces.size() << "\n";
     std::cout << "  Materials: " << materials.size() << "\n";
