@@ -21,7 +21,7 @@ void Solid::calculateTransformMat() {
     normalMatrix = rotate;
 }
 
-void Solid::calculateNormals() {
+void Solid::calculateFaceNormals() {
 
     for (int i = 0; i < numFaces; i++) {
         const Face &face = Solid::faceData[i].face;

@@ -15,7 +15,7 @@ void World::loadFaces() {
 void World::setup(int lat, int lon) {
     loadVertices(lat, lon);
     loadFaces(lat, lon);
-    calculateNormals();
+    calculateFaceNormals();
     calculateVertexNormals();
 }
 

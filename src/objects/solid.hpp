@@ -132,12 +132,12 @@ public:
     virtual void setup() {
         loadVertices();
         loadFaces();
-        calculateNormals();
+        calculateFaceNormals();
         calculateVertexNormals();
         calculateMinMaxCoords();
     }
 
-    virtual void calculateNormals();
+    virtual void calculateFaceNormals();
 
     virtual void calculateVertexNormals();
 

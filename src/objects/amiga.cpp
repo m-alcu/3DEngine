@@ -15,7 +15,7 @@ void Amiga::loadFaces() {
 void Amiga::setup(int lat, int lon) {
     loadVertices(lat, lon);
     loadFaces(lat, lon);
-    calculateNormals();
+    calculateFaceNormals();
     calculateVertexNormals();
 }
 

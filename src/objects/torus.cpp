@@ -14,7 +14,7 @@ void Torus::loadFaces() {
 void Torus::setup(int uSteps, int vSteps, float R, float r) {
     loadVertices(uSteps, vSteps, R, r);
     loadFaces(uSteps, vSteps);
-    calculateNormals();
+    calculateFaceNormals();
     calculateVertexNormals();
 }
 

@@ -147,7 +147,7 @@ void ObjLoader::setup(const std::string& filename) {
     this->name = filePath.stem().string();
     loadVertices(filename);
     loadFaces();
-    calculateNormals();
+    calculateFaceNormals();
     // Only calculate vertex normals if they weren't provided in the OBJ file
     if (!hasLoadedNormals) {
         calculateVertexNormals();
