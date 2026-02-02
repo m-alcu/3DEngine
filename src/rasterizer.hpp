@@ -4,7 +4,6 @@
 #include <cmath>
 #include <algorithm>
 #include <type_traits>
-#include <omp.h>
 #include "scene.hpp"
 #include "objects/solid.hpp"
 #include "slib.hpp"
