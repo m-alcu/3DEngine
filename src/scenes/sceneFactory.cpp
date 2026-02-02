@@ -11,8 +11,8 @@
 #include "suzanneScene.hpp"
 #include "tetrakisScene.hpp"
 #include "vikingRoomScene.hpp"
-#include "spyroLevelScene.hpp"
 #include "isometricLevelScene.hpp"
+#include "mountainsScene.hpp"
 #include "catStatueScene.hpp"
 #include "torusScene.hpp"
 #include "worldScene.hpp"
@@ -35,10 +35,10 @@ std::unique_ptr<Scene> SceneFactory::createScene(SceneType type, Screen scr) {
     return std::make_unique<SuzanneScene>(scr);
   case SceneType::VIKING_ROOM:
     return std::make_unique<VikingRoomScene>(scr);
-  case SceneType::SPYRO_LEVEL:
-    return std::make_unique<SpyroLevelScene>(scr);
   case SceneType::ISOMETRIC_LEVEL:
     return std::make_unique<IsometricLevelScene>(scr);
+  case SceneType::MOUNTAINS:
+    return std::make_unique<MountainsScene>(scr);
   case SceneType::CAT_STATUE:
     return std::make_unique<CatStatueScene>(scr);
   case SceneType::STAR:

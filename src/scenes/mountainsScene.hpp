@@ -1,7 +1,7 @@
 #pragma once
 #include "../scene.hpp"
 
-class SpyroLevelScene : public Scene {
+class MountainsScene : public Scene {
 public:
     using Scene::Scene;
 

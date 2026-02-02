@@ -1,22 +1,22 @@
-#include "spyroLevelScene.hpp"
+#include "mountainsScene.hpp"
 #include "../objects/objLoader.hpp"
 #include "../objects/icosahedron.hpp"
 
-void SpyroLevelScene::setup() {
+void MountainsScene::setup() {
 
     clearAllSolids();
 
-    auto spyroLevel = std::make_unique<ObjLoader>();
-    spyroLevel->setup("resources/spyrolevel.obj");
+    auto mountains = std::make_unique<ObjLoader>();
+    mountains->setup("resources/mountains.obj");
 
-    spyroLevel->position.z = -500;
-    spyroLevel->position.x = 0;
-    spyroLevel->position.y = 0;
-    spyroLevel->position.xAngle = 0.0f;
-    spyroLevel->position.yAngle = 0.0f;
-    spyroLevel->position.zAngle = 0.0f;
-    spyroLevel->shading = Shading::TexturedPhong;
-    sceneType = SceneType::SPYRO_LEVEL;
+    mountains->position.z = -500;
+    mountains->position.x = 0;
+    mountains->position.y = 0;
+    mountains->position.xAngle = 0.0f;
+    mountains->position.yAngle = 0.0f;
+    mountains->position.zAngle = 0.0f;
+    mountains->shading = Shading::Gouraud;
+    sceneType = SceneType::MOUNTAINS;
 
     // Add orbiting icosahedron as point light source
     auto icosahedron = std::make_unique<Icosahedron>();
@@ -29,7 +29,7 @@ void SpyroLevelScene::setup() {
     icosahedron->lightSourceEnabled = true;
     icosahedron->light.type = LightType::Point;
     icosahedron->light.color = {1.0f, 1.0f, 1.0f};
-    icosahedron->light.intensity = 8.0f;
+    icosahedron->light.intensity = 90.0f;
     icosahedron->rotationEnabled = false;
     icosahedron->setup();
     icosahedron->enableCircularOrbit(
@@ -39,7 +39,7 @@ void SpyroLevelScene::setup() {
         /*omega*/ (3.14159265f / 30.0f),
         /*initialPhase*/ 0.0f);
 
-    addSolid(std::move(spyroLevel));
+    addSolid(std::move(mountains));
     addSolid(std::move(icosahedron));
 
     Scene::setup();
