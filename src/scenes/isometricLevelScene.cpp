@@ -15,7 +15,7 @@ void IsometricLevelScene::setup() {
     isometricLevel->position.xAngle = 0.0f;
     isometricLevel->position.yAngle = 0.0f;
     isometricLevel->position.zAngle = 0.0f;
-    isometricLevel->shading = Shading::TexturedPhong;
+    isometricLevel->shading = Shading::Gouraud;
     sceneType = SceneType::ISOMETRIC_LEVEL;
 
     // Add orbiting icosahedron as point light source
@@ -29,7 +29,7 @@ void IsometricLevelScene::setup() {
     icosahedron->lightSourceEnabled = true;
     icosahedron->light.type = LightType::Point;
     icosahedron->light.color = {1.0f, 1.0f, 1.0f};
-    icosahedron->light.intensity = 8.0f;
+    icosahedron->light.intensity = 72.0f;
     icosahedron->rotationEnabled = false;
     icosahedron->setup();
     icosahedron->enableCircularOrbit(
