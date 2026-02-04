@@ -74,7 +74,7 @@ void Amiga::loadFaces(int lat, int lon) {
     material.Kd = { properties.k_d * 0xff, properties.k_d * 0x00, properties.k_d * 0x00 }; 
     material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };
     material.Ns = properties.shininess;
-    material.map_Kd = DecodePng(std::string(RES_PATH + mtlPath).c_str());
+    material.map_Kd = LoadTextureFromImg(std::string(RES_PATH + mtlPath).c_str());
     material.map_Kd.setFilter(TextureFilter::NEIGHBOUR);
     materials.insert({"red", material});
 
@@ -82,7 +82,7 @@ void Amiga::loadFaces(int lat, int lon) {
     material.Kd = { properties.k_d * 0xff, properties.k_d * 0xff, properties.k_d * 0xff };
     material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };
     material.Ns = properties.shininess;
-    material.map_Kd = DecodePng(std::string(RES_PATH + mtlPath).c_str());
+    material.map_Kd = LoadTextureFromImg(std::string(RES_PATH + mtlPath).c_str());
     material.map_Kd.setFilter(TextureFilter::NEIGHBOUR);
     materials.insert({"white", material});  
 

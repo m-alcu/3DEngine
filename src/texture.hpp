@@ -35,7 +35,7 @@ public:
     }
 
     // Check if texture is valid
-    bool isValid() const { return w > 0 && h > 0 && !data.empty(); }
+    inline bool isValid() const { return w > 0 && h > 0 && !data.empty(); }
 
     // Sample texture at normalized coordinates (u, v) in [0, 1]
     // Returns RGB values in [0, 255] as floats

@@ -157,7 +157,7 @@ public:
 
     virtual int getColorFromMaterial(const float color);
 
-    Texture DecodePng(const char* filename);
+    Texture LoadTextureFromImg(const char* filename);
 
     virtual void incAngles(float xAngle, float yAngle, float zAngle);
 

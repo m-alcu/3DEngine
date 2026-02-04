@@ -154,7 +154,7 @@ int Solid::getColorFromMaterial(const float color) {
     return (static_cast<int>(kaR * 255));
 }
 
-Texture Solid::DecodePng(const char* filename)
+Texture Solid::LoadTextureFromImg(const char* filename)
 {
     int width, height, channels;
     // Load image with 4 channels (RGBA) regardless of source format

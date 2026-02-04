@@ -12,10 +12,13 @@ void WorldScene::setup() {
     world->position.z = -150;
     world->position.x = 0;
     world->position.y = 0;
-    world->position.zoom = 100.0f;
+    world->position.zoom = 70.0f;
     world->position.xAngle = 0.0f;
     world->position.yAngle = 0.0f;
     world->position.zAngle = 0.0f;
+    world->incXangle = 0.25f;
+    world->incYangle = 0.5f;
+    world->rotationEnabled = true;
     world->shading = Shading::TexturedGouraud;
 	sceneType = SceneType::WORLD;
 
@@ -30,7 +33,7 @@ void WorldScene::setup() {
     icosahedron->lightSourceEnabled = true;
     icosahedron->light.type = LightType::Point;
     icosahedron->light.color = {1.0f, 1.0f, 1.0f};
-    icosahedron->light.intensity = 1.0f;
+    icosahedron->light.intensity = 4.5f;
     icosahedron->rotationEnabled = false;
     icosahedron->setup();
     icosahedron->enableCircularOrbit(

@@ -44,7 +44,7 @@ void AscLoader::loadVertices(const std::string& filename) {
     material.Ka = { properties.k_a * 0x00, properties.k_a * 0x00, properties.k_a * 0x00 };
     material.Kd = { properties.k_d * 0x00, properties.k_d * 0x58, properties.k_d * 0xfc }; 
     material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };
-    material.map_Kd = DecodePng(std::string(RES_PATH + mtlPath).c_str());
+    material.map_Kd = LoadTextureFromImg(std::string(RES_PATH + mtlPath).c_str());
     material.map_Kd.setFilter(TextureFilter::NEIGHBOUR);    
     material.Ns = properties.shininess;
     materials.insert({"blue", material});
@@ -52,7 +52,7 @@ void AscLoader::loadVertices(const std::string& filename) {
     material.Ka = { properties.k_a * 0x00, properties.k_a * 0x00, properties.k_a * 0x00 };
     material.Kd = { properties.k_d * 0xff, properties.k_d * 0xff, properties.k_d * 0xff };
     material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };
-    material.map_Kd = DecodePng(std::string(RES_PATH + mtlPath).c_str());
+    material.map_Kd = LoadTextureFromImg(std::string(RES_PATH + mtlPath).c_str());
     material.map_Kd.setFilter(TextureFilter::NEIGHBOUR);    
     material.Ns = properties.shininess;
     materials.insert({"white", material});          
