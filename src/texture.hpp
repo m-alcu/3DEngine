@@ -27,11 +27,29 @@ public:
         return reinterpret_cast<const RGBA8*>(data.data());
     }
 
+    // Wrap UV coordinate to [0, 1] range (for texture repeat)
+    static float wrapUV(float uv) {
+        uv = uv - static_cast<int>(uv); // fmod equivalent for positive
+        if (uv < 0.0f) uv += 1.0f;      // handle negative UVs
+        return uv;
+    }
+
+    // Check if texture is valid
+    bool isValid() const { return w > 0 && h > 0 && !data.empty(); }
+
     // Sample texture at normalized coordinates (u, v) in [0, 1]
     // Returns RGB values in [0, 255] as floats
     void sampleNearest(float u, float v, float& r, float& g, float& b) const {
-        int x = static_cast<int>(u * (w-1));
-        int y = static_cast<int>(v * (h-1));
+        if (!isValid()) {
+            r = 255.0f; g = 0.0f; b = 255.0f; // Magenta for missing texture
+            return;
+        }
+
+        u = wrapUV(u);
+        v = wrapUV(v);
+
+        int x = std::clamp(static_cast<int>(u * (w - 1)), 0, w - 1);
+        int y = std::clamp(static_cast<int>(v * (h - 1)), 0, h - 1);
 
         const RGBA8& px = pixels()[y * w + x];
 
@@ -43,6 +61,14 @@ public:
     // Sample texture with bilinear filtering at normalized coordinates (u, v) in [0, 1]
     // Returns RGB values in [0, 255] as floats for interpolation precision
     void sampleBilinear(float u, float v, float& r, float& g, float& b) const {
+        if (!isValid() || w < 2 || h < 2) {
+            r = 255.0f; g = 0.0f; b = 255.0f; // Magenta for missing texture
+            return;
+        }
+
+        u = wrapUV(u);
+        v = wrapUV(v);
+
         // Map to texel space and center on texel centers (-0.5)
         float xf = u * w - 0.5f;
         float yf = v * h - 0.5f;
