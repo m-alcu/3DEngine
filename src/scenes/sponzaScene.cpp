@@ -34,7 +34,7 @@ void SponzaScene::setup() {
     icosahedron->setup();
     icosahedron->enableCircularOrbit(
         /*center*/ {0, 200, -500},
-        /*radius*/ 400.0f,
+        /*radius*/ 40.0f,
         /*planeNormal*/ {0, 1, 1},
         /*omega*/ (3.14159265f / 3),
         /*initialPhase*/ 0.0f);

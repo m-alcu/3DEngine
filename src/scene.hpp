@@ -147,7 +147,7 @@ public:
     bool back = keys.count(SDLK_Z) && keys.at(SDLK_Z);
 
     // Calculate input deltas
-    float yawInput = camera.sensitivity * (right - left);
+    float yawInput = camera.sensitivity * (left - right);
     float pitchInput = camera.sensitivity * (up - down);
     float rollInput = camera.sensitivity * (rleft - rright);
     float moveInput = (fwd - back) * camera.speed;
