@@ -5,6 +5,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 
 add_subdirectory(submodules/SDL)
 
+add_subdirectory(submodules/rapidobj)
+
 set(SRC_DIRS src src/vendor/imgui src/vendor/lodepng src/objects src/effects src/backgrounds src/scenes)
 
 set(SRC_FILES "")
@@ -35,7 +37,7 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     $<TARGET_FILE_DIR:${PROJECT_NAME}>/resources
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3)
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3 rapidobj::rapidobj)
 
 target_compile_options(${PROJECT_NAME} PRIVATE
     $<$<CONFIG:Release>:-O3>

@@ -1,146 +1,12 @@
 #include <iostream>
 #include <cmath>
-#include <fstream>
-#include <sstream>
-#include <vector>
-#include <string>
+#include <filesystem>
 #include <map>
 #include <tuple>
-#include <functional>
-#include <cstdint>
-#include <filesystem>
 #include "objLoader.hpp"
 #include "../material.hpp"
 
-// Structure to hold indices for a face vertex (v/vt/vn)
-struct FaceVertex {
-    int vertexIndex = -1;
-    int texCoordIndex = -1;
-    int normalIndex = -1;
-};
-
-// Parse a single face vertex token like "1/2/3" or "1//3" or "1/2" or "1"
-static FaceVertex parseFaceVertex(const std::string& token) {
-    FaceVertex fv;
-    std::vector<std::string> parts;
-    std::stringstream ss(token);
-    std::string part;
-
-    while (std::getline(ss, part, '/')) {
-        parts.push_back(part);
-    }
-
-    if (parts.size() >= 1 && !parts[0].empty()) {
-        fv.vertexIndex = std::stoi(parts[0]) - 1; // OBJ indices are 1-based
-    }
-    if (parts.size() >= 2 && !parts[1].empty()) {
-        fv.texCoordIndex = std::stoi(parts[1]) - 1;
-    }
-    if (parts.size() >= 3 && !parts[2].empty()) {
-        fv.normalIndex = std::stoi(parts[2]) - 1;
-    }
-
-    return fv;
-}
-
-// Parse MTL file and return a map of material name to Material
-static std::map<std::string, Material> parseMtlFile(const std::string& mtlPath,
-                                                     std::function<Texture(const char*)> decodePng) {
-    std::map<std::string, Material> materials;
-
-    std::ifstream file(mtlPath);
-    if (!file.is_open()) {
-        std::cerr << "Failed to open MTL file: " << mtlPath << "\n";
-        return materials;
-    }
-
-    std::filesystem::path basePath = std::filesystem::path(mtlPath).parent_path();
-
-    std::string line;
-    std::string currentMaterialName;
-    Material currentMaterial;
-    bool hasMaterial = false;
-
-    while (std::getline(file, line)) {
-        // Remove leading/trailing whitespace
-        line.erase(0, line.find_first_not_of(" \t\r\n"));
-        line.erase(line.find_last_not_of(" \t\r\n") + 1);
-
-        if (line.empty() || line[0] == '#') continue;
-
-        std::istringstream iss(line);
-        std::string keyword;
-        iss >> keyword;
-
-        if (keyword == "newmtl") {
-            // Save previous material if exists
-            if (hasMaterial) {
-                materials[currentMaterialName] = currentMaterial;
-            }
-            iss >> currentMaterialName;
-            currentMaterial = Material{};
-            hasMaterial = true;
-        }
-        else if (keyword == "Ns") {
-            iss >> currentMaterial.Ns;
-        }
-        else if (keyword == "Ka") {
-            iss >> currentMaterial.Ka.x >> currentMaterial.Ka.y >> currentMaterial.Ka.z;
-        }
-        else if (keyword == "Kd") {
-            iss >> currentMaterial.Kd.x >> currentMaterial.Kd.y >> currentMaterial.Kd.z;
-        }
-        else if (keyword == "Ks") {
-            iss >> currentMaterial.Ks.x >> currentMaterial.Ks.y >> currentMaterial.Ks.z;
-        }
-        else if (keyword == "Ke") {
-            iss >> currentMaterial.Ke.x >> currentMaterial.Ke.y >> currentMaterial.Ke.z;
-        }
-        else if (keyword == "Ni") {
-            iss >> currentMaterial.Ni;
-        }
-        else if (keyword == "d") {
-            iss >> currentMaterial.d;
-        }
-        else if (keyword == "illum") {
-            iss >> currentMaterial.illum;
-        }
-        else if (keyword == "map_Kd") {
-            std::string texturePath;
-            iss >> texturePath;
-            std::filesystem::path fullPath = basePath / texturePath;
-            if (std::filesystem::exists(fullPath)) {
-                currentMaterial.map_Kd = decodePng(fullPath.string().c_str());
-            } else {
-                std::cerr << "Texture not found: " << fullPath << "\n";
-            }
-        }
-        else if (keyword == "map_Ks") {
-            std::string texturePath;
-            iss >> texturePath;
-            std::filesystem::path fullPath = basePath / texturePath;
-            if (std::filesystem::exists(fullPath)) {
-                currentMaterial.map_Ks = decodePng(fullPath.string().c_str());
-            }
-        }
-        else if (keyword == "map_Ns") {
-            std::string texturePath;
-            iss >> texturePath;
-            std::filesystem::path fullPath = basePath / texturePath;
-            if (std::filesystem::exists(fullPath)) {
-                currentMaterial.map_Ns = decodePng(fullPath.string().c_str());
-            }
-        }
-    }
-
-    // Save last material
-    if (hasMaterial) {
-        materials[currentMaterialName] = currentMaterial;
-    }
-
-    file.close();
-    return materials;
-}
+#include <rapidobj/rapidobj.hpp>
 
 void ObjLoader::setup(const std::string& filename) {
     std::filesystem::path filePath(filename);
@@ -157,31 +23,33 @@ void ObjLoader::setup(const std::string& filename) {
 }
 
 void ObjLoader::loadVertices(const std::string& filename) {
-    std::ifstream file(filename);
-
-    if (!file.is_open()) {
-        std::cerr << "Failed to open file: " << filename << "\n";
-        return;
-    }
-
     std::filesystem::path filePath(filename);
     std::filesystem::path basePath = filePath.parent_path();
 
-    std::string line;
+    // Parse OBJ file with rapidobj
+    rapidobj::Result result = rapidobj::ParseFile(filename);
 
-    // Temporary storage for raw OBJ data
-    std::vector<slib::vec3> rawVertices;
-    std::vector<slib::vec2> rawTexCoords;
-    std::vector<slib::vec3> rawNormals;
-    std::vector<FaceData> faces;
+    if (result.error) {
+        std::cerr << "Failed to parse OBJ file: " << result.error.code.message() << "\n";
+        return;
+    }
 
-    // Map to track unique vertex combinations (v/vt/vn) -> final index
-    std::map<std::tuple<int, int, int>, int> vertexMap;
-    std::vector<VertexData> finalVertices;
+    // Triangulate the mesh (rapidobj can have n-gons)
+    rapidobj::Triangulate(result);
 
-    std::string currentMaterialName = "default";
+    if (result.error) {
+        std::cerr << "Failed to triangulate: " << result.error.code.message() << "\n";
+        return;
+    }
 
-    // Create default material with default texture
+    const auto& attrib = result.attributes;
+    const auto& shapes = result.shapes;
+    const auto& mats = result.materials;
+
+    // Track if normals were loaded from the file
+    hasLoadedNormals = !attrib.normals.empty();
+
+    // Create default material
     MaterialProperties properties = getMaterialProperties(MaterialType::Metal);
     std::string defaultTexturePath = "checker-map_tho.png";
 
@@ -194,111 +62,111 @@ void ObjLoader::loadVertices(const std::string& filename) {
     defaultMaterial.Ns = properties.shininess;
     materials.insert({"default", defaultMaterial});
 
-    while (std::getline(file, line)) {
-        // Remove leading/trailing whitespace
-        line.erase(0, line.find_first_not_of(" \t\r\n"));
-        line.erase(line.find_last_not_of(" \t\r\n") + 1);
+    // Load materials from rapidobj
+    for (size_t i = 0; i < mats.size(); ++i) {
+        const auto& mat = mats[i];
+        Material material{};
 
-        if (line.empty() || line[0] == '#') continue;
+        material.Ns = mat.shininess;
+        material.Ka = { mat.ambient[0], mat.ambient[1], mat.ambient[2] };
+        material.Kd = { mat.diffuse[0], mat.diffuse[1], mat.diffuse[2] };
+        material.Ks = { mat.specular[0], mat.specular[1], mat.specular[2] };
+        material.Ke = { mat.emission[0], mat.emission[1], mat.emission[2] };
+        material.Ni = mat.ior;
+        material.d = mat.dissolve;
+        material.illum = mat.illum;
 
-        std::istringstream iss(line);
-        std::string keyword;
-        iss >> keyword;
-
-        if (keyword == "mtllib") {
-            // Load material library
-            std::string mtlFilename;
-            iss >> mtlFilename;
-            std::filesystem::path mtlPath = basePath / mtlFilename;
-
-            if (std::filesystem::exists(mtlPath)) {
-                auto loadedMaterials = parseMtlFile(mtlPath.string(),
-                    [this](const char* path) { return this->DecodePng(path); });
-                for (auto& [name, mat] : loadedMaterials) {
-                    materials[name] = mat;
-                }
-                std::cout << "Loaded " << loadedMaterials.size() << " materials from " << mtlFilename << "\n";
+        // Load diffuse texture (map_Kd)
+        if (!mat.diffuse_texname.empty()) {
+            std::filesystem::path texPath = basePath / mat.diffuse_texname;
+            if (std::filesystem::exists(texPath)) {
+                material.map_Kd = DecodePng(texPath.string().c_str());
             } else {
-                std::cerr << "MTL file not found: " << mtlPath << "\n";
+                std::cerr << "Texture not found: " << texPath << "\n";
             }
         }
-        else if (keyword == "usemtl") {
-            iss >> currentMaterialName;
-            // If material doesn't exist, use default
-            if (materials.find(currentMaterialName) == materials.end()) {
-                std::cerr << "Material not found: " << currentMaterialName << ", using default\n";
-                currentMaterialName = "default";
+
+        // Load specular texture (map_Ks)
+        if (!mat.specular_texname.empty()) {
+            std::filesystem::path texPath = basePath / mat.specular_texname;
+            if (std::filesystem::exists(texPath)) {
+                material.map_Ks = DecodePng(texPath.string().c_str());
             }
         }
-        else if (keyword == "v") {
-            // Vertex position
-            slib::vec3 v;
-            iss >> v.x >> v.y >> v.z;
-            rawVertices.push_back(v);
-        }
-        else if (keyword == "vt") {
-            // Texture coordinate
-            slib::vec2 vt;
-            iss >> vt.x >> vt.y;
-            // OBJ uses bottom-left origin, flip Y if needed
-            rawTexCoords.push_back(vt);
-        }
-        else if (keyword == "vn") {
-            // Vertex normal
-            slib::vec3 vn;
-            iss >> vn.x >> vn.y >> vn.z;
-            rawNormals.push_back(vn);
-        }
-        else if (keyword == "f") {
-            // Face - parse all vertex tokens
-            std::vector<FaceVertex> faceVertices;
-            std::string token;
 
-            while (iss >> token) {
-                faceVertices.push_back(parseFaceVertex(token));
+        // Load specular highlight texture (map_Ns)
+        if (!mat.specular_highlight_texname.empty()) {
+            std::filesystem::path texPath = basePath / mat.specular_highlight_texname;
+            if (std::filesystem::exists(texPath)) {
+                material.map_Ns = DecodePng(texPath.string().c_str());
             }
+        }
 
-            if (faceVertices.size() < 3) continue;
+        materials[mat.name] = material;
+    }
 
-            // Build face with final vertex indices
+    // Map to track unique vertex combinations (position_index, texcoord_index, normal_index) -> final index
+    std::map<std::tuple<int, int, int>, int> vertexMap;
+    std::vector<VertexData> finalVertices;
+    std::vector<FaceData> faces;
+
+    // Process all shapes
+    for (const auto& shape : shapes) {
+        const auto& mesh = shape.mesh;
+
+        // Process faces (triangulated, so every 3 indices form a face)
+        size_t indexOffset = 0;
+        for (size_t f = 0; f < mesh.num_face_vertices.size(); ++f) {
+            int faceVertCount = mesh.num_face_vertices[f];
+
             FaceData faceData;
-            faceData.face.materialKey = currentMaterialName;
 
-            for (const auto& fv : faceVertices) {
-                // Handle negative indices (relative to end of list)
-                int vIdx = fv.vertexIndex;
-                int vtIdx = fv.texCoordIndex;
-                int vnIdx = fv.normalIndex;
+            // Get material for this face
+            int matId = mesh.material_ids[f];
+            if (matId >= 0 && matId < static_cast<int>(mats.size())) {
+                faceData.face.materialKey = mats[matId].name;
+            } else {
+                faceData.face.materialKey = "default";
+            }
 
-                if (vIdx < 0) vIdx = static_cast<int>(rawVertices.size()) + vIdx + 1;
-                if (vtIdx < 0 && fv.texCoordIndex != -1) vtIdx = static_cast<int>(rawTexCoords.size()) + vtIdx + 1;
-                if (vnIdx < 0 && fv.normalIndex != -1) vnIdx = static_cast<int>(rawNormals.size()) + vnIdx + 1;
+            // Process each vertex in the face
+            for (int v = 0; v < faceVertCount; ++v) {
+                const auto& idx = mesh.indices[indexOffset + v];
 
-                auto key = std::make_tuple(vIdx, vtIdx, vnIdx);
+                int posIdx = idx.position_index;
+                int texIdx = idx.texcoord_index;
+                int normIdx = idx.normal_index;
+
+                auto key = std::make_tuple(posIdx, texIdx, normIdx);
 
                 int finalIndex;
                 auto it = vertexMap.find(key);
                 if (it != vertexMap.end()) {
                     finalIndex = it->second;
                 } else {
-                    // Create new vertex
                     VertexData vd;
 
-                    if (vIdx >= 0 && vIdx < static_cast<int>(rawVertices.size())) {
-                        vd.vertex = rawVertices[vIdx];
+                    // Position
+                    if (posIdx >= 0) {
+                        vd.vertex.x = attrib.positions[3 * posIdx + 0];
+                        vd.vertex.y = attrib.positions[3 * posIdx + 1];
+                        vd.vertex.z = attrib.positions[3 * posIdx + 2];
                     }
 
-                    if (vtIdx >= 0 && vtIdx < static_cast<int>(rawTexCoords.size())) {
-                        vd.texCoord = rawTexCoords[vtIdx];
+                    // Texture coordinates
+                    if (texIdx >= 0) {
+                        vd.texCoord.x = attrib.texcoords[2 * texIdx + 0];
+                        vd.texCoord.y = attrib.texcoords[2 * texIdx + 1];
                     } else {
-                        // Generate planar UV if no texture coords
                         vd.texCoord = { 0.0f, 0.0f };
                     }
 
-                    if (vnIdx >= 0 && vnIdx < static_cast<int>(rawNormals.size())) {
-                        vd.normal = rawNormals[vnIdx];
+                    // Normal
+                    if (normIdx >= 0) {
+                        vd.normal.x = attrib.normals[3 * normIdx + 0];
+                        vd.normal.y = attrib.normals[3 * normIdx + 1];
+                        vd.normal.z = attrib.normals[3 * normIdx + 2];
                     } else {
-                        // Normal will be calculated later
                         vd.normal = { 0.0f, 0.0f, 0.0f };
                     }
 
@@ -311,13 +179,12 @@ void ObjLoader::loadVertices(const std::string& filename) {
             }
 
             faces.push_back(faceData);
+            indexOffset += faceVertCount;
         }
     }
 
-    file.close();
-
     // If no texture coordinates were provided, generate planar mapping
-    if (rawTexCoords.empty() && !finalVertices.empty()) {
+    if (attrib.texcoords.empty() && !finalVertices.empty()) {
         float x_min = finalVertices[0].vertex.x;
         float y_min = finalVertices[0].vertex.y;
         float x_max = finalVertices[0].vertex.x;
@@ -341,13 +208,10 @@ void ObjLoader::loadVertices(const std::string& filename) {
         }
     }
 
-    // Track if normals were loaded from the file
-    hasLoadedNormals = !rawNormals.empty();
-
     std::cout << "Loaded OBJ: " << filename << "\n";
-    std::cout << "  Raw vertices: " << rawVertices.size() << "\n";
-    std::cout << "  Texture coords: " << rawTexCoords.size() << "\n";
-    std::cout << "  Normals: " << rawNormals.size() << (hasLoadedNormals ? " (using file normals)" : " (will calculate)") << "\n";
+    std::cout << "  Positions: " << attrib.positions.size() / 3 << "\n";
+    std::cout << "  Texture coords: " << attrib.texcoords.size() / 2 << "\n";
+    std::cout << "  Normals: " << attrib.normals.size() / 3 << (hasLoadedNormals ? " (using file normals)" : " (will calculate)") << "\n";
     std::cout << "  Final vertices: " << finalVertices.size() << "\n";
     std::cout << "  Faces: " << faces.size() << "\n";
     std::cout << "  Materials: " << materials.size() << "\n";
@@ -360,7 +224,6 @@ void ObjLoader::loadVertices(const std::string& filename) {
 
 void ObjLoader::loadFaces() {
     // Faces are already loaded in loadVertices
-    // This is called by base class setup, just recalculate normals
 }
 
 void ObjLoader::loadVertices() {
