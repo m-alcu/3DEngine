@@ -132,10 +132,28 @@ Each light-source solid maintains its own shadow map for shadow calculations.
 
 Descent-style 6DOF movement with momentum/hysteresis. Right-click drag for orbit mode around the target solid.
 
+### OBJ Model Loading
+
+The `ObjLoader` class (`src/objects/objLoader.cpp`) loads Wavefront OBJ files using the rapidobj library.
+
+**Features**:
+- Parses OBJ geometry (vertices, normals, texture coordinates)
+- Automatically triangulates n-gon faces
+- Loads associated MTL material files
+- Supports texture maps (diffuse, specular, normal)
+- Handles UV coordinates outside [0,1] range (texture tiling)
+
+**Usage**:
+```cpp
+auto model = std::make_unique<ObjLoader>();
+model->setup("resources/model.obj");
+```
+
 ## Dependencies
 
 - SDL3 (as git submodule in `submodules/SDL/`)
+- rapidobj (as git submodule in `submodules/rapidobj/`) - Fast OBJ file parser
 - Dear ImGui (vendored in `src/vendor/imgui/`)
-- LodePNG (vendored in `src/vendor/lodepng/`)
+- stb_image (vendored in `src/vendor/stb/`) - Image loading (PNG, JPG, BMP, TGA, etc.)
 - Google Test (fetched via CMake FetchContent for testing)
 - C++23 standard required
