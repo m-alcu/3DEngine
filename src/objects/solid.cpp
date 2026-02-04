@@ -3,7 +3,7 @@
 #include "solid.hpp"
 #include "../slib.hpp"
 #include "../smath.hpp"
-#include "../vendor/lodepng/lodepng.h"
+#include "../vendor/stb/stb_image.h"
 
 Solid::Solid()
     : modelMatrix(smath::identity()),
@@ -156,25 +156,20 @@ int Solid::getColorFromMaterial(const float color) {
 
 Texture Solid::DecodePng(const char* filename)
 {
-    std::vector<unsigned char> buffer;
-    std::vector<unsigned char> image; // the raw pixels
-    lodepng::load_file(buffer, filename);
-    unsigned width, height;
+    int width, height, channels;
+    // Load image with 4 channels (RGBA) regardless of source format
+    unsigned char* data = stbi_load(filename, &width, &height, &channels, 4);
 
-    lodepng::State state;
-
-    // decode
-    unsigned error = lodepng::decode(image, width, height, state, buffer);
-    // if there's an error, display it
-    if (error)
-    {
-        std::cout << "decoder error " << error << ": " << lodepng_error_text(error) << std::endl;
-        exit(1);
+    if (!data) {
+        std::cout << "Failed to load image: " << filename << " - " << stbi_failure_reason() << std::endl;
+        return {0, 0, {}};
     }
 
-    // the pixels are now in the vector "image", 4 bytes per pixel, ordered RGBARGBA..., use it as texture, draw
-    // it, ...
-    return {static_cast<int>(width), static_cast<int>(height), image};
+    // Copy data into vector
+    std::vector<unsigned char> image(data, data + (width * height * 4));
+    stbi_image_free(data);
+
+    return {width, height, image};
 }
 
 void Solid::incAngles(float xAngle, float yAngle, float zAngle) {

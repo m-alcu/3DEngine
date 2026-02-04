@@ -7,7 +7,7 @@ add_subdirectory(submodules/SDL)
 
 add_subdirectory(submodules/rapidobj)
 
-set(SRC_DIRS src src/vendor/imgui src/vendor/lodepng src/objects src/effects src/backgrounds src/scenes)
+set(SRC_DIRS src src/vendor/imgui src/vendor/stb src/objects src/effects src/backgrounds src/scenes)
 
 set(SRC_FILES "")
 foreach(dir ${SRC_DIRS})

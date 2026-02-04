@@ -6,7 +6,7 @@
 #include "../slib.hpp"
 #include "../color.hpp"
 #include "../constants.hpp"
-#include "../vendor/lodepng/lodepng.h"
+#include "../vendor/stb/stb_image.h"
 
 class Twister : public Background {
 

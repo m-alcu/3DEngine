@@ -14,6 +14,7 @@
 #include "isometricLevelScene.hpp"
 #include "mountainsScene.hpp"
 #include "catStatueScene.hpp"
+#include "sponzaScene.hpp"
 #include "torusScene.hpp"
 #include "worldScene.hpp"
 
@@ -53,6 +54,8 @@ std::unique_ptr<Scene> SceneFactory::createScene(SceneType type, Screen scr) {
     return std::make_unique<ShadowTestScene>(scr);
   case SceneType::SHADOWTEST_POINT:
     return std::make_unique<ShadowPointTestScene>(scr);
+  case SceneType::SPONZA:
+    return std::make_unique<SponzaScene>(scr);
   default:
     return nullptr;
   }

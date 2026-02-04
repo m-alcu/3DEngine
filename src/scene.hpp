@@ -40,14 +40,15 @@ enum class SceneType {
   AMIGA,
   WORLD,
   SHADOWTEST,
-  SHADOWTEST_POINT
+  SHADOWTEST_POINT,
+  SPONZA
 };
 
 static const char *sceneNames[] = {
     "Torus",      "Tetrakis",    "Icosahedron",       "Cube",  "Knot",
     "Knot Point", "Bunny",       "Suzanne",           "Viking Room",
     "Isometric Level", "Mountains", "Cat Statue", "Star",          "Amiga", "World",
-    "Shadow Test", "Shadow Point Test"};
+    "Shadow Test", "Shadow Point Test", "Sponza"};
 
 typedef struct Screen {
   int32_t width;
