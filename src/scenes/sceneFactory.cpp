@@ -1,6 +1,5 @@
 #include "sceneFactory.hpp"
 #include "sceneLoader.hpp"
-#include "amigaScene.hpp"
 #include "bunnyScene.hpp"
 #include "cubeScene.hpp"
 #include "icosahedronScene.hpp"
@@ -30,8 +29,6 @@ bool SceneFactory::scanned_ = false;
 
 std::unique_ptr<Scene> SceneFactory::createScene(SceneType type, Screen scr) {
   switch (type) {
-  case SceneType::AMIGA:
-    return std::make_unique<AmigaScene>(scr);
   case SceneType::CUBE:
     return std::make_unique<CubeScene>(scr);
   case SceneType::ICOSAHEDRON:

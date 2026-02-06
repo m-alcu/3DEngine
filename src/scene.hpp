@@ -37,7 +37,6 @@ enum class SceneType {
   MOUNTAINS,
   CAT_STATUE,
   STAR,
-  AMIGA,
   WORLD,
   SHADOWTEST,
   SHADOWTEST_POINT,
@@ -49,7 +48,7 @@ enum class SceneType {
 static const char *sceneNames[] = {
     "Torus",      "Tetrakis",    "Icosahedron",       "Cube",  "Knot",
     "Knot Point", "Bunny",       "Suzanne",           "Viking Room",
-    "Isometric Level", "Mountains", "Cat Statue", "Star",          "Amiga", "World",
+    "Isometric Level", "Mountains", "Cat Statue", "Star", "World",
     "Shadow Test", "Shadow Point Test", "Sponza"};
 
 typedef struct Screen {
