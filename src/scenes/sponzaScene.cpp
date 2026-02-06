@@ -17,6 +17,10 @@ void SponzaScene::setup() {
     sponza->position.zAngle = 0.0f;
     sponza->shading = Shading::TexturedPhong;
     sceneType = SceneType::SPONZA;
+    shadowsEnabled = false;
+
+    camera.pos = {0.0f, 50.0f, -500.0f};
+    camera.forward = {1.0f, 0.0f, 0.0f};
 
     // Add orbiting icosahedron as point light source
     auto icosahedron = std::make_unique<Icosahedron>();
@@ -24,7 +28,7 @@ void SponzaScene::setup() {
     icosahedron->position.z = -500;
     icosahedron->position.x = 0;
     icosahedron->position.y = 0;
-    icosahedron->position.zoom = 0.2f;
+    icosahedron->position.zoom = 0.02f;
     icosahedron->shading = Shading::Flat;
     icosahedron->lightSourceEnabled = true;
     icosahedron->light.type = LightType::Point;
