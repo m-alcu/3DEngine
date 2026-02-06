@@ -112,7 +112,7 @@ int main(int, char **) {
   // nullptr, io.Fonts->GetGlyphRangesJapanese()); IM_ASSERT(font != nullptr);
 
   auto scene =
-      SceneFactory::createScene(SceneType::SHADOWTEST, {SCREEN_WIDTH, SCREEN_HEIGHT});
+      SceneFactory::createSceneByIndex(0, {SCREEN_WIDTH, SCREEN_HEIGHT});
   scene->setup();
 
   // Main loop

@@ -1,0 +1,36 @@
+scene:
+  name: "World"
+
+  shadows_enabled: true
+  pcf_radius: 1
+  depth_sort_enabled: true
+  background: desert
+
+  solids:
+    - type: world
+      name: "World"
+      latitude: 16
+      longitude: 32
+      position: [0.0, 0.0, -150.0]
+      angles: [0.0, 0.0, 0.0]
+      zoom: 70.0
+      shading: textured_gouraud
+      rotation_enabled: true
+      rotation_speed: [0.25, 0.5]
+
+    - type: icosahedron
+      name: "Light Icosahedron"
+      position: [0.0, 0.0, -150.0]
+      zoom: 0.2
+      shading: flat
+      rotation_enabled: false
+      light:
+        type: point
+        color: [1.0, 1.0, 1.0]
+        intensity: 4.5
+      orbit:
+        center: [0.0, 0.0, -150.0]
+        radius: 150.0
+        plane_normal: [0.0, 1.0, 1.0]
+        omega: 1.0471975
+        initial_phase: 0.0

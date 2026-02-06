@@ -1,0 +1,71 @@
+scene:
+  name: "Cube"
+
+  shadows_enabled: false
+  pcf_radius: 1
+  depth_sort_enabled: true
+  background: desert
+
+  solids:
+    - type: cube
+      name: "Cube"
+      position: [0.0, 0.0, -500.0]
+      angles: [0.0, 0.0, 0.0]
+      zoom: 20.0
+      shading: textured_flat
+      rotation_enabled: true
+      rotation_speed: [0.2, 0.3]
+
+    - type: icosahedron
+      name: "Light Icosahedron green"
+      position: [0.0, 0.0, -500.0]
+      zoom: 0.2
+      shading: flat
+      rotation_enabled: false
+      emissive_color: [0.5, 1.0, 0.5]
+      light:
+        type: point
+        color: [0.5, 1.0, 0.5]
+        intensity: 3.0
+      orbit:
+        center: [0.0, 0.0, -500.0]
+        radius: 500.0
+        plane_normal: [0.0, 1.0, 1.0]
+        omega: 1.0471975
+        initial_phase: 0.0
+
+    - type: icosahedron
+      name: "Light Icosahedron blue"
+      position: [0.0, 0.0, -500.0]
+      zoom: 0.2
+      shading: flat
+      rotation_enabled: false
+      emissive_color: [0.5, 0.5, 1.0]
+      light:
+        type: point
+        color: [0.5, 0.5, 1.0]
+        intensity: 3.0
+      orbit:
+        center: [0.0, 0.0, -500.0]
+        radius: 500.0
+        plane_normal: [1.0, 1.0, 0.0]
+        omega: -0.6283185
+        initial_phase: 0.0
+
+    - type: icosahedron
+      name: "Light Icosahedron red"
+      position: [0.0, 0.0, -500.0]
+      zoom: 0.2
+      shading: flat
+      rotation_enabled: false
+      emissive_color: [1.0, 0.5, 0.5]
+      light:
+        type: point
+        color: [1.0, 0.5, 0.5]
+        intensity: 3.0
+      orbit:
+        center: [0.0, 0.0, -500.0]
+        radius: 500.0
+        plane_normal: [1.0, 0.0, 1.0]
+        omega: 1.5707963
+        initial_phase: 0.0

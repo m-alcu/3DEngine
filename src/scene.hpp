@@ -24,32 +24,9 @@
 #include "stats.hpp"
 
 enum class SceneType {
-  TORUS,
-  TETRAKIS,
-  ICOSAHEDRON,
-  CUBE,
-  KNOT,
-  KNOT_POINT,
-  BUNNY,
-  SUZANNE,
-  VIKING_ROOM,
-  ISOMETRIC_LEVEL,
-  MOUNTAINS,
-  CAT_STATUE,
-  STAR,
-  WORLD,
-  SHADOWTEST,
-  SHADOWTEST_POINT,
-  SPONZA,
   YAML,
-  BUILTIN_COUNT = YAML // sentinel: number of built-in (non-YAML) scene types
+  BUILTIN_COUNT = YAML
 };
-
-static const char *sceneNames[] = {
-    "Torus",      "Tetrakis",    "Icosahedron",       "Cube",  "Knot",
-    "Knot Point", "Bunny",       "Suzanne",           "Viking Room",
-    "Isometric Level", "Mountains", "Cat Statue", "Star", "World",
-    "Shadow Test", "Shadow Point Test", "Sponza"};
 
 typedef struct Screen {
   int32_t width;
@@ -204,7 +181,7 @@ public:
   void clearAllSolids() { solids.clear(); }
 
   Screen screen;
-  SceneType sceneType = SceneType::TETRAKIS; // Default scene type
+  SceneType sceneType = SceneType::YAML;
 
   slib::vec3 forwardNeg; // Negative forward vector for lighting calculations
   slib::mat4 spaceMatrix;

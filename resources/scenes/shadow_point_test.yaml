@@ -1,0 +1,50 @@
+scene:
+  name: "Shadow Point Test"
+
+  shadows_enabled: true
+  pcf_radius: 1
+  depth_sort_enabled: true
+  background: desert
+
+  camera:
+    position: [50.0, 100.0, 100.0]
+    pitch: 0.0
+    yaw: 0.0
+    roll: 0.0
+
+  solids:
+    - type: plane
+      name: "Floor Plane"
+      size: 150.0
+      position: [0.0, 0.0, -500.0]
+      angles: [15.0, 0.0, 0.0]
+      zoom: 1.0
+      shading: flat
+      rotation_enabled: false
+
+    - type: plane
+      name: "Front Plane"
+      size: 50.0
+      position: [0.0, 0.0, -300.0]
+      angles: [0.0, 0.0, 0.0]
+      zoom: 1.0
+      shading: flat
+      rotation_enabled: true
+
+    - type: icosahedron
+      name: "Light Icosahedron"
+      position: [0.0, 0.0, -400.0]
+      zoom: 0.2
+      shading: flat
+      rotation_enabled: false
+      emissive_color: [1.0, 0.0, 0.0]
+      light:
+        type: point
+        color: [1.0, 0.0, 0.0]
+        intensity: 4.0
+      orbit:
+        center: [0.0, 0.0, -400.0]
+        radius: 266.0
+        plane_normal: [1.0, 0.0, 0.0]
+        omega: 1.0471975
+        initial_phase: 0.0

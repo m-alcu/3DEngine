@@ -1,0 +1,32 @@
+scene:
+  name: "Mountains"
+
+  shadows_enabled: true
+  pcf_radius: 1
+  depth_sort_enabled: true
+  background: desert
+
+  solids:
+    - type: obj_loader
+      file: "resources/mountains.obj"
+      name: "Mountains"
+      position: [0.0, 0.0, -500.0]
+      angles: [0.0, 0.0, 0.0]
+      shading: gouraud
+
+    - type: icosahedron
+      name: "Light Icosahedron"
+      position: [0.0, 0.0, -500.0]
+      zoom: 0.2
+      shading: flat
+      rotation_enabled: false
+      light:
+        type: point
+        color: [1.0, 1.0, 1.0]
+        intensity: 90.0
+      orbit:
+        center: [0.0, 200.0, -500.0]
+        radius: 500.0
+        plane_normal: [1.0, 1.0, 1.0]
+        omega: 0.1047198
+        initial_phase: 0.0
