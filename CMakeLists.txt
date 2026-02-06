@@ -7,6 +7,18 @@ add_subdirectory(submodules/SDL)
 
 add_subdirectory(submodules/rapidobj)
 
+# YAML parsing library
+include(FetchContent)
+FetchContent_Declare(
+    yaml-cpp
+    GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
+    GIT_TAG 0.8.0
+)
+set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
+set(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(yaml-cpp)
+
 set(SRC_DIRS src src/vendor/imgui src/vendor/stb src/objects src/effects src/backgrounds src/scenes)
 
 set(SRC_FILES "")
@@ -37,7 +49,7 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     $<TARGET_FILE_DIR:${PROJECT_NAME}>/resources
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3 rapidobj::rapidobj)
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3 rapidobj::rapidobj yaml-cpp::yaml-cpp)
 
 target_compile_options(${PROJECT_NAME} PRIVATE
     $<$<CONFIG:Release>:-O3>
@@ -53,7 +65,6 @@ option(BUILD_TESTS "Build unit tests" ON)
 if(BUILD_TESTS)
     enable_testing()
 
-    include(FetchContent)
     FetchContent_Declare(
         googletest
         GIT_REPOSITORY https://github.com/google/googletest.git

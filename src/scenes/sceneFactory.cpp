@@ -1,4 +1,5 @@
 #include "sceneFactory.hpp"
+#include "sceneLoader.hpp"
 #include "amigaScene.hpp"
 #include "bunnyScene.hpp"
 #include "cubeScene.hpp"
@@ -56,7 +57,14 @@ std::unique_ptr<Scene> SceneFactory::createScene(SceneType type, Screen scr) {
     return std::make_unique<ShadowPointTestScene>(scr);
   case SceneType::SPONZA:
     return std::make_unique<SponzaScene>(scr);
+  case SceneType::YAML:
+    return SceneLoader::loadFromFile("resources/scenes/suzanne.yaml", scr);
   default:
     return nullptr;
   }
+}
+
+std::unique_ptr<Scene> SceneFactory::createSceneFromYaml(
+    const std::string& yamlPath, Screen scr) {
+  return SceneLoader::loadFromFile(yamlPath, scr);
 }
