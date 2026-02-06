@@ -19,6 +19,15 @@
 #include "torusScene.hpp"
 #include "worldScene.hpp"
 
+#include <algorithm>
+#include <filesystem>
+
+// Static member definitions
+std::vector<std::string> SceneFactory::yamlPaths_;
+std::vector<std::string> SceneFactory::yamlNames_;
+std::vector<std::string> SceneFactory::combinedNames_;
+bool SceneFactory::scanned_ = false;
+
 std::unique_ptr<Scene> SceneFactory::createScene(SceneType type, Screen scr) {
   switch (type) {
   case SceneType::AMIGA:
@@ -57,8 +66,6 @@ std::unique_ptr<Scene> SceneFactory::createScene(SceneType type, Screen scr) {
     return std::make_unique<ShadowPointTestScene>(scr);
   case SceneType::SPONZA:
     return std::make_unique<SponzaScene>(scr);
-  case SceneType::YAML:
-    return SceneLoader::loadFromFile("resources/scenes/suzanne.yaml", scr);
   default:
     return nullptr;
   }
@@ -67,4 +74,73 @@ std::unique_ptr<Scene> SceneFactory::createScene(SceneType type, Screen scr) {
 std::unique_ptr<Scene> SceneFactory::createSceneFromYaml(
     const std::string& yamlPath, Screen scr) {
   return SceneLoader::loadFromFile(yamlPath, scr);
+}
+
+void SceneFactory::scanYamlScenes(const std::string& directory) {
+  yamlPaths_.clear();
+  yamlNames_.clear();
+
+  namespace fs = std::filesystem;
+  if (!fs::exists(directory) || !fs::is_directory(directory))
+    return;
+
+  std::vector<fs::directory_entry> entries;
+  for (const auto& entry : fs::directory_iterator(directory)) {
+    if (entry.is_regular_file()) {
+      auto ext = entry.path().extension().string();
+      if (ext == ".yaml" || ext == ".yml")
+        entries.push_back(entry);
+    }
+  }
+
+  std::sort(entries.begin(), entries.end(),
+            [](const fs::directory_entry& a, const fs::directory_entry& b) {
+              return a.path().filename() < b.path().filename();
+            });
+
+  for (const auto& entry : entries) {
+    yamlPaths_.push_back(entry.path().string());
+    yamlNames_.push_back(entry.path().stem().string());
+  }
+
+  scanned_ = true;
+  buildCombinedNames();
+}
+
+void SceneFactory::buildCombinedNames() {
+  constexpr int builtinCount = static_cast<int>(SceneType::BUILTIN_COUNT);
+  combinedNames_.clear();
+  combinedNames_.reserve(builtinCount + yamlNames_.size());
+
+  for (int i = 0; i < builtinCount; ++i)
+    combinedNames_.push_back(sceneNames[i]);
+
+  for (const auto& name : yamlNames_)
+    combinedNames_.push_back(name);
+}
+
+const std::vector<std::string>& SceneFactory::allSceneNames() {
+  if (!scanned_)
+    scanYamlScenes("resources/scenes");
+  return combinedNames_;
+}
+
+int SceneFactory::sceneCount() {
+  return static_cast<int>(allSceneNames().size());
+}
+
+std::unique_ptr<Scene> SceneFactory::createSceneByIndex(int index, Screen scr) {
+  constexpr int builtinCount = static_cast<int>(SceneType::BUILTIN_COUNT);
+
+  if (index < builtinCount)
+    return createScene(static_cast<SceneType>(index), scr);
+
+  int yamlIndex = index - builtinCount;
+  if (!scanned_)
+    scanYamlScenes("resources/scenes");
+
+  if (yamlIndex >= 0 && yamlIndex < static_cast<int>(yamlPaths_.size()))
+    return createSceneFromYaml(yamlPaths_[yamlIndex], scr);
+
+  return nullptr;
 }

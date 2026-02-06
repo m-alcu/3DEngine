@@ -159,15 +159,26 @@ int main(int, char **) {
       scene->drawSolidControls();
 
       int currentBackground = static_cast<int>(scene->backgroundType);
-      int currentScene = static_cast<int>(scene->sceneType);
-      if (ImGui::Combo("Scene", &currentScene, sceneNames,
-                       IM_ARRAYSIZE(sceneNames))) {
-        scene = SceneFactory::createScene(static_cast<SceneType>(currentScene),
-                                          {SCREEN_WIDTH, SCREEN_HEIGHT});
-        scene->setup();
-        scene->backgroundType = static_cast<BackgroundType>(currentBackground);
-        scene->background = std::unique_ptr<Background>(
-            BackgroundFactory::createBackground(scene->backgroundType));
+
+      // Build combo items from dynamic scene list (built-in + YAML)
+      const auto& names = SceneFactory::allSceneNames();
+      auto itemGetter = [](void* data, int idx) -> const char* {
+        auto* v = static_cast<const std::vector<std::string>*>(data);
+        return (*v)[idx].c_str();
+      };
+      static int currentSceneIndex = static_cast<int>(scene->sceneType);
+      if (ImGui::Combo("Scene", &currentSceneIndex, itemGetter,
+                       const_cast<void*>(static_cast<const void*>(&names)),
+                       SceneFactory::sceneCount())) {
+        auto newScene = SceneFactory::createSceneByIndex(
+            currentSceneIndex, {SCREEN_WIDTH, SCREEN_HEIGHT});
+        if (newScene) {
+          scene = std::move(newScene);
+          scene->setup();
+          scene->backgroundType = static_cast<BackgroundType>(currentBackground);
+          scene->background = std::unique_ptr<Background>(
+              BackgroundFactory::createBackground(scene->backgroundType));
+        }
       }
 
       scene->drawSceneControls();

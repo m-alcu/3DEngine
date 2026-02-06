@@ -1,0 +1,32 @@
+scene:
+  name: "Knot"
+
+  shadows_enabled: true
+  pcf_radius: 1
+  depth_sort_enabled: true
+  background: desert
+
+  solids:
+    - type: asc_loader
+      file: "resources/knot.asc"
+      name: "Knot"
+      position: [0.0, 0.0, -500.0]
+      angles: [90.0, 0.0, 0.0]
+      shading: flat
+
+    - type: icosahedron
+      name: "Light Icosahedron"
+      position: [0.0, 0.0, -500.0]
+      zoom: 0.2
+      shading: flat
+      rotation_enabled: false
+      light:
+        type: point
+        color: [1.0, 1.0, 1.0]
+        intensity: 1.0
+      orbit:
+        center: [0.0, 0.0, -500.0]
+        radius: 200.0
+        plane_normal: [0.0, 1.0, 1.0]
+        omega: 1.0471975
+        initial_phase: 0.0

@@ -42,14 +42,15 @@ enum class SceneType {
   SHADOWTEST,
   SHADOWTEST_POINT,
   SPONZA,
-  YAML
+  YAML,
+  BUILTIN_COUNT = YAML // sentinel: number of built-in (non-YAML) scene types
 };
 
 static const char *sceneNames[] = {
     "Torus",      "Tetrakis",    "Icosahedron",       "Cube",  "Knot",
     "Knot Point", "Bunny",       "Suzanne",           "Viking Room",
     "Isometric Level", "Mountains", "Cat Statue", "Star",          "Amiga", "World",
-    "Shadow Test", "Shadow Point Test", "Sponza", "YAML"};
+    "Shadow Test", "Shadow Point Test", "Sponza"};
 
 typedef struct Screen {
   int32_t width;
