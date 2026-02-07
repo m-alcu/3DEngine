@@ -3,16 +3,32 @@ project(3DEngine)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 
-add_subdirectory(submodules/SDL)
+include(FetchContent)
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 
-add_subdirectory(submodules/rapidobj)
+# SDL3
+FetchContent_Declare(
+    SDL3
+    GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+    GIT_TAG release-3.4.0
+    GIT_SHALLOW FALSE
+)
+FetchContent_MakeAvailable(SDL3)
+
+# rapidobj
+FetchContent_Declare(
+    rapidobj
+    GIT_REPOSITORY https://github.com/guybrush77/rapidobj.git
+    GIT_TAG v1.1
+    GIT_SHALLOW FALSE
+)
+FetchContent_MakeAvailable(rapidobj)
 
 # YAML parsing library
-include(FetchContent)
 FetchContent_Declare(
     yaml-cpp
     GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
-    GIT_TAG 0.8.0
+    GIT_TAG yaml-cpp-0.9.0
 )
 set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)

@@ -11,7 +11,11 @@
       "Bash(\"./build-test/bin/Release/test_math.exe\" --gtest_filter=\"Vec3Test.*\")",
       "Bash(\"./build-test/bin/Release/test_math.exe\" --gtest_filter=\"Vec3Test.EqualityWithEpsilon\")",
       "Bash(\"./build-test/bin/Release/test_math.exe\" --gtest_filter=\"SmathTest.Normalize*\")",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(git submodule:*)",
+      "Bash(git -C \"c:\\\\proy\\\\render\\\\3DEngine\" submodule deinit -f submodules/SDL)",
+      "Bash(git -C \"c:\\\\proy\\\\render\\\\3DEngine\" submodule deinit -f submodules/rapidobj)",
+      "Bash(git -C:*)"
     ]
   }
 }
