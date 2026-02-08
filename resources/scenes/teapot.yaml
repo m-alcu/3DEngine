@@ -1,27 +1,23 @@
 scene:
-  name: "Sponza"
+  name: "Teapot"
 
-  shadows_enabled: false
+  shadows_enabled: true
   pcf_radius: 1
   depth_sort_enabled: true
   background: desert
 
-  camera:
-    position: [0.0, 50.0, -500.0]
-    forward: [1.0, 0.0, 0.0]
-
   solids:
     - type: obj_loader
-      file: "resources/objs/sponza/sponza.obj"
-      name: "Sponza"
-      position: [0.0, 0.0, -500.0]
-      angles: [0.0, 0.0, 0.0]
+      file: "resources/objs/teapot.obj"
+      name: "Teapot"
+      position: [100.0, -250.0, -500.0]
+      angles: [-10.0, 0.0, 0.0]
       shading: textured_phong
 
     - type: icosahedron
       name: "Light Icosahedron"
-      position: [0.0, 0.0, -500.0]
-      zoom: 0.02
+      position: [100.0, -250.0, -500.0]
+      zoom: 0.2
       shading: flat
       rotation_enabled: false
       light:
@@ -29,8 +25,8 @@ scene:
         color: [1.0, 1.0, 1.0]
         intensity: 2.0
       orbit:
-        center: [0.0, 200.0, -500.0]
-        radius: 40.0
+        center: [100.0, 350.0, -500.0]
+        radius: 500.0
         plane_normal: [0.0, 1.0, 1.0]
         omega: 1.0471975
         initial_phase: 0.0

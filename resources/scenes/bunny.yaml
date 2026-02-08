@@ -8,7 +8,7 @@ scene:
 
   solids:
     - type: obj_loader
-      file: "resources/bunny.obj"
+      file: "resources/objs/bunny.obj"
       name: "Bunny"
       position: [100.0, -250.0, -500.0]
       angles: [-10.0, 0.0, 0.0]
