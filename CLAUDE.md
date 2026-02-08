@@ -43,6 +43,30 @@ cmake -S . -B build -DBUILD_TESTS=OFF
 Test files are in `tests/`. Current test coverage:
 - `test_math.cpp` - Tests for math library (slib vectors/matrices, smath transforms)
 
+## Raspberry Pi / Linux Dependencies
+
+When building on Raspberry Pi (Raspberry Pi OS / Debian), install the following X11 and system libraries before running CMake:
+
+```bash
+# Minimal (X11 + graphics)
+sudo apt-get install -y \
+    build-essential cmake pkg-config git \
+    libx11-dev libxext-dev libxrender-dev \
+    libxrandr-dev libxcursor-dev libxfixes-dev \
+    libxi-dev libxss-dev libxtst-dev libxkbcommon-dev \
+    libgl1-mesa-dev libegl1-mesa-dev libgles2-mesa-dev \
+    libdrm-dev libgbm-dev \
+    libudev-dev libdbus-1-dev
+
+# Recommended (adds Wayland + audio + RPi GPU)
+sudo apt-get install -y \
+    libwayland-dev wayland-protocols libdecor-0-dev \
+    libasound2-dev libpulse-dev \
+    libraspberrypi-dev
+```
+
+Key packages: `libx11-dev` (X11 core), `libxrandr-dev` (display config), `libxcursor-dev` (cursor), `libxi-dev` (input), `libxkbcommon-dev` (keyboard), `libdrm-dev`/`libgbm-dev` (KMS/DRM), `libegl1-mesa-dev`/`libgles2-mesa-dev`/`libgl1-mesa-dev` (graphics APIs), `libudev-dev` (device enumeration), `libraspberrypi-dev` (VideoCore GPU).
+
 ## Architecture Overview
 
 This is a software 3D rendering engine (no GPU/OpenGL) using SDL3 for windowing and pixel buffer display, Dear ImGui for the UI, and a custom software rasterizer.

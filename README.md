@@ -65,6 +65,72 @@ Seleccionables desde el combo "Scene" en la ventana de ImGui:
 - **SDL3 no detectado**: verifica que los headers y la librería estén en las rutas de tu toolchain (`CMAKE_PREFIX_PATH`, `SDL3_DIR`, o variables de entorno como `PKG_CONFIG_PATH`).
 - **Compilador antiguo**: se requiere un compilador con soporte C++20; actualiza GCC/Clang o usa el toolchain provisto por tu SDK.
 
+## Build en Raspberry Pi (Raspberry Pi OS / Debian)
+
+SDL3 requiere varias bibliotecas de desarrollo X11 y del sistema para compilar en Raspberry Pi. Instálalas antes de ejecutar CMake.
+
+### Instalación mínima (X11 + gráficos básicos)
+
+```bash
+sudo apt-get update
+sudo apt-get install -y \
+    build-essential cmake pkg-config git \
+    libx11-dev libxext-dev libxrender-dev \
+    libxrandr-dev libxcursor-dev libxfixes-dev \
+    libxi-dev libxss-dev libxtst-dev libxkbcommon-dev \
+    libgl1-mesa-dev libegl1-mesa-dev libgles2-mesa-dev \
+    libdrm-dev libgbm-dev \
+    libudev-dev libdbus-1-dev
+```
+
+### Instalación recomendada (X11 + Wayland + Audio)
+
+```bash
+sudo apt-get update
+sudo apt-get install -y \
+    build-essential cmake pkg-config git \
+    libx11-dev libxext-dev libxrender-dev \
+    libxrandr-dev libxcursor-dev libxfixes-dev \
+    libxi-dev libxss-dev libxtst-dev libxkbcommon-dev \
+    libwayland-dev wayland-protocols libdecor-0-dev \
+    libegl1-mesa-dev libgles2-mesa-dev libgl1-mesa-dev \
+    libdrm-dev libgbm-dev \
+    libasound2-dev libpulse-dev \
+    libudev-dev libdbus-1-dev \
+    libraspberrypi-dev
+```
+
+### Detalle de paquetes X11
+
+| Paquete | Propósito |
+|---------|-----------|
+| `libx11-dev` | Biblioteca principal X11 |
+| `libxext-dev` | Extensiones X11 |
+| `libxrender-dev` | Extensión de renderizado X11 |
+| `libxrandr-dev` | Gestión de resolución y pantallas |
+| `libxcursor-dev` | Soporte avanzado de cursor |
+| `libxfixes-dev` | Correcciones misceláneas X11 |
+| `libxi-dev` | XInput 2 (multi-touch, dispositivos de entrada) |
+| `libxss-dev` | Extensión de salvapantallas |
+| `libxtst-dev` | Extensión XTest |
+| `libxkbcommon-dev` | Mapeo de teclado (X11 y Wayland) |
+| `libdrm-dev` | Direct Rendering Manager (KMS/DRM) |
+| `libgbm-dev` | Generic Buffer Management (KMS/DRM) |
+| `libegl1-mesa-dev` | Abstracción gráfica EGL |
+| `libgles2-mesa-dev` | OpenGL ES 2.0 |
+| `libgl1-mesa-dev` | OpenGL |
+| `libudev-dev` | Enumeración de dispositivos (joysticks, input) |
+| `libdbus-1-dev` | Mensajería D-Bus del sistema |
+| `libraspberrypi-dev` | Acceso GPU VideoCore de Raspberry Pi |
+
+### Compilación en Raspberry Pi
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --parallel $(nproc)
+./build/bin/3DEngine
+```
+
 ## Build para WebAssembly (Emscripten)
 1. Activa el entorno de Emscripten (`source /path/to/emsdk_env.sh`).
 2. Genera con la toolchain de Emscripten (puedes usar `emcmake` para simplificar las rutas):
