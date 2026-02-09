@@ -5,7 +5,8 @@
 
 enum class TextureFilter {
     NEIGHBOUR,
-    BILINEAR
+    BILINEAR,
+    BILINEAR_INT
 };
 
 struct RGBA8 {
@@ -48,8 +49,8 @@ public:
         u = wrapUV(u);
         v = wrapUV(v);
 
-        int x = std::clamp(static_cast<int>(u * (w - 1)), 0, w - 1);
-        int y = std::clamp(static_cast<int>(v * (h - 1)), 0, h - 1);
+        int x = static_cast<int>(u * (w - 1));
+        int y = static_cast<int>(v * (h - 1));
 
         const RGBA8& px = pixels()[y * w + x];
 
@@ -118,11 +119,82 @@ public:
         b = (b00 * fx1 + b10 * fx) * fy1 + (b01 * fx1 + b11 * fx) * fy;
     }
 
+    // Bilinear filtering using integer quadrant selection (https://github.com/tsoding/olive.c/blob/master/olive.c#L957)
+    // Determines which quadrant of the texel center the sample falls in,
+    // picks the 4 neighbors accordingly, and blends with integer weights
+    // Useful for performance-critical sampling where floating-point interpolation is too costly
+    void sampleBilinearInt(float u, float v, float& r, float& g, float& b) const {
+        if (!isValid() || w < 2 || h < 2) {
+            r = 255.0f; g = 0.0f; b = 255.0f;
+            return;
+        }
+
+        u = wrapUV(u);
+        v = wrapUV(v);
+
+        // Sub-texel precision scale
+        constexpr int S = 256;
+
+        int nx = static_cast<int>(u * w * S);
+        int ny = static_cast<int>(v * h * S);
+
+        int px = nx % S;
+        int py = ny % S;
+
+        int x1 = nx / S, x2 = nx / S;
+        int y1 = ny / S, y2 = ny / S;
+
+        if (px < S / 2) {
+            px += S / 2;
+            x1 -= 1;
+            if (x1 < 0) x1 = 0;
+        } else {
+            px -= S / 2;
+            x2 += 1;
+            if (x2 >= w) x2 = w - 1;
+        }
+
+        if (py < S / 2) {
+            py += S / 2;
+            y1 -= 1;
+            if (y1 < 0) y1 = 0;
+        } else {
+            py -= S / 2;
+            y2 += 1;
+            if (y2 >= h) y2 = h - 1;
+        }
+
+        const RGBA8* px_data = pixels();
+        const RGBA8& p00 = px_data[y1 * w + x1];
+        const RGBA8& p10 = px_data[y1 * w + x2];
+        const RGBA8& p01 = px_data[y2 * w + x1];
+        const RGBA8& p11 = px_data[y2 * w + x2];
+
+        // mix(a, b, t, range) = a + (b - a) * t / range
+        auto mix = [S](float a, float b, int t) -> float {
+            return a + (b - a) * t / S;
+        };
+
+        float topR = mix(p00.r, p10.r, px);
+        float topG = mix(p00.g, p10.g, px);
+        float topB = mix(p00.b, p10.b, px);
+
+        float botR = mix(p01.r, p11.r, px);
+        float botG = mix(p01.g, p11.g, px);
+        float botB = mix(p01.b, p11.b, px);
+
+        r = mix(topR, botR, py);
+        g = mix(topG, botG, py);
+        b = mix(topB, botB, py);
+    }
+
     // Set filter mode (updates function pointer)
     void setFilter(TextureFilter filter) {
-        sampleFn = (filter == TextureFilter::BILINEAR)
-            ? &Texture::sampleBilinear
-            : &Texture::sampleNearest;
+        switch (filter) {
+            case TextureFilter::BILINEAR:     sampleFn = &Texture::sampleBilinear;    break;
+            case TextureFilter::BILINEAR_INT: sampleFn = &Texture::sampleBilinearInt; break;
+            default:                          sampleFn = &Texture::sampleNearest;     break;
+        }
     }
 
     // Unified sample method - no branch, uses function pointer
