@@ -152,6 +152,29 @@ Each light-source solid maintains its own shadow map for shadow calculations.
 - Shadow map debug overlay display
 - Per-solid light intensity slider (when solid is a light source)
 
+### Skybox / Cubemap Background
+
+The engine supports cubemap skyboxes as a background type. A `CubeMap` class (`src/cubemap.hpp`) holds 6 face textures and samples them by 3D direction. The `Skybox` background (`src/backgrounds/skybox.hpp`) ray-marches each pixel through the inverse view rotation to sample the cubemap, with caching to skip re-rendering when the camera orientation hasn't changed.
+
+**Face naming convention**: Faces use axis labels (px, nx, py, ny, pz, nz) corresponding to +X, -X, +Y, -Y, +Z, -Z directions.
+
+**YAML configuration**:
+```yaml
+scene:
+  background: skybox
+  skybox:
+    px: "resources/skybox/px.png"
+    nx: "resources/skybox/nx.png"
+    py: "resources/skybox/py.png"
+    ny: "resources/skybox/ny.png"
+    pz: "resources/skybox/pz.png"
+    nz: "resources/skybox/nz.png"
+```
+
+When no `skybox` node is provided, the default constructor loads from `resources/skybox/{px,nx,py,ny,pz,nz}.png`.
+
+Free skybox textures: https://freestylized.com/all-skybox/
+
 ### Camera Controls
 
 Descent-style 6DOF movement with momentum/hysteresis. Right-click drag for orbit mode around the target solid.
@@ -175,9 +198,10 @@ model->setup("resources/model.obj");
 
 ## Dependencies
 
-- SDL3 (as git submodule in `submodules/SDL/`)
-- rapidobj (as git submodule in `submodules/rapidobj/`) - Fast OBJ file parser
-- Dear ImGui (vendored in `src/vendor/imgui/`)
-- stb_image (vendored in `src/vendor/stb/`) - Image loading (PNG, JPG, BMP, TGA, etc.)
+- SDL3 (fetched via CMake FetchContent)
+- rapidobj (fetched via CMake FetchContent) - Fast OBJ file parser
+- yaml-cpp (fetched via CMake FetchContent) - YAML scene file parsing
+- Dear ImGui (in `src/vendor/imgui/`)
+- stb_image (in `src/vendor/stb/`) - Image loading (PNG, JPG, BMP, TGA, etc.)
 - Google Test (fetched via CMake FetchContent for testing)
 - C++23 standard required

@@ -3,9 +3,14 @@
 Software 3D engine using SDL3, Dear ImGui, and modern CMake.
 
 ## Dependencias
-- **SDL3** (biblioteca y headers disponibles para el compilador).
+- **SDL3** (descargado automáticamente via CMake FetchContent).
+- **rapidobj** (descargado automáticamente via CMake FetchContent) - Parser de archivos OBJ.
+- **yaml-cpp** (descargado automáticamente via CMake FetchContent) - Parser de archivos YAML para escenas.
+- **Dear ImGui** (incluido en `src/vendor/imgui/`).
+- **stb_image** (incluido en `src/vendor/stb/`) - Carga de imágenes (PNG, JPG, BMP, TGA, etc.).
+- **Google Test** (descargado via CMake FetchContent para tests).
 - **CMake** ≥ 3.28.
-- Toolchain C++20 con soporte para las extensiones usadas por SDL (GCC/Clang/MSVC o `emcc`).
+- Toolchain C++23 (GCC/Clang/MSVC o `emcc`).
 - Opcional: Emscripten SDK para builds WebAssembly.
 
 ## Configuración y compilación (desktop)
@@ -53,6 +58,26 @@ Seleccionables desde el combo "Scene" en la ventana de ImGui:
 - **Torus**, **Tetrakis**, **Icosahedron**, **Cube**, **Knot**, **Star**: primitivas/solids paramétricos con rotación automática opcional.
 - **Amiga**: escena inspirada en el clásico logo/banda Amiga.
 - **World**: escena que carga geometría desde recursos externos.
+
+## Skybox / Cubemap
+
+El motor soporta fondos de tipo skybox mediante cubemaps de 6 caras. Se pueden seleccionar desde el combo "Background" en ImGui o configurar en el archivo YAML de la escena:
+
+```yaml
+scene:
+  background: skybox
+  skybox:
+    px: "resources/skybox/px.png"
+    nx: "resources/skybox/nx.png"
+    py: "resources/skybox/py.png"
+    ny: "resources/skybox/ny.png"
+    pz: "resources/skybox/pz.png"
+    nz: "resources/skybox/nz.png"
+```
+
+Las caras usan nombres de ejes: `px`/`nx` = +X/-X, `py`/`ny` = +Y/-Y, `pz`/`nz` = +Z/-Z. El skybox rota con la cámara.
+
+Se pueden descargar texturas de skybox gratuitas desde: https://freestylized.com/all-skybox/
 
 ## Controles principales
 - **Movimiento estilo Descent**: Flechas o keypad para pitch/yaw, `Q`/`E` (o keypad 7/9) para roll, `A`/`Z` (o keypad ±) para avanzar/retroceder.
