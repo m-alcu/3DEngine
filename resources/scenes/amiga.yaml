@@ -4,7 +4,14 @@ scene:
   shadows_enabled: true
   pcf_radius: 1
   depth_sort_enabled: true
-  background: desert
+  background: skybox
+  skybox:
+    px: "resources/skybox/1/px.png"
+    nx: "resources/skybox/1/nx.png"
+    py: "resources/skybox/1/py.png"
+    ny: "resources/skybox/1/ny.png"
+    pz: "resources/skybox/1/pz.png"
+    nz: "resources/skybox/1/nz.png"
 
   solids:
     - type: amiga

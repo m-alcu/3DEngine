@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <unordered_map>
 
+#include "../backgrounds/skybox.hpp"
 #include "../objects/objLoader.hpp"
 #include "../objects/ascLoader.hpp"
 #include "../objects/cube.hpp"
@@ -54,6 +55,7 @@ BackgroundType SceneLoader::parseBackgroundType(const std::string& str) {
         {"desert",    BackgroundType::DESERT},
         {"image_png", BackgroundType::IMAGE_PNG},
         {"twister",   BackgroundType::TWISTER},
+        {"skybox",    BackgroundType::SKYBOX},
     };
     auto it = map.find(str);
     if (it == map.end())
@@ -283,8 +285,20 @@ std::unique_ptr<Scene> SceneLoader::loadFromFile(const std::string& yamlPath,
     if (sceneNode["background"]) {
         scene->backgroundType = parseBackgroundType(
             sceneNode["background"].as<std::string>());
-        scene->background = std::unique_ptr<Background>(
-            BackgroundFactory::createBackground(scene->backgroundType));
+        if (scene->backgroundType == BackgroundType::SKYBOX && sceneNode["skybox"]) {
+            auto sb = sceneNode["skybox"];
+            scene->background = std::make_unique<Skybox>(
+                sb["px"].as<std::string>(),
+                sb["nx"].as<std::string>(),
+                sb["py"].as<std::string>(),
+                sb["ny"].as<std::string>(),
+                sb["pz"].as<std::string>(),
+                sb["nz"].as<std::string>()
+            );
+        } else {
+            scene->background = std::unique_ptr<Background>(
+                BackgroundFactory::createBackground(scene->backgroundType));
+        }
     }
 
     // Camera

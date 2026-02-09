@@ -8,6 +8,8 @@ std::unique_ptr<Background> BackgroundFactory::createBackground(BackgroundType t
             return std::make_unique<Imagepng>();
         case BackgroundType::TWISTER:
             return std::make_unique<Twister>();
+        case BackgroundType::SKYBOX:
+            return std::make_unique<Skybox>();
         default:
             return nullptr;
     }

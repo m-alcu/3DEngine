@@ -172,8 +172,8 @@ public:
   }
 
   void drawBackground() const {
-
-    background->draw(backg, screen.height, screen.width);
+    float aspectRatio = static_cast<float>(screen.width) / screen.height;
+    background->draw(backg, screen.height, screen.width, camera, aspectRatio);
   }
 
   // Add a solid to the scene's list of solids.
