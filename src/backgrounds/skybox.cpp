@@ -6,12 +6,12 @@
 
 Skybox::Skybox() {
     cubemap.loadFaces(
-        "resources/skybox/px.png",
-        "resources/skybox/nx.png",
-        "resources/skybox/py.png",
-        "resources/skybox/ny.png",
-        "resources/skybox/pz.png",
-        "resources/skybox/nz.png"
+        "resources/skybox/1/px.png",
+        "resources/skybox/1/nx.png",
+        "resources/skybox/1/py.png",
+        "resources/skybox/1/ny.png",
+        "resources/skybox/1/pz.png",
+        "resources/skybox/1/nz.png"
     );
 }
 

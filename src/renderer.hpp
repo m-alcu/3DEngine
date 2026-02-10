@@ -9,6 +9,7 @@
 #include "effects/texturedFlatEffect.hpp"
 #include "effects/texturedGouraudEffect.hpp"
 #include "effects/texturedPhongEffect.hpp"
+#include "effects/environmentMapEffect.hpp"
 #include "objects/solid.hpp"
 #include "axisRenderer.hpp"
 #include "bresenham.hpp"
@@ -60,6 +61,9 @@ public:
         break;
       case Shading::TexturedPhong:
         texturedPhongRasterizer.drawRenderable(solidPtr.get(), &scene);
+        break;
+      case Shading::EnvironmentMap:
+        environmentMapRasterizer.drawRenderable(solidPtr.get(), &scene);
         break;
       default:
         flatRasterizer.drawRenderable(solidPtr.get(), &scene);
@@ -166,5 +170,6 @@ public:
   Rasterizer<TexturedGouraudEffect> texturedGouraudRasterizer;
   Rasterizer<TexturedPhongEffect> texturedPhongRasterizer;
   Rasterizer<TexturedBlinnPhongEffect> texturedBlinnPhongRasterizer;
+  Rasterizer<EnvironmentMapEffect> environmentMapRasterizer;
   Rasterizer<ShadowEffect> shadowRasterizer;
 };

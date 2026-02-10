@@ -20,7 +20,8 @@ enum class Shading {
     TexturedFlat,
     TexturedGouraud,
     TexturedBlinnPhong,
-    TexturedPhong
+    TexturedPhong,
+    EnvironmentMap
 };
 
 // Labels for the enum (must match order of enum values)
@@ -33,7 +34,8 @@ static const char* shadingNames[] = {
     "Textured Flat",
     "Textured Gouraud",
     "Textured Blinn-Phong",
-    "Textured Phong"
+    "Textured Phong",
+    "Environment Map"
 };
 
 struct VertexData {

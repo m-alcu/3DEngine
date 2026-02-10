@@ -22,6 +22,8 @@ public:
     void draw(uint32_t* pixels, uint16_t height, uint16_t width,
               const Camera& camera, float aspectRatio) override;
 
+    CubeMap* getCubeMap() override { return &cubemap; }
+
 private:
     CubeMap cubemap;
 

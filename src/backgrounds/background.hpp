@@ -4,6 +4,7 @@
 #include <memory>
 
 class Camera; // Forward declaration
+class CubeMap; // Forward declaration
 
 class Background {
 
@@ -24,6 +25,8 @@ class Background {
         void setNeedsUpdate(bool update) {
             needsUpdate = update;
         }
+
+        virtual CubeMap* getCubeMap() { return nullptr; }
 
         virtual ~Background() {}
 

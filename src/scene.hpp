@@ -15,6 +15,7 @@
 #include "ZBuffer.hpp"
 #include "backgrounds/background.hpp"
 #include "backgrounds/backgroundFactory.hpp"
+#include "cubemap.hpp"
 #include "camera.hpp"
 #include "events/Event.hpp"
 #include "light.hpp"
@@ -170,6 +171,8 @@ public:
   void addSolid(std::unique_ptr<Solid> solid) {
     solids.push_back(std::move(solid));
   }
+
+  CubeMap* getCubeMap() const { return background ? background->getCubeMap() : nullptr; }
 
   void drawBackground() const {
     float aspectRatio = static_cast<float>(screen.width) / screen.height;
