@@ -1,33 +1,13 @@
-/* bitmap_font8x8.h
-   Ready-to-drop 8x8 ASCII bitmap font (0x20..0x7F), plus a tiny renderer.
+#pragma once
 
-   - Each glyph is 8 rows, 1 byte per row.
-   - Bit 7 is leftmost pixel, bit 0 is rightmost pixel.
-   - Public-domain-style “font8x8 basic” layout (widely used in hobby code).
+#include <cstdint>
 
-   Usage:
-     #include "bitmap_font8x8.h"
-     font8x8_draw_text_rgba(fb, fb_w, fb_h, stride_px,
-                            10, 10, "FPS avg (64 samples): 325.00",
-                            0xFFFFFFFFu, 0x000000FFu, 1);
+// 8x8 ASCII bitmap font (0x20..0x7F)
+// Each glyph is 8 rows, 1 byte per row. Bit 0 is leftmost pixel.
 
-   Notes:
-     - Colors are RGBA8888 (0xRRGGBBAA) by default in this helper.
-       Adjust pack/unpack if your pixel format differs.
-*/
+namespace Font8x8 {
 
-#ifndef BITMAP_FONT8X8_H
-#define BITMAP_FONT8X8_H
-
-#include <stdint.h>
-#include <stddef.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/* 96 glyphs: ASCII 0x20 (space) .. 0x7F (DEL) */
-static const uint8_t font8x8_ascii_20_7f[96][8] = {
+inline constexpr uint8_t glyphs[96][8] = {
   /* 0x20 ' ' */ {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},
   /* 0x21 '!' */ {0x18,0x18,0x18,0x18,0x18,0x00,0x18,0x00},
   /* 0x22 '"' */ {0x36,0x36,0x24,0x00,0x00,0x00,0x00,0x00},
@@ -126,26 +106,21 @@ static const uint8_t font8x8_ascii_20_7f[96][8] = {
   /* 0x7F DEL */ {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},
 };
 
-/* ----- Minimal RGBA8888 framebuffer renderer ----- */
-
-static inline void font8x8_put_px_rgba(uint32_t* fb, int fb_w, int fb_h, int stride_px,
-                                       int x, int y, uint32_t rgba)
-{
-  if ((unsigned)x >= (unsigned)fb_w || (unsigned)y >= (unsigned)fb_h) return;
-  fb[y * stride_px + x] = rgba;
+inline void putPixel(uint32_t* fb, int fb_w, int fb_h, int stride_px,
+                     int x, int y, uint32_t color) {
+  if (static_cast<unsigned>(x) >= static_cast<unsigned>(fb_w) ||
+      static_cast<unsigned>(y) >= static_cast<unsigned>(fb_h)) return;
+  fb[y * stride_px + x] = color;
 }
 
-/* Draw one 8x8 glyph. Optional 1px outline by drawing neighbors first. */
-static inline void font8x8_draw_glyph_rgba(uint32_t* fb, int fb_w, int fb_h, int stride_px,
-                                           int x, int y, char c,
-                                           uint32_t fg_rgba, uint32_t outline_rgba,
-                                           int outline /*0/1*/)
-{
-  unsigned uc = (unsigned char)c;
+inline void drawGlyph(uint32_t* fb, int fb_w, int fb_h, int stride_px,
+                      int x, int y, char c,
+                      uint32_t fg, uint32_t outline_color,
+                      bool outline) {
+  auto uc = static_cast<unsigned char>(c);
   if (uc < 0x20 || uc > 0x7F) uc = '?';
-  const uint8_t* rows = font8x8_ascii_20_7f[uc - 0x20];
+  const uint8_t* rows = glyphs[uc - 0x20];
 
-  /* Outline: draw glyph shifted in 8-neighborhood (cheap, looks very “retro HUD”). */
   if (outline) {
     for (int oy = -1; oy <= 1; ++oy) {
       for (int ox = -1; ox <= 1; ++ox) {
@@ -153,8 +128,8 @@ static inline void font8x8_draw_glyph_rgba(uint32_t* fb, int fb_w, int fb_h, int
         for (int r = 0; r < 8; ++r) {
           uint8_t bits = rows[r];
           for (int col = 0; col < 8; ++col) {
-            if (bits & (uint8_t)(1u << col)) {
-              font8x8_put_px_rgba(fb, fb_w, fb_h, stride_px, x + col + ox, y + r + oy, outline_rgba);
+            if (bits & static_cast<uint8_t>(1u << col)) {
+              putPixel(fb, fb_w, fb_h, stride_px, x + col + ox, y + r + oy, outline_color);
             }
           }
         }
@@ -162,33 +137,27 @@ static inline void font8x8_draw_glyph_rgba(uint32_t* fb, int fb_w, int fb_h, int
     }
   }
 
-  /* Foreground */
   for (int r = 0; r < 8; ++r) {
     uint8_t bits = rows[r];
     for (int col = 0; col < 8; ++col) {
-      if (bits & (uint8_t)(1u << col)) {
-        font8x8_put_px_rgba(fb, fb_w, fb_h, stride_px, x + col, y + r, fg_rgba);
+      if (bits & static_cast<uint8_t>(1u << col)) {
+        putPixel(fb, fb_w, fb_h, stride_px, x + col, y + r, fg);
       }
     }
   }
 }
 
-/* Draw text left-to-right. Supports '\n'. Returns final cursor x. */
-static inline int font8x8_draw_text_rgba(uint32_t* fb, int fb_w, int fb_h, int stride_px,
-                                         int x, int y, const char* text,
-                                         uint32_t fg_rgba, uint32_t outline_rgba,
-                                         int outline /*0/1*/)
-{
+inline int drawText(uint32_t* fb, int fb_w, int fb_h, int stride_px,
+                    int x, int y, const char* text,
+                    uint32_t fg, uint32_t outline_color,
+                    bool outline) {
   int cx = x, cy = y;
   for (const char* p = text; p && *p; ++p) {
     if (*p == '\n') { cx = x; cy += 8; continue; }
-    font8x8_draw_glyph_rgba(fb, fb_w, fb_h, stride_px, cx, cy, *p, fg_rgba, outline_rgba, outline);
+    drawGlyph(fb, fb_w, fb_h, stride_px, cx, cy, *p, fg, outline_color, outline);
     cx += 8;
   }
   return cx;
 }
 
-#ifdef __cplusplus
-}
-#endif
-#endif /* BITMAP_FONT8X8_H */
+} // namespace Font8x8
