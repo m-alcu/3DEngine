@@ -273,6 +273,10 @@ std::unique_ptr<Scene> SceneLoader::loadFromFile(const std::string& yamlPath,
     auto scene = std::make_unique<Scene>(scr);
     scene->sceneType = SceneType::YAML;
 
+    // Scene name
+    if (sceneNode["name"])
+        scene->name = sceneNode["name"].as<std::string>();
+
     // Scene-level properties
     if (sceneNode["shadows_enabled"])
         scene->shadowsEnabled = sceneNode["shadows_enabled"].as<bool>();

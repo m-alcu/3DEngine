@@ -15,6 +15,7 @@
 #include "bresenham.hpp"
 #include "rasterizer.hpp"
 #include <cstdint>
+#include "fonts.cpp"
 
 class Renderer {
 
@@ -32,6 +33,15 @@ public:
     }
 
     scene.drawBackground();
+
+    if (!scene.name.empty()) {
+      int textWidth = static_cast<int>(scene.name.size()) * 8;
+      int tx = scene.screen.width - textWidth - 10;
+      int ty = scene.screen.height - 18;
+      font8x8_draw_text_rgba(scene.pixels, scene.screen.width, scene.screen.height,
+                             scene.screen.width, tx, ty, scene.name.c_str(),
+                             0xFFFFFFFFu, 0xFF000000u, 1);
+    }
 
     for (auto &solidPtr : scene.solids) {
       switch (solidPtr->shading) {

@@ -185,6 +185,7 @@ public:
 
   Screen screen;
   SceneType sceneType = SceneType::YAML;
+  std::string name;
 
   slib::vec3 forwardNeg; // Negative forward vector for lighting calculations
   slib::mat4 spaceMatrix;
