@@ -8,7 +8,7 @@
 #include <cstdio>
 
 HdrPanorama::HdrPanorama() {
-    load("resources/hdrs/HDR_multi_nebulae_1.hdr");
+    load("resources/hdrs/HDR_artificial_planet.hdr");
 }
 
 HdrPanorama::HdrPanorama(const std::string& path) {

@@ -6,7 +6,7 @@ scene:
   depth_sort_enabled: true
   background: hdr_panorama
   hdr_panorama:
-    path: "resources/hdrs/HDR_multi_nebulae_1.hdr"
+    path: "resources/hdrs/HDR_artificial_planet.hdr"
 
   solids:
     - type: world
