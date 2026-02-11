@@ -6,19 +6,22 @@
 #include "imagepng.hpp"
 #include "twister.hpp"
 #include "skybox.hpp"
+#include "hdrPanorama.hpp"
 
 enum class BackgroundType {
     DESERT,
     IMAGE_PNG,
     TWISTER,
-    SKYBOX
+    SKYBOX,
+    HDR_PANORAMA
 };
 
 static const char* backgroundNames[] = {
     "Desert",
     "Image PNG",
     "Twister",
-    "Skybox"
+    "Skybox",
+    "HDR Panorama"
 };
 
 class BackgroundFactory {

@@ -10,6 +10,8 @@ std::unique_ptr<Background> BackgroundFactory::createBackground(BackgroundType t
             return std::make_unique<Twister>();
         case BackgroundType::SKYBOX:
             return std::make_unique<Skybox>();
+        case BackgroundType::HDR_PANORAMA:
+            return std::make_unique<HdrPanorama>();
         default:
             return nullptr;
     }

@@ -4,7 +4,9 @@ scene:
   shadows_enabled: true
   pcf_radius: 1
   depth_sort_enabled: true
-  background: desert
+  background: hdr_panorama
+  hdr_panorama:
+    path: "resources/hdrs/HDR_multi_nebulae_1.hdr"
 
   solids:
     - type: world

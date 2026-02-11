@@ -55,7 +55,8 @@ BackgroundType SceneLoader::parseBackgroundType(const std::string& str) {
         {"desert",    BackgroundType::DESERT},
         {"image_png", BackgroundType::IMAGE_PNG},
         {"twister",   BackgroundType::TWISTER},
-        {"skybox",    BackgroundType::SKYBOX},
+        {"skybox",        BackgroundType::SKYBOX},
+        {"hdr_panorama",  BackgroundType::HDR_PANORAMA},
     };
     auto it = map.find(str);
     if (it == map.end())
@@ -298,6 +299,11 @@ std::unique_ptr<Scene> SceneLoader::loadFromFile(const std::string& yamlPath,
                 sb["ny"].as<std::string>(),
                 sb["pz"].as<std::string>(),
                 sb["nz"].as<std::string>()
+            );
+        } else if (scene->backgroundType == BackgroundType::HDR_PANORAMA && sceneNode["hdr_panorama"]) {
+            auto hdr = sceneNode["hdr_panorama"];
+            scene->background = std::make_unique<HdrPanorama>(
+                hdr["path"].as<std::string>()
             );
         } else {
             scene->background = std::unique_ptr<Background>(
