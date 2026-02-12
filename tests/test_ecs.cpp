@@ -42,7 +42,7 @@ TEST(ComponentStoreTest, AddAndGet) {
     TransformComponent t;
     t.position.x = 42.0f;
 
-    store.add(1, &t);
+    store.add(1, t);
     TransformComponent* result = store.get(1);
     ASSERT_NE(result, nullptr);
     EXPECT_FLOAT_EQ(result->position.x, 42.0f);
@@ -57,7 +57,7 @@ TEST(ComponentStoreTest, HasAndRemove) {
     ComponentStore<TransformComponent> store;
     TransformComponent t;
 
-    store.add(1, &t);
+    store.add(1, t);
     EXPECT_TRUE(store.has(1));
     EXPECT_FALSE(store.has(2));
 
@@ -71,10 +71,10 @@ TEST(ComponentStoreTest, Size) {
     TransformComponent t1, t2, t3;
 
     EXPECT_EQ(store.size(), 0u);
-    store.add(1, &t1);
+    store.add(1, t1);
     EXPECT_EQ(store.size(), 1u);
-    store.add(2, &t2);
-    store.add(3, &t3);
+    store.add(2, t2);
+    store.add(3, t3);
     EXPECT_EQ(store.size(), 3u);
     store.remove(2);
     EXPECT_EQ(store.size(), 2u);
@@ -84,8 +84,8 @@ TEST(ComponentStoreTest, Clear) {
     ComponentStore<TransformComponent> store;
     TransformComponent t1, t2;
 
-    store.add(1, &t1);
-    store.add(2, &t2);
+    store.add(1, t1);
+    store.add(2, t2);
     EXPECT_EQ(store.size(), 2u);
 
     store.clear();
@@ -101,13 +101,13 @@ TEST(ComponentStoreTest, Iteration) {
     t2.position.x = 2.0f;
     t3.position.x = 3.0f;
 
-    store.add(10, &t1);
-    store.add(20, &t2);
-    store.add(30, &t3);
+    store.add(10, t1);
+    store.add(20, t2);
+    store.add(30, t3);
 
     float sum = 0.0f;
     for (auto& [entity, transform] : store) {
-        sum += transform->position.x;
+        sum += transform.position.x;
     }
     EXPECT_FLOAT_EQ(sum, 6.0f);
 }
@@ -117,11 +117,13 @@ TEST(ComponentStoreTest, MutationThroughPointer) {
     TransformComponent t;
     t.position.x = 0.0f;
 
-    store.add(1, &t);
+    store.add(1, t);
     store.get(1)->position.x = 99.0f;
 
-    // Original is modified (non-owning pointer)
-    EXPECT_FLOAT_EQ(t.position.x, 99.0f);
+    // Store owns data — mutation changes the store's copy
+    EXPECT_FLOAT_EQ(store.get(1)->position.x, 99.0f);
+    // Original is NOT modified (value was copied into store)
+    EXPECT_FLOAT_EQ(t.position.x, 0.0f);
 }
 
 // ============================================================================
@@ -143,7 +145,7 @@ TEST(RegistryTest, TransformStoreIntegration) {
 
     TransformComponent t;
     t.position.x = 10.0f;
-    reg.transforms().add(e, &t);
+    reg.transforms().add(e, t);
 
     EXPECT_TRUE(reg.transforms().has(e));
     EXPECT_FLOAT_EQ(reg.transforms().get(e)->position.x, 10.0f);
@@ -155,8 +157,8 @@ TEST(RegistryTest, DestroyEntityRemovesFromAllStores) {
 
     TransformComponent t;
     LightComponent lc;
-    reg.transforms().add(e, &t);
-    reg.lights().add(e, &lc);
+    reg.transforms().add(e, t);
+    reg.lights().add(e, lc);
     EXPECT_TRUE(reg.transforms().has(e));
     EXPECT_TRUE(reg.lights().has(e));
 
@@ -172,9 +174,9 @@ TEST(RegistryTest, ClearRemovesAllComponents) {
 
     Entity e1 = reg.createEntity();
     Entity e2 = reg.createEntity();
-    reg.transforms().add(e1, &t1);
-    reg.transforms().add(e2, &t2);
-    reg.lights().add(e1, &lc);
+    reg.transforms().add(e1, t1);
+    reg.transforms().add(e2, t2);
+    reg.lights().add(e1, lc);
 
     EXPECT_EQ(reg.transforms().size(), 2u);
     EXPECT_EQ(reg.lights().size(), 1u);
@@ -192,13 +194,13 @@ TEST(RegistryTest, SystemIterationPattern) {
 
     for (int i = 0; i < 3; ++i) {
         Entity e = reg.createEntity();
-        reg.transforms().add(e, &transforms[i]);
+        reg.transforms().add(e, transforms[i]);
     }
 
     // Simulate a system iterating all transforms
     float sum = 0.0f;
     for (auto& [entity, transform] : reg.transforms()) {
-        sum += transform->position.x;
+        sum += transform.position.x;
     }
     EXPECT_FLOAT_EQ(sum, 600.0f);
 }
@@ -213,7 +215,7 @@ TEST(RegistryTest, LightStoreAddAndGet) {
 
     LightComponent lc;
     lc.light.intensity = 5.0f;
-    reg.lights().add(e, &lc);
+    reg.lights().add(e, lc);
 
     EXPECT_TRUE(reg.lights().has(e));
     ASSERT_NE(reg.lights().get(e), nullptr);
@@ -227,9 +229,9 @@ TEST(RegistryTest, LightStoreOnlyForLightEntities) {
 
     TransformComponent t1, t2;
     LightComponent lc;
-    reg.transforms().add(lightEntity, &t1);
-    reg.transforms().add(nonLightEntity, &t2);
-    reg.lights().add(lightEntity, &lc);
+    reg.transforms().add(lightEntity, t1);
+    reg.transforms().add(nonLightEntity, t2);
+    reg.lights().add(lightEntity, lc);
 
     // Both have transforms
     EXPECT_TRUE(reg.transforms().has(lightEntity));
@@ -250,13 +252,13 @@ TEST(RegistryTest, LightStoreIteration) {
     Entity e2 = reg.createEntity();
     Entity e3 = reg.createEntity(); // non-light entity
 
-    reg.lights().add(e1, &lc1);
-    reg.lights().add(e2, &lc2);
+    reg.lights().add(e1, lc1);
+    reg.lights().add(e2, lc2);
 
     float sum = 0.0f;
     int count = 0;
     for (auto& [entity, lightComp] : reg.lights()) {
-        sum += lightComp->light.intensity;
+        sum += lightComp.light.intensity;
         count++;
     }
     EXPECT_EQ(count, 2);
@@ -269,11 +271,13 @@ TEST(RegistryTest, LightStoreMutationThroughPointer) {
 
     LightComponent lc;
     lc.light.intensity = 1.0f;
-    reg.lights().add(e, &lc);
+    reg.lights().add(e, lc);
 
     // Modify through registry pointer
     reg.lights().get(e)->light.intensity = 42.0f;
 
-    // Original is modified (non-owning pointer)
-    EXPECT_FLOAT_EQ(lc.light.intensity, 42.0f);
+    // Store owns data — mutation changes the store's copy
+    EXPECT_FLOAT_EQ(reg.lights().get(e)->light.intensity, 42.0f);
+    // Original is NOT modified (value was copied into store)
+    EXPECT_FLOAT_EQ(lc.light.intensity, 1.0f);
 }

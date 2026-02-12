@@ -84,7 +84,8 @@ public:
     std::vector<VertexData> vertexData;
     std::vector<FaceData> faceData;
     Shading shading;
-    TransformComponent transform;
+    TransformComponent localTransform_;
+    TransformComponent* transform = &localTransform_;
 	bool rotationEnabled = true;
     float incXangle = 0.0f;  // Rotation speed around X axis
     float incYangle = 0.0f;  // Rotation speed around Y axis
@@ -93,7 +94,8 @@ public:
 
     int numVertices;
     int numFaces;
-    std::optional<LightComponent> lightComponent;
+    std::optional<LightComponent> localLight_;
+    LightComponent* lightComponent = nullptr;
 
     // Minimum and maximum coordinates for bounding box
     slib::vec3 minCoord{};
@@ -154,6 +156,11 @@ public:
     virtual void updateOrbit(float dt);
 
     void setEmissiveColor(const slib::vec3& color);
+
+    void initLight(LightComponent lc) {
+        localLight_ = std::move(lc);
+        lightComponent = &*localLight_;
+    }
 
 protected:
     // Protected virtual methods to be implemented by derived classes.

@@ -4,21 +4,21 @@
 
 template<typename T>
 class ComponentStore {
-    std::unordered_map<Entity, T*> data_;
+    std::unordered_map<Entity, T> data_;
 
 public:
-    void add(Entity e, T* component) { data_[e] = component; }
+    void add(Entity e, T component) { data_.emplace(e, std::move(component)); }
 
     void remove(Entity e) { data_.erase(e); }
 
     T* get(Entity e) {
         auto it = data_.find(e);
-        return it != data_.end() ? it->second : nullptr;
+        return it != data_.end() ? &it->second : nullptr;
     }
 
     const T* get(Entity e) const {
         auto it = data_.find(e);
-        return it != data_.end() ? it->second : nullptr;
+        return it != data_.end() ? &it->second : nullptr;
     }
 
     bool has(Entity e) const { return data_.count(e) > 0; }

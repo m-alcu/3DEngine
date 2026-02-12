@@ -74,7 +74,7 @@ public:
       solidPtr->calculateTransformMat();
       hasGeometry = true;
 
-      if (solidPtr->lightComponent.has_value()) {
+      if (solidPtr->lightComponent) {
         // Create shadow map for this light source if it doesn't exist
         if (!solidPtr->lightComponent->shadowMap) {
           solidPtr->lightComponent->shadowMap = std::make_shared<ShadowMap>(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
@@ -82,7 +82,7 @@ public:
         }
 
         // Update light position from solid position
-        solidPtr->lightComponent->light.position = {solidPtr->transform.position.x, solidPtr->transform.position.y, solidPtr->transform.position.z};
+        solidPtr->lightComponent->light.position = {solidPtr->transform->position.x, solidPtr->transform->position.y, solidPtr->transform->position.z};
 
       } else {
         if (solidPtr->rotationEnabled) {
@@ -173,9 +173,14 @@ public:
     solid->entity = registry.createEntity();
     solids.push_back(std::move(solid));
     auto& added = solids.back();
-    registry.transforms().add(added->entity, &added->transform);
-    if (added->lightComponent.has_value()) {
-      registry.lights().add(added->entity, &*added->lightComponent);
+    // Move transform into registry; update pointer to registry-owned copy
+    registry.transforms().add(added->entity, std::move(added->localTransform_));
+    added->transform = registry.transforms().get(added->entity);
+    // Move light into registry if present
+    if (added->localLight_) {
+      registry.lights().add(added->entity, std::move(*added->localLight_));
+      added->lightComponent = registry.lights().get(added->entity);
+      added->localLight_.reset();
     }
   }
 
@@ -217,12 +222,12 @@ public:
 
   // Returns a filtered view of solids that are light sources
   auto lightSources() const {
-    return solids | std::views::filter([](const auto& s) { return s->lightComponent.has_value(); });
+    return solids | std::views::filter([](const auto& s) { return s->lightComponent != nullptr; });
   }
 
   // Returns a filtered view of solids that are not light sources (renderables)
   auto renderables() const {
-    return solids | std::views::filter([](const auto& s) { return !s->lightComponent.has_value(); });
+    return solids | std::views::filter([](const auto& s) { return s->lightComponent == nullptr; });
   }
 
   // Access light components through registry (for effect pixel shaders)
@@ -296,51 +301,51 @@ public:
     ImGui::SliderFloat("Rot X Speed", &selectedSolid->incXangle, 0.0f, 1.0f);
     ImGui::SliderFloat("Rot Y Speed", &selectedSolid->incYangle, 0.0f, 1.0f);
 
-    float position[3] = {selectedSolid->transform.position.x,
-                         selectedSolid->transform.position.y,
-                         selectedSolid->transform.position.z};
+    float position[3] = {selectedSolid->transform->position.x,
+                         selectedSolid->transform->position.y,
+                         selectedSolid->transform->position.z};
     if (ImGui::DragFloat3("Position", position, 1.0f)) {
-      selectedSolid->transform.position.x = position[0];
-      selectedSolid->transform.position.y = position[1];
-      selectedSolid->transform.position.z = position[2];
+      selectedSolid->transform->position.x = position[0];
+      selectedSolid->transform->position.y = position[1];
+      selectedSolid->transform->position.z = position[2];
     }
 
-    ImGui::DragFloat("Zoom", &selectedSolid->transform.position.zoom, 0.1f, 0.01f, 500.0f);
+    ImGui::DragFloat("Zoom", &selectedSolid->transform->position.zoom, 0.1f, 0.01f, 500.0f);
 
-    float angles[3] = {selectedSolid->transform.position.xAngle,
-                       selectedSolid->transform.position.yAngle,
-                       selectedSolid->transform.position.zAngle};
+    float angles[3] = {selectedSolid->transform->position.xAngle,
+                       selectedSolid->transform->position.yAngle,
+                       selectedSolid->transform->position.zAngle};
     if (ImGui::DragFloat3("Angles", angles, 1.0f, -360.0f, 360.0f)) {
-      selectedSolid->transform.position.xAngle = angles[0];
-      selectedSolid->transform.position.yAngle = angles[1];
-      selectedSolid->transform.position.zAngle = angles[2];
+      selectedSolid->transform->position.xAngle = angles[0];
+      selectedSolid->transform->position.yAngle = angles[1];
+      selectedSolid->transform->position.zAngle = angles[2];
     }
 
-    bool orbitEnabled = selectedSolid->transform.orbit.enabled;
+    bool orbitEnabled = selectedSolid->transform->orbit.enabled;
     if (ImGui::Checkbox("Enable Orbit", &orbitEnabled)) {
       if (orbitEnabled) {
-        selectedSolid->enableCircularOrbit(selectedSolid->transform.orbit.center,
-                                           selectedSolid->transform.orbit.radius,
-                                           selectedSolid->transform.orbit.n,
-                                           selectedSolid->transform.orbit.omega,
-                                           selectedSolid->transform.orbit.phase);
+        selectedSolid->enableCircularOrbit(selectedSolid->transform->orbit.center,
+                                           selectedSolid->transform->orbit.radius,
+                                           selectedSolid->transform->orbit.n,
+                                           selectedSolid->transform->orbit.omega,
+                                           selectedSolid->transform->orbit.phase);
       } else {
         selectedSolid->disableCircularOrbit();
       }
     }
 
-    float orbitCenter[3] = {selectedSolid->transform.orbit.center.x,
-                            selectedSolid->transform.orbit.center.y,
-                            selectedSolid->transform.orbit.center.z};
+    float orbitCenter[3] = {selectedSolid->transform->orbit.center.x,
+                            selectedSolid->transform->orbit.center.y,
+                            selectedSolid->transform->orbit.center.z};
     if (ImGui::DragFloat3("Orbit Center", orbitCenter, 1.0f)) {
-      selectedSolid->transform.orbit.center = {orbitCenter[0], orbitCenter[1], orbitCenter[2]};
+      selectedSolid->transform->orbit.center = {orbitCenter[0], orbitCenter[1], orbitCenter[2]};
     }
 
-    ImGui::DragFloat("Orbit Radius", &selectedSolid->transform.orbit.radius, 0.1f, 0.0f, 10000.0f);
-    ImGui::DragFloat("Orbit Speed", &selectedSolid->transform.orbit.omega, 0.01f, -10.0f, 10.0f);
+    ImGui::DragFloat("Orbit Radius", &selectedSolid->transform->orbit.radius, 0.1f, 0.0f, 10000.0f);
+    ImGui::DragFloat("Orbit Speed", &selectedSolid->transform->orbit.omega, 0.01f, -10.0f, 10.0f);
 
     // Light properties (only shown if solid is a light source)
-    if (selectedSolid->lightComponent.has_value()) {
+    if (selectedSolid->lightComponent) {
       ImGui::Separator();
       ImGui::Text("Light Source");
       ImGui::SliderFloat("Light Intensity", &selectedSolid->lightComponent->light.intensity, 0.0f, 100.0f);

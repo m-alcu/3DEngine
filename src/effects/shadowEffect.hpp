@@ -73,7 +73,7 @@ public:
                           const Solid* lightSource) const {
             Vertex vertex;
             // Transform to world space
-            vertex.world = solid->transform.modelMatrix * slib::vec4(vData.vertex, 1);
+            vertex.world = solid->transform->modelMatrix * slib::vec4(vData.vertex, 1);
 
             // Transform to light clip space
             const auto& shadowMap = lightSource->lightComponent->shadowMap;

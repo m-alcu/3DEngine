@@ -10,7 +10,7 @@ Solid::Solid() {
 }
 
 void Solid::calculateTransformMat() {
-    TransformSystem::updateTransform(transform);
+    TransformSystem::updateTransform(*transform);
 }
 
 void Solid::calculateFaceNormals() {
@@ -91,15 +91,15 @@ float Solid::getBoundingRadius() const {
 }
 
 slib::vec3 Solid::getWorldCenter() const {
-    return TransformSystem::getWorldCenter(transform, minCoord, maxCoord);
+    return TransformSystem::getWorldCenter(*transform, minCoord, maxCoord);
 }
 
 void Solid::updateWorldBounds(slib::vec3& worldBoundMin, slib::vec3& worldBoundMax) const {
-    TransformSystem::updateWorldBounds(transform, minCoord, maxCoord, worldBoundMin, worldBoundMax);
+    TransformSystem::updateWorldBounds(*transform, minCoord, maxCoord, worldBoundMin, worldBoundMax);
 }
 
 void Solid::scaleToRadius(float targetRadius) {
-    TransformSystem::scaleToRadius(transform, getBoundingRadius(), targetRadius);
+    TransformSystem::scaleToRadius(*transform, getBoundingRadius(), targetRadius);
 }
 
 // Function returning MaterialProperties struct
@@ -143,11 +143,11 @@ Texture Solid::LoadTextureFromImg(const char* filename)
 }
 
 void Solid::incAngles(float xAngle, float yAngle, float zAngle) {
-    TransformSystem::incAngles(transform, xAngle, yAngle, zAngle);
+    TransformSystem::incAngles(*transform, xAngle, yAngle, zAngle);
 }
 
 void Solid::buildOrbitBasis(const slib::vec3& n) {
-    TransformSystem::buildOrbitBasis(transform, n);
+    TransformSystem::buildOrbitBasis(*transform, n);
 }
 
 void Solid::enableCircularOrbit(const slib::vec3& center,
@@ -157,16 +157,16 @@ void Solid::enableCircularOrbit(const slib::vec3& center,
     float initialPhaseRadians,
     bool /*faceCenter*/)
 {
-    TransformSystem::enableCircularOrbit(transform, center, radius,
+    TransformSystem::enableCircularOrbit(*transform, center, radius,
         planeNormal, angularSpeedRadiansPerSec, initialPhaseRadians);
 }
 
 void Solid::disableCircularOrbit() {
-    TransformSystem::disableCircularOrbit(transform);
+    TransformSystem::disableCircularOrbit(*transform);
 }
 
 void Solid::updateOrbit(float dt) {
-    TransformSystem::updateOrbit(transform, dt);
+    TransformSystem::updateOrbit(*transform, dt);
 }
 
 // Set emissive color for all materials

@@ -77,7 +77,7 @@ public:
                       const Solid *solid,
                       const Scene *scene) const {
       Vertex vertex;
-      vertex.world = solid->transform.modelMatrix * slib::vec4(vData.vertex, 1);
+      vertex.world = solid->transform->modelMatrix * slib::vec4(vData.vertex, 1);
       vertex.ndc = slib::vec4(vertex.world, 1) * scene->spaceMatrix;
       vertex.tex = slib::zvec2(vData.texCoord.x, vData.texCoord.y, 1);
       Projection<Vertex>::view(scene->screen.width, scene->screen.height,
@@ -109,11 +109,11 @@ public:
 
       slib::vec3 color{0.0f, 0.0f, 0.0f};
       for (const auto &[entity_, lightComp] : scene.lights()) {
-        const Light &light = lightComp->light;
+        const Light &light = lightComp.light;
         slib::vec3 luxDirection = light.getDirection(vRaster.world);
         float attenuation = light.getAttenuation(vRaster.world);
         float diff = std::max(0.0f, smath::dot(poly.rotatedFaceNormal, luxDirection));
-        float shadow = scene.shadowsEnabled && lightComp->shadowMap ? lightComp->shadowMap->sampleShadow(vRaster.world, diff) : 1.0f;   
+        float shadow = scene.shadowsEnabled && lightComp.shadowMap ? lightComp.shadowMap->sampleShadow(vRaster.world, diff) : 1.0f;   
         float factor = light.intensity * attenuation * shadow;
         slib::vec3 lightColor = light.color * factor;
         color += texColor * lightColor * diff;
