@@ -21,6 +21,8 @@
 #include "light.hpp"
 #include "objects/solid.hpp"
 #include "ecs/Registry.hpp"
+#include "ecs/TransformSystem.hpp"
+#include "ecs/LightSystem.hpp"
 #include "slib.hpp"
 #include "smath.hpp"
 #include "stats.hpp"
@@ -64,29 +66,21 @@ public:
 
   virtual void update(float dt) {
 
-    bool hasGeometry = false;
+    // --- System pipeline: iterate component stores directly ---
+    TransformSystem::updateAllOrbits(registry.transforms(), dt);
+    TransformSystem::updateAllTransforms(registry.transforms());
+    LightSystem::syncPositions(registry);
+    LightSystem::ensureShadowMaps(registry.lights(), pcfRadiusChanged, pcfRadius);
+
+    // --- Solid-coupled remnants (future: RotationComponent, MeshComponent) ---
     worldBoundMin = slib::vec3::boundMin();
     worldBoundMax = slib::vec3::boundMax();
+    bool hasGeometry = !solids.empty();
 
     for (auto &solidPtr : solids) {
-
-      solidPtr->updateOrbit(dt);
-      solidPtr->calculateTransformMat();
-      hasGeometry = true;
-
-      if (solidPtr->lightComponent) {
-        // Create shadow map for this light source if it doesn't exist
-        if (!solidPtr->lightComponent->shadowMap) {
-          solidPtr->lightComponent->shadowMap = std::make_shared<ShadowMap>(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
-          solidPtr->lightComponent->shadowMap->subscribeToPcfRadiusChanges(pcfRadiusChanged, pcfRadius);
-        }
-
-        // Update light position from solid position
-        solidPtr->lightComponent->light.position = {solidPtr->transform->position.x, solidPtr->transform->position.y, solidPtr->transform->position.z};
-
-      } else {
+      if (!solidPtr->lightComponent) {
         if (solidPtr->rotationEnabled) {
-          solidPtr->incAngles(solidPtr->incXangle, solidPtr->incYangle, 0.0f);
+          TransformSystem::incAngles(*solidPtr->transform, solidPtr->incXangle, solidPtr->incYangle, 0.0f);
         }
         solidPtr->updateWorldBounds(worldBoundMin, worldBoundMax);
       }

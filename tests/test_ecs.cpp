@@ -3,7 +3,9 @@
 #include "../src/ecs/ComponentStore.hpp"
 #include "../src/ecs/Registry.hpp"
 #include "../src/ecs/TransformComponent.hpp"
+#include "../src/ecs/TransformSystem.hpp"
 #include "../src/ecs/LightComponent.hpp"
+#include "../src/ecs/LightSystem.hpp"
 
 // ============================================================================
 // Entity Tests
@@ -280,4 +282,146 @@ TEST(RegistryTest, LightStoreMutationThroughPointer) {
     EXPECT_FLOAT_EQ(reg.lights().get(e)->light.intensity, 42.0f);
     // Original is NOT modified (value was copied into store)
     EXPECT_FLOAT_EQ(lc.light.intensity, 1.0f);
+}
+
+// ============================================================================
+// System Tests — TransformSystem batch functions
+// ============================================================================
+
+TEST(TransformSystemTest, UpdateAllTransforms) {
+    ComponentStore<TransformComponent> store;
+    TransformComponent t1, t2;
+    t1.position.x = 10.0f;
+    t1.position.zoom = 2.0f;
+    t2.position.y = 20.0f;
+
+    store.add(1, t1);
+    store.add(2, t2);
+
+    TransformSystem::updateAllTransforms(store);
+
+    // Both transforms should have non-identity modelMatrices
+    auto* r1 = store.get(1);
+    auto* r2 = store.get(2);
+    ASSERT_NE(r1, nullptr);
+    ASSERT_NE(r2, nullptr);
+
+    // t1: translated to x=10, scaled by 2 — translation lives in row 0, col 3
+    EXPECT_FLOAT_EQ(r1->modelMatrix.data[0][3], 10.0f);
+    // t2: translated to y=20 — translation lives in row 1, col 3
+    EXPECT_FLOAT_EQ(r2->modelMatrix.data[1][3], 20.0f);
+}
+
+TEST(TransformSystemTest, UpdateAllOrbits) {
+    ComponentStore<TransformComponent> store;
+
+    // Orbiting transform
+    TransformComponent orbiting;
+    orbiting.position.x = 0.0f;
+    TransformSystem::enableCircularOrbit(orbiting, {0, 0, 0}, 100.0f, {0, 1, 0}, 1.0f, 0.0f);
+    store.add(1, orbiting);
+
+    // Non-orbiting transform
+    TransformComponent stationary;
+    stationary.position.x = 42.0f;
+    store.add(2, stationary);
+
+    TransformSystem::updateAllOrbits(store, 0.1f);
+
+    // Orbiting one should have moved
+    auto* o = store.get(1);
+    ASSERT_NE(o, nullptr);
+    EXPECT_TRUE(o->orbit.enabled);
+    // Phase should have advanced from 0
+    EXPECT_GT(o->orbit.phase, 0.0f);
+
+    // Stationary one should be unchanged
+    auto* s = store.get(2);
+    ASSERT_NE(s, nullptr);
+    EXPECT_FALSE(s->orbit.enabled);
+    EXPECT_FLOAT_EQ(s->position.x, 42.0f);
+}
+
+// ============================================================================
+// System Tests — LightSystem
+// ============================================================================
+
+TEST(LightSystemTest, SyncPositions) {
+    Registry reg;
+    Entity e = reg.createEntity();
+
+    TransformComponent t;
+    t.position.x = 100.0f;
+    t.position.y = 200.0f;
+    t.position.z = 300.0f;
+    reg.transforms().add(e, t);
+
+    LightComponent lc;
+    lc.light.position = {0.0f, 0.0f, 0.0f};
+    reg.lights().add(e, lc);
+
+    LightSystem::syncPositions(reg);
+
+    auto* light = reg.lights().get(e);
+    ASSERT_NE(light, nullptr);
+    EXPECT_FLOAT_EQ(light->light.position.x, 100.0f);
+    EXPECT_FLOAT_EQ(light->light.position.y, 200.0f);
+    EXPECT_FLOAT_EQ(light->light.position.z, 300.0f);
+}
+
+TEST(LightSystemTest, SyncPositionsMultipleLights) {
+    Registry reg;
+    Entity e1 = reg.createEntity();
+    Entity e2 = reg.createEntity();
+
+    TransformComponent t1;
+    t1.position.x = 10.0f;
+    reg.transforms().add(e1, t1);
+
+    TransformComponent t2;
+    t2.position.x = 20.0f;
+    reg.transforms().add(e2, t2);
+
+    LightComponent lc1, lc2;
+    reg.lights().add(e1, lc1);
+    reg.lights().add(e2, lc2);
+
+    LightSystem::syncPositions(reg);
+
+    EXPECT_FLOAT_EQ(reg.lights().get(e1)->light.position.x, 10.0f);
+    EXPECT_FLOAT_EQ(reg.lights().get(e2)->light.position.x, 20.0f);
+}
+
+TEST(LightSystemTest, EnsureShadowMaps) {
+    ComponentStore<LightComponent> store;
+    LightComponent lc1, lc2;
+    store.add(1, lc1);
+    store.add(2, lc2);
+
+    // Neither should have a shadow map yet
+    EXPECT_EQ(store.get(1)->shadowMap, nullptr);
+    EXPECT_EQ(store.get(2)->shadowMap, nullptr);
+
+    sage::Event dummyEvent;
+    LightSystem::ensureShadowMaps(store, dummyEvent, 0);
+
+    // Both should now have shadow maps
+    EXPECT_NE(store.get(1)->shadowMap, nullptr);
+    EXPECT_NE(store.get(2)->shadowMap, nullptr);
+}
+
+TEST(LightSystemTest, EnsureShadowMapsIdempotent) {
+    ComponentStore<LightComponent> store;
+    LightComponent lc;
+    store.add(1, lc);
+
+    sage::Event dummyEvent;
+    LightSystem::ensureShadowMaps(store, dummyEvent, 0);
+
+    auto* firstMap = store.get(1)->shadowMap.get();
+    ASSERT_NE(firstMap, nullptr);
+
+    // Calling again should not create a new map
+    LightSystem::ensureShadowMaps(store, dummyEvent, 0);
+    EXPECT_EQ(store.get(1)->shadowMap.get(), firstMap);
 }

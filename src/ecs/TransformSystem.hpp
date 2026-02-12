@@ -1,5 +1,6 @@
 #pragma once
 #include "TransformComponent.hpp"
+#include "ComponentStore.hpp"
 #include "../slib.hpp"
 #include "../smath.hpp"
 #include <algorithm>
@@ -111,6 +112,22 @@ namespace TransformSystem {
         t.position.x = P.x;
         t.position.y = P.y;
         t.position.z = P.z;
+    }
+
+    // --- Batch system functions ---
+
+    // Iterate all transforms, update orbit positions
+    inline void updateAllOrbits(ComponentStore<TransformComponent>& store, float dt) {
+        for (auto& [entity, t] : store) {
+            updateOrbit(t, dt);
+        }
+    }
+
+    // Iterate all transforms, rebuild modelMatrix + normalMatrix
+    inline void updateAllTransforms(ComponentStore<TransformComponent>& store) {
+        for (auto& [entity, t] : store) {
+            updateTransform(t);
+        }
     }
 
 } // namespace TransformSystem
