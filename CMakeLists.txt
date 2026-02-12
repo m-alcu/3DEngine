@@ -115,8 +115,6 @@ if(BUILD_TESTS)
         tests/test_ecs.cpp
         src/slib.cpp
         src/smath.cpp
-        src/events/Event.cpp
-        src/events/EventManager.cpp
     )
     target_include_directories(test_ecs PRIVATE ${CMAKE_SOURCE_DIR}/src)
     target_link_libraries(test_ecs PRIVATE GTest::gtest_main)
