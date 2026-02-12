@@ -13,8 +13,8 @@ void Plane::loadVertices() {
     v.vertex = { +half, +half, 0}; v.texCoord = { 1, 1 }; vertices.push_back(v);
     v.vertex = { -half, +half, 0} ; v.texCoord = { 0, 1 }; vertices.push_back(v);
 
-    this->vertexData = vertices;
-    this->numVertices = vertices.size();
+    this->mesh->vertexData = vertices;
+    this->mesh->numVertices = vertices.size();
 }
 
 void Plane::loadFaces() {
@@ -27,12 +27,12 @@ void Plane::loadFaces() {
     material.Kd = { properties.k_d * 0xaa, properties.k_d * 0xaa, properties.k_d * 0xaa };
     material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };
     material.Ns = properties.shininess;
-    materials.insert({materialKey, material});
+    mesh->materials.insert({materialKey, material});
 
     FaceData face;
     face.face.vertexIndices = { 0, 1, 2, 3 };
     face.face.materialKey = materialKey;
-    this->faceData.push_back(face);
+    this->mesh->faceData.push_back(face);
 
-    this->numFaces = this->faceData.size();
+    this->mesh->numFaces = this->mesh->faceData.size();
 }

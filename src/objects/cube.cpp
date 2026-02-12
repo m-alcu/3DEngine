@@ -47,8 +47,8 @@ void Cube::loadVertices() {
     v.vertex = { +half, -half, +half }; v.texCoord = { 0, 0 }; vertices.push_back(v);
     v.vertex = { -half, -half, +half }; v.texCoord = { 1, 0 }; vertices.push_back(v);
 
-    this->vertexData = vertices;
-    this->numVertices = vertices.size();
+    this->mesh->vertexData = vertices;
+    this->mesh->numVertices = vertices.size();
 }
 
 void Cube::loadFaces() {
@@ -65,7 +65,7 @@ void Cube::loadFaces() {
     material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };
     material.Ns = properties.shininess;
     material.map_Kd = LoadTextureFromImg(std::string(RES_PATH + mtlPath).c_str());
-    materials.insert({materialKey, material});
+    mesh->materials.insert({materialKey, material});
 
     // Each face has 2 triangles, so for each face we generate 6 indices
     for (int baseIndex = 0; baseIndex < 4*6; baseIndex += 4) {
@@ -74,8 +74,8 @@ void Cube::loadFaces() {
 		face.face.vertexIndices = { baseIndex + 0, baseIndex + 1, baseIndex + 2, baseIndex + 3 };
 		face.face.materialKey = materialKey;
                 
-        this->faceData.push_back(face);
+        this->mesh->faceData.push_back(face);
     }
 
-    this->numFaces =this->faceData.size();
+    this->mesh->numFaces = this->mesh->faceData.size();
 }

@@ -47,7 +47,7 @@ void AscLoader::loadVertices(const std::string& filename) {
     material.map_Kd = LoadTextureFromImg(std::string(RES_PATH + mtlPath).c_str());
     material.map_Kd.setFilter(TextureFilter::NEIGHBOUR);    
     material.Ns = properties.shininess;
-    materials.insert({"blue", material});
+    mesh->materials.insert({"blue", material});
 
     material.Ka = { properties.k_a * 0x00, properties.k_a * 0x00, properties.k_a * 0x00 };
     material.Kd = { properties.k_d * 0xff, properties.k_d * 0xff, properties.k_d * 0xff };
@@ -55,7 +55,7 @@ void AscLoader::loadVertices(const std::string& filename) {
     material.map_Kd = LoadTextureFromImg(std::string(RES_PATH + mtlPath).c_str());
     material.map_Kd.setFilter(TextureFilter::NEIGHBOUR);    
     material.Ns = properties.shininess;
-    materials.insert({"white", material});          
+    mesh->materials.insert({"white", material});          
 
     while (std::getline(file, line)) {
         // Remove leading/trailing spaces
@@ -129,14 +129,14 @@ void AscLoader::loadVertices(const std::string& filename) {
     std::cout << "Total faces: " << num_faces << "\n";
 
     // Store vertices and faces in the class members
-    AscLoader::vertexData = vertices;
+    mesh->vertexData = vertices;
 
     float x_min = 0.0f;
     float y_min = 0.0f;
     float x_max = 0.0f;
     float y_max = 0.0f;
 
-    for (auto& vertex : AscLoader::vertexData) {
+    for (auto& vertex : mesh->vertexData) {
         // Calculate min and max for x and y coordinates
         if (vertex.vertex.x < x_min) x_min = vertex.vertex.x;
         if (vertex.vertex.y < y_min) y_min = vertex.vertex.y;
@@ -144,15 +144,15 @@ void AscLoader::loadVertices(const std::string& filename) {
         if (vertex.vertex.y > y_max) y_max = vertex.vertex.y;
     }
 
-    for (auto& vertex : AscLoader::vertexData) {
+    for (auto& vertex : mesh->vertexData) {
         // Set texture coordinates based on the min and max values
         vertex.texCoord.x = (vertex.vertex.x - x_min) / (x_max - x_min);
         vertex.texCoord.y = (vertex.vertex.y - y_min) / (y_max - y_min);
     }
 
-    AscLoader::faceData = faces;
-    AscLoader::numVertices = num_vertex;
-    AscLoader::numFaces = num_faces;
+    mesh->faceData = faces;
+    mesh->numVertices = num_vertex;
+    mesh->numFaces = num_faces;
 }
 
 void AscLoader::loadFaces() {

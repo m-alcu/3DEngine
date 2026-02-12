@@ -19,8 +19,8 @@ void Test::loadVertices() {
     vertices.push_back({  -axisDist,  axisDist, -axisDist });
     vertices.push_back({  -axisDist, -axisDist, -axisDist });
     vertices.push_back({   axisDist, -axisDist, -axisDist });
-    this->vertexData = vertices;
-    this->numVertices = vertices.size();
+    this->mesh->vertexData = vertices;
+    this->mesh->numVertices = vertices.size();
 }
 
 void Test::loadFaces() {
@@ -36,13 +36,13 @@ void Test::loadFaces() {
     material.Kd = { properties.k_d * 0x00, properties.k_d * 0x58, properties.k_d * 0xfc }; 
     material.Ks = { properties.k_s * 0x00, properties.k_s * 0x58, properties.k_s * 0xfc };
     material.Ns = properties.shininess;
-    materials.insert({"blue", material});
+    mesh->materials.insert({"blue", material});
 
     material.Ka = { properties.k_a * 0xff, properties.k_a * 0xff, properties.k_a * 0xff };
     material.Kd = { properties.k_d * 0xff, properties.k_d * 0xff, properties.k_d * 0xff };
     material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };
     material.Ns = properties.shininess;
-    materials.insert({"white", material});
+    mesh->materials.insert({"white", material});
 
     FaceData face1;
 
@@ -76,7 +76,7 @@ void Test::loadFaces() {
     face4.face.materialKey = "white";
     faces.push_back(face4);
 
-    this->faceData = faces;
-    this->numFaces = faces.size();
+    this->mesh->faceData = faces;
+    this->mesh->numFaces = faces.size();
 
 }

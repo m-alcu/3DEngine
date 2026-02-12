@@ -60,7 +60,7 @@ void ObjLoader::loadVertices(const std::string& filename) {
     defaultMaterial.map_Kd = LoadTextureFromImg(std::string(RES_PATH + defaultTexturePath).c_str());
     defaultMaterial.map_Kd.setFilter(TextureFilter::NEIGHBOUR);
     defaultMaterial.Ns = properties.shininess;
-    materials.insert({"default", defaultMaterial});
+    mesh->materials.insert({"default", defaultMaterial});
 
     // Load materials from rapidobj
     for (size_t i = 0; i < mats.size(); ++i) {
@@ -102,7 +102,7 @@ void ObjLoader::loadVertices(const std::string& filename) {
             }
         }
 
-        materials[mat.name] = material;
+        mesh->materials[mat.name] = material;
     }
 
     // Map to track unique vertex combinations (position_index, texcoord_index, normal_index) -> final index
@@ -214,12 +214,12 @@ void ObjLoader::loadVertices(const std::string& filename) {
     std::cout << "  Normals: " << attrib.normals.size() / 3 << (hasLoadedNormals ? " (using file normals)" : " (will calculate)") << "\n";
     std::cout << "  Final vertices: " << finalVertices.size() << "\n";
     std::cout << "  Faces: " << faces.size() << "\n";
-    std::cout << "  Materials: " << materials.size() << "\n";
+    std::cout << "  Materials: " << mesh->materials.size() << "\n";
 
-    vertexData = std::move(finalVertices);
-    faceData = std::move(faces);
-    numVertices = static_cast<int>(vertexData.size());
-    numFaces = static_cast<int>(faceData.size());
+    mesh->vertexData = std::move(finalVertices);
+    mesh->faceData = std::move(faces);
+    mesh->numVertices = static_cast<int>(mesh->vertexData.size());
+    mesh->numFaces = static_cast<int>(mesh->faceData.size());
 }
 
 void ObjLoader::loadFaces() {

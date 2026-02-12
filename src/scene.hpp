@@ -17,7 +17,6 @@
 #include "backgrounds/backgroundFactory.hpp"
 #include "cubemap.hpp"
 #include "camera.hpp"
-#include "events/Event.hpp"
 #include "light.hpp"
 #include "objects/solid.hpp"
 #include "ecs/Registry.hpp"
@@ -70,9 +69,9 @@ public:
     TransformSystem::updateAllOrbits(registry.transforms(), dt);
     TransformSystem::updateAllTransforms(registry.transforms());
     LightSystem::syncPositions(registry);
-    LightSystem::ensureShadowMaps(registry.lights(), pcfRadiusChanged, pcfRadius);
+    LightSystem::ensureShadowMaps(registry.lights(), pcfRadius);
 
-    // --- Solid-coupled remnants (future: RotationComponent, MeshComponent) ---
+    // --- Solid-coupled remnants (future: RotationComponent) ---
     worldBoundMin = slib::vec3::boundMin();
     worldBoundMax = slib::vec3::boundMax();
     bool hasGeometry = !solids.empty();
@@ -176,6 +175,10 @@ public:
       added->lightComponent = registry.lights().get(added->entity);
       added->localLight_.reset();
     }
+
+    // Move mesh into registry; update pointer to registry-owned copy
+    registry.meshes().add(added->entity, std::move(added->localMesh_));
+    added->mesh = registry.meshes().get(added->entity);
   }
 
   CubeMap* getCubeMap() const { return background ? background->getCubeMap() : nullptr; }
@@ -248,7 +251,6 @@ public:
 
   // PCF radius control (0 = no filtering, 1 = 3x3, 2 = 5x5)
   int pcfRadius = SHADOW_PCF_RADIUS;
-  sage::Event pcfRadiusChanged;
 
   // Selected solid index for UI
   int selectedSolidIndex = 0;
@@ -365,7 +367,6 @@ public:
     int currentPcfRadius = pcfRadius;
     if (ImGui::Combo("PCF Radius", &currentPcfRadius, pcfLabels, IM_ARRAYSIZE(pcfLabels))) {
       pcfRadius = currentPcfRadius;
-      pcfRadiusChanged.InvokeAllCallbacks();
     }
   }
 

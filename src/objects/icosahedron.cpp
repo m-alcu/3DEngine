@@ -35,8 +35,8 @@ void Icosahedron::loadVertices() {
         vt.texCoord = { (p.x / axisDist + 1.f) * 0.5f, (p.y / axisDist + 1.f) * 0.5f };
     }
 
-    Icosahedron::vertexData = v;
-    Icosahedron::numVertices = v.size();
+    mesh->vertexData = v;
+    mesh->numVertices = v.size();
 }
 
 void Icosahedron::loadFaces() {
@@ -54,7 +54,7 @@ void Icosahedron::loadFaces() {
     mat.Ns = props.shininess;
     mat.illum = 1; // Emissive material
     mat.Ke = { props.k_a * 0xff, props.k_a * 0xff, props.k_a * 0xff }; // Emissive color
-    materials.insert({ "white", mat });
+    mesh->materials.insert({ "white", mat });
 
     // 20 triangular faces of the icosahedron (indices match the vertex order above)
     const uint16_t F[20][3] = {
@@ -75,6 +75,6 @@ void Icosahedron::loadFaces() {
         faces.push_back(fd);
     }
 
-    Icosahedron::faceData = faces;
-    Icosahedron::numFaces = faces.size();
+    mesh->faceData = faces;
+    mesh->numFaces = faces.size();
 }

@@ -1,17 +1,16 @@
 #pragma once
 #include <cstdint>
 #include <vector>
-#include <map>
 #include <string>
 #include <memory>
 #include <optional>
 #include "../slib.hpp"
-#include "../material.hpp"
 #include "../constants.hpp"
 #include "../smath.hpp"
 #include "../ecs/TransformComponent.hpp"
 #include "../ecs/Entity.hpp"
 #include "../ecs/LightComponent.hpp"
+#include "../ecs/MeshComponent.hpp"
 
 enum class Shading {
     Wireframe,
@@ -40,24 +39,6 @@ static const char* shadingNames[] = {
     "Environment Map"
 };
 
-struct VertexData {
-    slib::vec3 vertex;
-    slib::vec3 normal;
-    slib::vec2 texCoord;
-};
-
-typedef struct Face
-{
-	std::vector<int> vertexIndices; // For wireframe rendering
-    std::string materialKey;
-} Face;
-
-struct FaceData {
-    Face face;
-    slib::vec3 faceNormal;
-};
-
-
 enum class MaterialType {
     Rubber,
     Plastic,
@@ -81,25 +62,18 @@ struct MaterialProperties {
 class Solid {
 public:
     Entity entity = NULL_ENTITY;
-    std::vector<VertexData> vertexData;
-    std::vector<FaceData> faceData;
     Shading shading;
     TransformComponent localTransform_;
     TransformComponent* transform = &localTransform_;
+
+    MeshComponent localMesh_;
+    MeshComponent* mesh = &localMesh_;
 	bool rotationEnabled = true;
     float incXangle = 0.0f;  // Rotation speed around X axis
     float incYangle = 0.0f;  // Rotation speed around Y axis
     std::string name;
-    std::map<std::string, Material> materials;
-
-    int numVertices;
-    int numFaces;
     std::optional<LightComponent> localLight_;
     LightComponent* lightComponent = nullptr;
-
-    // Minimum and maximum coordinates for bounding box
-    slib::vec3 minCoord{};
-    slib::vec3 maxCoord{};
  
 public:
     // Base constructor that initializes common data members.

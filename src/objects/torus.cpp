@@ -22,7 +22,7 @@ void Torus::loadVertices(int uSteps, int vSteps, float R, float r) {
 
     std::vector<VertexData> vertices;
     vertices.resize(uSteps * vSteps);
-    Torus::vertexData = vertices;
+    mesh->vertexData = vertices;
 
     for (int i = 0; i < uSteps; i++) {
         float u = i * 2 * PI / uSteps;
@@ -35,13 +35,13 @@ void Torus::loadVertices(int uSteps, int vSteps, float R, float r) {
             float x = (R + r * cosV) * cosU;
             float y = (R + r * cosV) * sinU;
             float z = r * sinV;
-            Torus::vertexData[i * vSteps + j].vertex = { x, y, z };
-            Torus::vertexData[i * vSteps + j].texCoord = { (x/(R+r)+1)/2, (y/(R+r)+1)/2 };
+            mesh->vertexData[i * vSteps + j].vertex = { x, y, z };
+            mesh->vertexData[i * vSteps + j].texCoord = { (x/(R+r)+1)/2, (y/(R+r)+1)/2 };
         
         }
     }
 
-    Torus::numVertices = vertices.size();
+    mesh->numVertices = vertices.size();
 }
 
 void Torus::loadFaces(int uSteps, int vSteps) {
@@ -61,7 +61,7 @@ void Torus::loadFaces(int uSteps, int vSteps) {
     material.Ns = properties.shininess;
     material.map_Kd = LoadTextureFromImg(std::string(RES_PATH + mtlPath).c_str());
     material.map_Kd.setFilter(TextureFilter::NEIGHBOUR);
-    materials.insert({"blue", material});
+    mesh->materials.insert({"blue", material});
 
     material.Ka = { properties.k_a * 0x00, properties.k_a * 0x00, properties.k_a * 0x00 };
     material.Kd = { properties.k_d * 0xff, properties.k_d * 0xff, properties.k_d * 0xff };
@@ -69,7 +69,7 @@ void Torus::loadFaces(int uSteps, int vSteps) {
     material.Ns = properties.shininess;
     material.map_Kd = LoadTextureFromImg(std::string(RES_PATH + mtlPath).c_str());
     material.map_Kd.setFilter(TextureFilter::NEIGHBOUR);
-    materials.insert({"white", material});  
+    mesh->materials.insert({"white", material});  
 
     int faceIndex = 0;
     for (int i = 0; i < uSteps; i++) {
@@ -100,6 +100,6 @@ void Torus::loadFaces(int uSteps, int vSteps) {
         }
     }
 
-    Torus::faceData = faces;
-    Torus::numFaces = faces.size();
+    mesh->faceData = faces;
+    mesh->numFaces = faces.size();
 }

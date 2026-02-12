@@ -29,7 +29,7 @@ void World::loadVertices(int lat, int lon) {
 
     std::vector<VertexData> vertices;
     vertices.resize((lat + 1) * (lon + 1));
-    World::vertexData = vertices;
+    mesh->vertexData = vertices;
 
 
     for (int i = 0; i <= lat; i++) {
@@ -37,28 +37,28 @@ void World::loadVertices(int lat, int lon) {
         for (int j = 0; j <= lon; j++) {
             float phi = j * 2 * PI / lon;
             if (j == lon) {
-                World::vertexData[i * (lon + 1) + j].vertex = World::vertexData[i * (lon + 1) + j - lon].vertex;
+                mesh->vertexData[i * (lon + 1) + j].vertex = mesh->vertexData[i * (lon + 1) + j - lon].vertex;
             } else {
                 float x = sinf(theta) * cosf(phi);
                 float y = cosf(theta);
                 float z = sinf(theta) * sinf(phi);
-                World::vertexData[i * (lon + 1) + j].vertex = { x, y, z };
+                mesh->vertexData[i * (lon + 1) + j].vertex = { x, y, z };
             }
             // Ensure texture wraps by duplicating the last column with u = 1.0 when j == lon
             float u = (j == lon) ? 1.0f : phi / (2 * PI);
             float v = (i == lat) ? 1.0f : theta / PI;
-            World::vertexData[i * (lon + 1) + j].texCoord = { u, v };
+            mesh->vertexData[i * (lon + 1) + j].texCoord = { u, v };
 
         }
     }    
 
-    World::numVertices = vertices.size();
+    mesh->numVertices = vertices.size();
 }
 
 void World::calculateVertexNormals() {
 
-    for (int i = 0; i < numVertices; i++) {
-        World::vertexData[i].normal = World::vertexData[i].vertex; // Initialize normals to zero
+    for (int i = 0; i < mesh->numVertices; i++) {
+        mesh->vertexData[i].normal = mesh->vertexData[i].vertex; // Initialize normals to zero
     }
 }
 
@@ -79,7 +79,7 @@ void World::loadFaces(int lat, int lon) {
     material.Ns = properties.shininess;
     material.map_Kd = LoadTextureFromImg(std::string(RES_PATH + mtlPath).c_str());
     material.map_Kd.setFilter(TextureFilter::BILINEAR_INT);
-    materials.insert({"red", material});
+    mesh->materials.insert({"red", material});
 
     material.Ka = { properties.k_a * 0x00, properties.k_a * 0x00, properties.k_a * 0x00 };
     material.Kd = { properties.k_d * 0xff, properties.k_d * 0xff, properties.k_d * 0xff };
@@ -87,7 +87,7 @@ void World::loadFaces(int lat, int lon) {
     material.Ns = properties.shininess;
     material.map_Kd = LoadTextureFromImg(std::string(RES_PATH + mtlPath).c_str());
     material.map_Kd.setFilter(TextureFilter::BILINEAR_INT);
-    materials.insert({"white", material});  
+    mesh->materials.insert({"white", material});  
 
     for (int i = 0; i < lat; i++) {
         for (int j = 0; j < lon; j++) {
@@ -114,6 +114,6 @@ void World::loadFaces(int lat, int lon) {
         }
     }
 
-    World::faceData = faces;
-    World::numFaces = faces.size();
+    mesh->faceData = faces;
+    mesh->numFaces = faces.size();
 }

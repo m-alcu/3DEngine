@@ -402,8 +402,7 @@ TEST(LightSystemTest, EnsureShadowMaps) {
     EXPECT_EQ(store.get(1)->shadowMap, nullptr);
     EXPECT_EQ(store.get(2)->shadowMap, nullptr);
 
-    sage::Event dummyEvent;
-    LightSystem::ensureShadowMaps(store, dummyEvent, 0);
+    LightSystem::ensureShadowMaps(store, 0);
 
     // Both should now have shadow maps
     EXPECT_NE(store.get(1)->shadowMap, nullptr);
@@ -415,13 +414,12 @@ TEST(LightSystemTest, EnsureShadowMapsIdempotent) {
     LightComponent lc;
     store.add(1, lc);
 
-    sage::Event dummyEvent;
-    LightSystem::ensureShadowMaps(store, dummyEvent, 0);
+    LightSystem::ensureShadowMaps(store, 0);
 
     auto* firstMap = store.get(1)->shadowMap.get();
     ASSERT_NE(firstMap, nullptr);
 
     // Calling again should not create a new map
-    LightSystem::ensureShadowMaps(store, dummyEvent, 0);
+    LightSystem::ensureShadowMaps(store, 0);
     EXPECT_EQ(store.get(1)->shadowMap.get(), firstMap);
 }

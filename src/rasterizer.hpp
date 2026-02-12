@@ -62,15 +62,15 @@ class Rasterizer {
 		Projection<vertex> projection;
 
         void processVertices() {
-            projectedPoints.resize(solid->numVertices);
-            const int n = static_cast<int>(solid->vertexData.size());
+            projectedPoints.resize(solid->mesh->numVertices);
+            const int n = static_cast<int>(solid->mesh->vertexData.size());
 
             #pragma omp parallel for if(n > 1000)
             for (int i = 0; i < n; ++i) {
                 if constexpr (isShadowEffect) {
-                    projectedPoints[i] = effect.vs(solid->vertexData[i], solid, scene, lightSource);
+                    projectedPoints[i] = effect.vs(solid->mesh->vertexData[i], solid, scene, lightSource);
                 } else {
-                    projectedPoints[i] = effect.vs(solid->vertexData[i], solid, scene);
+                    projectedPoints[i] = effect.vs(solid->mesh->vertexData[i], solid, scene);
                     scene->stats.addProcessedVertex();
                 }
             }
@@ -103,14 +103,14 @@ class Rasterizer {
                 float depth;
             };
             std::vector<FaceDepth> visibleFaces;
-            visibleFaces.reserve(solid->faceData.size());
+            visibleFaces.reserve(solid->mesh->faceData.size());
 
             //#pragma omp parallel
             {
                 std::vector<FaceDepth> localVisible;
                 //#pragma omp for nowait
-                for (int i = 0; i < static_cast<int>(solid->faceData.size()); ++i) {
-                    const auto& faceDataEntry = solid->faceData[i];
+                for (int i = 0; i < static_cast<int>(solid->mesh->faceData.size()); ++i) {
+                    const auto& faceDataEntry = solid->mesh->faceData[i];
                     slib::vec3 normal = getRotatedNormal(faceDataEntry);
                     vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];
 
@@ -129,13 +129,13 @@ class Rasterizer {
             //#pragma omp parallel for
             //This will wait until we develop a tile-based rasterizer
             for (const auto& fd : visibleFaces) {
-                const auto& faceDataEntry = solid->faceData[fd.faceIndex];
+                const auto& faceDataEntry = solid->mesh->faceData[fd.faceIndex];
                 slib::vec3 normal = getRotatedNormal(faceDataEntry);
 
                 Polygon<vertex> poly(
                     collectPolyVerts(faceDataEntry),
                     normal,
-                    solid->materials.at(faceDataEntry.face.materialKey)
+                    solid->mesh->materials.at(faceDataEntry.face.materialKey)
                 );
                 clipAndDraw(poly);
             }
@@ -143,7 +143,7 @@ class Rasterizer {
 
         void drawShadowFaces()
         {
-            for (const auto &faceDataEntry : solid->faceData)
+            for (const auto &faceDataEntry : solid->mesh->faceData)
             {
                 slib::vec3 normal = getRotatedNormal(faceDataEntry);
                 vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];

@@ -14,9 +14,10 @@ void Solid::calculateTransformMat() {
 }
 
 void Solid::calculateFaceNormals() {
+    if (!mesh) return;
 
-    for (int i = 0; i < numFaces; i++) {
-        const Face &face = Solid::faceData[i].face;
+    for (int i = 0; i < mesh->numFaces; i++) {
+        const Face &face = mesh->faceData[i].face;
         const size_t n = face.vertexIndices.size();
 
         // Newell's method: works for any polygon (tri, quad, n-gon)
@@ -25,77 +26,83 @@ void Solid::calculateFaceNormals() {
         slib::vec3 normal = {0.0f, 0.0f, 0.0f};
 
         for (size_t j = 0; j < n; ++j) {
-            const slib::vec3& curr = Solid::vertexData[face.vertexIndices[j]].vertex;
-            const slib::vec3& next = Solid::vertexData[face.vertexIndices[(j + 1) % n]].vertex;
+            const slib::vec3& curr = mesh->vertexData[face.vertexIndices[j]].vertex;
+            const slib::vec3& next = mesh->vertexData[face.vertexIndices[(j + 1) % n]].vertex;
 
             normal.x += (curr.y - next.y) * (curr.z + next.z);
             normal.y += (curr.z - next.z) * (curr.x + next.x);
             normal.z += (curr.x - next.x) * (curr.y + next.y);
         }
-        Solid::faceData[i].faceNormal = smath::normalize(normal);
+        mesh->faceData[i].faceNormal = smath::normalize(normal);
     }
 }
 
 void Solid::calculateVertexNormals() {
+    if (!mesh) return;
 
-    for (int i = 0; i < numVertices; i++) {
+    for (int i = 0; i < mesh->numVertices; i++) {
         slib::vec3 vertexNormal = { 0, 0, 0 };
-        for(int j = 0; j < numFaces; j++) {
+        for(int j = 0; j < mesh->numFaces; j++) {
 
-            for (int vi : Solid::faceData[j].face.vertexIndices) {
+            for (int vi : mesh->faceData[j].face.vertexIndices) {
                 // guard in case your data can contain bad indices
                 if (vi == i) {
-                    vertexNormal += Solid::faceData[j].faceNormal;
+                    vertexNormal += mesh->faceData[j].faceNormal;
                 }
             }        
         }
-        Solid::vertexData[i].normal = smath::normalize(vertexNormal);
+        mesh->vertexData[i].normal = smath::normalize(vertexNormal);
     }
 
 }
 
 void Solid::calculateMinMaxCoords() {
-    if (numVertices == 0) {
-        minCoord = {0.0f, 0.0f, 0.0f};
-        maxCoord = {0.0f, 0.0f, 0.0f};
+    if (!mesh || mesh->numVertices == 0) {
+        if (mesh) {
+            mesh->minCoord = {0.0f, 0.0f, 0.0f};
+            mesh->maxCoord = {0.0f, 0.0f, 0.0f};
+        }
         return;
     }
 
     // Initialize with the first vertex
-    minCoord = vertexData[0].vertex;
-    maxCoord = vertexData[0].vertex;
+    mesh->minCoord = mesh->vertexData[0].vertex;
+    mesh->maxCoord = mesh->vertexData[0].vertex;
 
     // Iterate through all vertices to find min and max coordinates
-    for (int i = 1; i < numVertices; i++) {
-        const slib::vec3& v = vertexData[i].vertex;
+    for (int i = 1; i < mesh->numVertices; i++) {
+        const slib::vec3& v = mesh->vertexData[i].vertex;
 
         // Update minimum coordinates
-        if (v.x < minCoord.x) minCoord.x = v.x;
-        if (v.y < minCoord.y) minCoord.y = v.y;
-        if (v.z < minCoord.z) minCoord.z = v.z;
+        if (v.x < mesh->minCoord.x) mesh->minCoord.x = v.x;
+        if (v.y < mesh->minCoord.y) mesh->minCoord.y = v.y;
+        if (v.z < mesh->minCoord.z) mesh->minCoord.z = v.z;
 
         // Update maximum coordinates
-        if (v.x > maxCoord.x) maxCoord.x = v.x;
-        if (v.y > maxCoord.y) maxCoord.y = v.y;
-        if (v.z > maxCoord.z) maxCoord.z = v.z;
+        if (v.x > mesh->maxCoord.x) mesh->maxCoord.x = v.x;
+        if (v.y > mesh->maxCoord.y) mesh->maxCoord.y = v.y;
+        if (v.z > mesh->maxCoord.z) mesh->maxCoord.z = v.z;
     }
 }
 
 float Solid::getBoundingRadius() const {
-    slib::vec3 center{(minCoord.x + maxCoord.x) * 0.5f,
-                      (minCoord.y + maxCoord.y) * 0.5f,
-                      (minCoord.z + maxCoord.z) * 0.5f};
-    slib::vec3 halfDiag{maxCoord.x - center.x, maxCoord.y - center.y,
-                        maxCoord.z - center.z};
+    if (!mesh) return 0.0f;
+    slib::vec3 center{(mesh->minCoord.x + mesh->maxCoord.x) * 0.5f,
+                      (mesh->minCoord.y + mesh->maxCoord.y) * 0.5f,
+                      (mesh->minCoord.z + mesh->maxCoord.z) * 0.5f};
+    slib::vec3 halfDiag{mesh->maxCoord.x - center.x, mesh->maxCoord.y - center.y,
+                        mesh->maxCoord.z - center.z};
     return smath::distance(halfDiag);
 }
 
 slib::vec3 Solid::getWorldCenter() const {
-    return TransformSystem::getWorldCenter(*transform, minCoord, maxCoord);
+    if (!mesh) return {0.0f, 0.0f, 0.0f};
+    return TransformSystem::getWorldCenter(*transform, mesh->minCoord, mesh->maxCoord);
 }
 
 void Solid::updateWorldBounds(slib::vec3& worldBoundMin, slib::vec3& worldBoundMax) const {
-    TransformSystem::updateWorldBounds(*transform, minCoord, maxCoord, worldBoundMin, worldBoundMax);
+    if (!mesh) return;
+    TransformSystem::updateWorldBounds(*transform, mesh->minCoord, mesh->maxCoord, worldBoundMin, worldBoundMax);
 }
 
 void Solid::scaleToRadius(float targetRadius) {
@@ -171,7 +178,8 @@ void Solid::updateOrbit(float dt) {
 
 // Set emissive color for all materials
 void Solid::setEmissiveColor(const slib::vec3& color) {
-    for (auto& kv : materials) {
+    if (!mesh) return;
+    for (auto& kv : mesh->materials) {
         kv.second.Ke = color * 255.0f;
     }
 }

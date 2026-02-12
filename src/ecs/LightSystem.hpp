@@ -1,7 +1,6 @@
 #pragma once
 #include "Registry.hpp"
 #include "../constants.hpp"
-#include "../events/Event.hpp"
 
 namespace LightSystem {
 
@@ -17,12 +16,12 @@ namespace LightSystem {
 
     // Ensure every light has a shadow map allocated
     inline void ensureShadowMaps(ComponentStore<LightComponent>& lights,
-                                  sage::Event& pcfRadiusChanged, int pcfRadius) {
+                                  int pcfRadius) {
         for (auto& [entity, light] : lights) {
             if (!light.shadowMap) {
                 light.shadowMap = std::make_shared<ShadowMap>(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
-                light.shadowMap->subscribeToPcfRadiusChanges(pcfRadiusChanged, pcfRadius);
             }
+            light.shadowMap->pcfRadius = pcfRadius;
         }
     }
 

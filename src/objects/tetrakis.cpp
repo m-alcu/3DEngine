@@ -29,13 +29,13 @@ void Tetrakis::loadVertices() {
     vertices.push_back({ 0, -axisDist, 0 });
     vertices.push_back({ 0, 0, -axisDist });
 
-    Tetrakis::vertexData = vertices;
+    mesh->vertexData = vertices;
 
-    for (auto& vertex : Tetrakis::vertexData) {
+    for (auto& vertex : mesh->vertexData) {
         vertex.texCoord = { (vertex.vertex.x/axisDist + 1)/2, (vertex.vertex.y/axisDist + 1)/2 };
     }
 
-    Tetrakis::numVertices = vertices.size();
+    mesh->numVertices = vertices.size();
 }
 
 void Tetrakis::loadFaces() {
@@ -53,7 +53,7 @@ void Tetrakis::loadFaces() {
     material.map_Kd = LoadTextureFromImg(std::string(RES_PATH + mtlPath).c_str());
     material.map_Kd.setFilter(TextureFilter::NEIGHBOUR);
     material.Ns = properties.shininess;
-    materials.insert({"blue", material});
+    mesh->materials.insert({"blue", material});
 
     material.Ka = { properties.k_a * 0xff, properties.k_a * 0xff, properties.k_a * 0xff };
     material.Kd = { properties.k_d * 0xff, properties.k_d * 0xff, properties.k_d * 0xff };
@@ -61,7 +61,7 @@ void Tetrakis::loadFaces() {
     material.map_Kd = LoadTextureFromImg(std::string(RES_PATH + mtlPath).c_str());
     material.map_Kd.setFilter(TextureFilter::NEIGHBOUR);    
     material.Ns = properties.shininess;
-    materials.insert({"white", material});    
+    mesh->materials.insert({"white", material});    
 
     // Define the quadrilaterals (outer vertices) and centers for each face group.
     const uint16_t quads[6][4] = {
@@ -97,6 +97,6 @@ void Tetrakis::loadFaces() {
         }
     }
 
-    Tetrakis::faceData = faces;
-    Tetrakis::numFaces = faces.size();
+    mesh->faceData = faces;
+    mesh->numFaces = faces.size();
 }

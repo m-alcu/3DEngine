@@ -29,7 +29,7 @@ void Amiga::loadVertices(int lat, int lon) {
 
     std::vector<VertexData> vertices;
     vertices.resize((lat + 1) * lon);
-    Amiga::vertexData = vertices;
+    mesh->vertexData = vertices;
 
 
     for (int i = 0; i <= lat; i++) {
@@ -39,23 +39,23 @@ void Amiga::loadVertices(int lat, int lon) {
             float x = sinf(theta) * cosf(phi);
             float y = cosf(theta);
             float z = sinf(theta) * sinf(phi);
-            Amiga::vertexData[i * lon + j].vertex = { x, y, z };
+            mesh->vertexData[i * lon + j].vertex = { x, y, z };
 
             // Ensure texture wraps by duplicating the last column with u = 1.0 when j == lon
             float u = phi / (2 * PI);
             float v = theta / PI;
-            Amiga::vertexData[i * lon + j].texCoord = { u, v };
+            mesh->vertexData[i * lon + j].texCoord = { u, v };
 
         }
     }    
 
-    Amiga::numVertices = vertices.size();
+    mesh->numVertices = vertices.size();
 }
 
 void Amiga::calculateVertexNormals() {
 
-    for (int i = 0; i < numVertices; i++) {
-        Amiga::vertexData[i].normal = Amiga::vertexData[i].vertex; // Initialize normals to zero
+    for (int i = 0; i < mesh->numVertices; i++) {
+        mesh->vertexData[i].normal = mesh->vertexData[i].vertex; // Initialize normals to zero
     }
 }
 
@@ -76,7 +76,7 @@ void Amiga::loadFaces(int lat, int lon) {
     material.Ns = properties.shininess;
     material.map_Kd = LoadTextureFromImg(std::string(RES_PATH + mtlPath).c_str());
     material.map_Kd.setFilter(TextureFilter::NEIGHBOUR);
-    materials.insert({"red", material});
+    mesh->materials.insert({"red", material});
 
     material.Ka = { properties.k_a * 0x00, properties.k_a * 0x00, properties.k_a * 0x00 };
     material.Kd = { properties.k_d * 0xff, properties.k_d * 0xff, properties.k_d * 0xff };
@@ -84,7 +84,7 @@ void Amiga::loadFaces(int lat, int lon) {
     material.Ns = properties.shininess;
     material.map_Kd = LoadTextureFromImg(std::string(RES_PATH + mtlPath).c_str());
     material.map_Kd.setFilter(TextureFilter::NEIGHBOUR);
-    materials.insert({"white", material});  
+    mesh->materials.insert({"white", material});  
 
     for (int i = 0; i < lat; i++) {
         for (int j = 0; j < lon; j++) {
@@ -112,6 +112,6 @@ void Amiga::loadFaces(int lat, int lon) {
         }
     }
 
-    Amiga::faceData = faces;
-    Amiga::numFaces = faces.size();
+    mesh->faceData = faces;
+    mesh->numFaces = faces.size();
 }
