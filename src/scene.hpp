@@ -20,6 +20,7 @@
 #include "events/Event.hpp"
 #include "light.hpp"
 #include "objects/solid.hpp"
+#include "ecs/Registry.hpp"
 #include "slib.hpp"
 #include "smath.hpp"
 #include "stats.hpp"
@@ -169,7 +170,9 @@ public:
   // Add a solid to the scene's list of solids.
   // Using std::unique_ptr is a good practice for ownership.
   void addSolid(std::unique_ptr<Solid> solid) {
+    solid->entity = registry.createEntity();
     solids.push_back(std::move(solid));
+    registry.transforms().add(solids.back()->entity, &solids.back()->transform);
   }
 
   CubeMap* getCubeMap() const { return background ? background->getCubeMap() : nullptr; }
@@ -181,7 +184,10 @@ public:
 
   // Add a solid to the scene's list of solids.
   // Using std::unique_ptr is a good practice for ownership.
-  void clearAllSolids() { solids.clear(); }
+  void clearAllSolids() {
+    solids.clear();
+    registry.clear();
+  }
 
   Screen screen;
   SceneType sceneType = SceneType::YAML;
@@ -203,6 +209,7 @@ public:
   Camera camera; // Camera object to manage camera properties.
   // Store solids in a vector of unique_ptr to handle memory automatically.
   std::vector<std::unique_ptr<Solid>> solids;
+  Registry registry; // ECS registry for component storage
 
   // Returns a filtered view of solids that are light sources
   auto lightSources() const {

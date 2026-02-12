@@ -11,6 +11,7 @@
 #include "../smath.hpp"
 #include "../ShadowMap.hpp"
 #include "../ecs/TransformComponent.hpp"
+#include "../ecs/Entity.hpp"
 
 enum class Shading {
     Wireframe,
@@ -79,6 +80,7 @@ struct MaterialProperties {
 
 class Solid {
 public:
+    Entity entity = NULL_ENTITY;
     std::vector<VertexData> vertexData;
     std::vector<FaceData> faceData;
     Shading shading;

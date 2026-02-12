@@ -110,7 +110,18 @@ if(BUILD_TESTS)
     target_link_libraries(test_transform PRIVATE GTest::gtest_main)
     set_target_properties(test_transform PROPERTIES CXX_STANDARD 23 CXX_STANDARD_REQUIRED on)
 
+    # ECS (Entity, ComponentStore, Registry) test
+    add_executable(test_ecs
+        tests/test_ecs.cpp
+        src/slib.cpp
+        src/smath.cpp
+    )
+    target_include_directories(test_ecs PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(test_ecs PRIVATE GTest::gtest_main)
+    set_target_properties(test_ecs PROPERTIES CXX_STANDARD 23 CXX_STANDARD_REQUIRED on)
+
     include(GoogleTest)
     gtest_discover_tests(test_math)
     gtest_discover_tests(test_transform)
+    gtest_discover_tests(test_ecs)
 endif()
