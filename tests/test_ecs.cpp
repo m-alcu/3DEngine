@@ -3,6 +3,7 @@
 #include "../src/ecs/ComponentStore.hpp"
 #include "../src/ecs/Registry.hpp"
 #include "../src/ecs/TransformComponent.hpp"
+#include "../src/ecs/LightComponent.hpp"
 
 // ============================================================================
 // Entity Tests
@@ -153,25 +154,33 @@ TEST(RegistryTest, DestroyEntityRemovesFromAllStores) {
     Entity e = reg.createEntity();
 
     TransformComponent t;
+    LightComponent lc;
     reg.transforms().add(e, &t);
+    reg.lights().add(e, &lc);
     EXPECT_TRUE(reg.transforms().has(e));
+    EXPECT_TRUE(reg.lights().has(e));
 
     reg.destroyEntity(e);
     EXPECT_FALSE(reg.transforms().has(e));
+    EXPECT_FALSE(reg.lights().has(e));
 }
 
 TEST(RegistryTest, ClearRemovesAllComponents) {
     Registry reg;
     TransformComponent t1, t2;
+    LightComponent lc;
 
     Entity e1 = reg.createEntity();
     Entity e2 = reg.createEntity();
     reg.transforms().add(e1, &t1);
     reg.transforms().add(e2, &t2);
+    reg.lights().add(e1, &lc);
 
     EXPECT_EQ(reg.transforms().size(), 2u);
+    EXPECT_EQ(reg.lights().size(), 1u);
     reg.clear();
     EXPECT_EQ(reg.transforms().size(), 0u);
+    EXPECT_EQ(reg.lights().size(), 0u);
 }
 
 TEST(RegistryTest, SystemIterationPattern) {
@@ -192,4 +201,79 @@ TEST(RegistryTest, SystemIterationPattern) {
         sum += transform->position.x;
     }
     EXPECT_FLOAT_EQ(sum, 600.0f);
+}
+
+// ============================================================================
+// LightComponent Store Tests
+// ============================================================================
+
+TEST(RegistryTest, LightStoreAddAndGet) {
+    Registry reg;
+    Entity e = reg.createEntity();
+
+    LightComponent lc;
+    lc.light.intensity = 5.0f;
+    reg.lights().add(e, &lc);
+
+    EXPECT_TRUE(reg.lights().has(e));
+    ASSERT_NE(reg.lights().get(e), nullptr);
+    EXPECT_FLOAT_EQ(reg.lights().get(e)->light.intensity, 5.0f);
+}
+
+TEST(RegistryTest, LightStoreOnlyForLightEntities) {
+    Registry reg;
+    Entity lightEntity = reg.createEntity();
+    Entity nonLightEntity = reg.createEntity();
+
+    TransformComponent t1, t2;
+    LightComponent lc;
+    reg.transforms().add(lightEntity, &t1);
+    reg.transforms().add(nonLightEntity, &t2);
+    reg.lights().add(lightEntity, &lc);
+
+    // Both have transforms
+    EXPECT_TRUE(reg.transforms().has(lightEntity));
+    EXPECT_TRUE(reg.transforms().has(nonLightEntity));
+
+    // Only light entity has LightComponent
+    EXPECT_TRUE(reg.lights().has(lightEntity));
+    EXPECT_FALSE(reg.lights().has(nonLightEntity));
+}
+
+TEST(RegistryTest, LightStoreIteration) {
+    Registry reg;
+    LightComponent lc1, lc2;
+    lc1.light.intensity = 10.0f;
+    lc2.light.intensity = 20.0f;
+
+    Entity e1 = reg.createEntity();
+    Entity e2 = reg.createEntity();
+    Entity e3 = reg.createEntity(); // non-light entity
+
+    reg.lights().add(e1, &lc1);
+    reg.lights().add(e2, &lc2);
+
+    float sum = 0.0f;
+    int count = 0;
+    for (auto& [entity, lightComp] : reg.lights()) {
+        sum += lightComp->light.intensity;
+        count++;
+    }
+    EXPECT_EQ(count, 2);
+    EXPECT_FLOAT_EQ(sum, 30.0f);
+}
+
+TEST(RegistryTest, LightStoreMutationThroughPointer) {
+    Registry reg;
+    Entity e = reg.createEntity();
+
+    LightComponent lc;
+    lc.light.intensity = 1.0f;
+    reg.lights().add(e, &lc);
+
+    // Modify through registry pointer
+    reg.lights().get(e)->light.intensity = 42.0f;
+
+    // Original is modified (non-owning pointer)
+    EXPECT_FLOAT_EQ(lc.light.intensity, 42.0f);
 }

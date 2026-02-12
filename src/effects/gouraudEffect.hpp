@@ -100,12 +100,12 @@ public:
                         const Polygon<Vertex> &poly) const {
 
       slib::vec3 diffuseColor{0.0f, 0.0f, 0.0f};
-      for (const auto &solidPtr : scene.lightSources()) {
-        const Light &light = solidPtr->light;
+      for (const auto &[entity_, lightComp] : scene.lights()) {
+        const Light &light = lightComp->light;
         float attenuation = light.getAttenuation(vRaster.world);
         const slib::vec3 &luxDirection = light.getDirection(vRaster.world);
         float diff = std::max(0.0f, smath::dot(vRaster.normal, luxDirection));           
-        float shadow = scene.shadowsEnabled && solidPtr->shadowMap ? solidPtr->shadowMap->sampleShadow(vRaster.world, diff) : 1.0f;
+        float shadow = scene.shadowsEnabled && lightComp->shadowMap ? lightComp->shadowMap->sampleShadow(vRaster.world, diff) : 1.0f;
         diffuseColor += light.color * (diff * light.intensity * attenuation * shadow);
       }
       return Color(poly.material->Ka + poly.material->Kd * diffuseColor).toBgra();

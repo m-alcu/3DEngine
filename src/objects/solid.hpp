@@ -4,14 +4,14 @@
 #include <map>
 #include <string>
 #include <memory>
+#include <optional>
 #include "../slib.hpp"
-#include "../light.hpp"
 #include "../material.hpp"
 #include "../constants.hpp"
 #include "../smath.hpp"
-#include "../ShadowMap.hpp"
 #include "../ecs/TransformComponent.hpp"
 #include "../ecs/Entity.hpp"
+#include "../ecs/LightComponent.hpp"
 
 enum class Shading {
     Wireframe,
@@ -93,9 +93,7 @@ public:
 
     int numVertices;
     int numFaces;
-	bool lightSourceEnabled = false;
-    Light light;  // Light properties when this solid is a light source
-    std::shared_ptr<ShadowMap> shadowMap;  // Shadow map for this light source
+    std::optional<LightComponent> lightComponent;
 
     // Minimum and maximum coordinates for bounding box
     slib::vec3 minCoord{};

@@ -74,15 +74,15 @@ public:
       solidPtr->calculateTransformMat();
       hasGeometry = true;
 
-      if (solidPtr->lightSourceEnabled) {
+      if (solidPtr->lightComponent.has_value()) {
         // Create shadow map for this light source if it doesn't exist
-        if (!solidPtr->shadowMap) {
-          solidPtr->shadowMap = std::make_shared<ShadowMap>(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
-          solidPtr->shadowMap->subscribeToPcfRadiusChanges(pcfRadiusChanged, pcfRadius);
+        if (!solidPtr->lightComponent->shadowMap) {
+          solidPtr->lightComponent->shadowMap = std::make_shared<ShadowMap>(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
+          solidPtr->lightComponent->shadowMap->subscribeToPcfRadiusChanges(pcfRadiusChanged, pcfRadius);
         }
 
         // Update light position from solid position
-        solidPtr->light.position = {solidPtr->transform.position.x, solidPtr->transform.position.y, solidPtr->transform.position.z};
+        solidPtr->lightComponent->light.position = {solidPtr->transform.position.x, solidPtr->transform.position.y, solidPtr->transform.position.z};
 
       } else {
         if (solidPtr->rotationEnabled) {
@@ -172,7 +172,11 @@ public:
   void addSolid(std::unique_ptr<Solid> solid) {
     solid->entity = registry.createEntity();
     solids.push_back(std::move(solid));
-    registry.transforms().add(solids.back()->entity, &solids.back()->transform);
+    auto& added = solids.back();
+    registry.transforms().add(added->entity, &added->transform);
+    if (added->lightComponent.has_value()) {
+      registry.lights().add(added->entity, &*added->lightComponent);
+    }
   }
 
   CubeMap* getCubeMap() const { return background ? background->getCubeMap() : nullptr; }
@@ -213,13 +217,17 @@ public:
 
   // Returns a filtered view of solids that are light sources
   auto lightSources() const {
-    return solids | std::views::filter([](const auto& s) { return s->lightSourceEnabled; });
+    return solids | std::views::filter([](const auto& s) { return s->lightComponent.has_value(); });
   }
 
-    // Returns a filtered view of solids that are not light sources (renderables)
+  // Returns a filtered view of solids that are not light sources (renderables)
   auto renderables() const {
-    return solids | std::views::filter([](const auto& s) { return !s->lightSourceEnabled; });
+    return solids | std::views::filter([](const auto& s) { return !s->lightComponent.has_value(); });
   }
+
+  // Access light components through registry (for effect pixel shaders)
+  auto& lights() { return registry.lights(); }
+  const auto& lights() const { return registry.lights(); }
 
   bool orbiting = false;
   bool shadowsEnabled = true;        // Enable/disable shadow rendering
@@ -332,10 +340,10 @@ public:
     ImGui::DragFloat("Orbit Speed", &selectedSolid->transform.orbit.omega, 0.01f, -10.0f, 10.0f);
 
     // Light properties (only shown if solid is a light source)
-    if (selectedSolid->lightSourceEnabled) {
+    if (selectedSolid->lightComponent.has_value()) {
       ImGui::Separator();
       ImGui::Text("Light Source");
-      ImGui::SliderFloat("Light Intensity", &selectedSolid->light.intensity, 0.0f, 100.0f);
+      ImGui::SliderFloat("Light Intensity", &selectedSolid->lightComponent->light.intensity, 0.0f, 100.0f);
     }
   }
 

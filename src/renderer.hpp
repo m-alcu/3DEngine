@@ -87,8 +87,8 @@ public:
 
   void renderShadowPass(Scene &scene) {
     for (auto &lightSource : scene.lightSources()) {
-      lightSource->shadowMap->clear();
-      lightSource->shadowMap->buildLightMatrices(lightSource->light,
+      lightSource->lightComponent->shadowMap->clear();
+      lightSource->lightComponent->shadowMap->buildLightMatrices(lightSource->lightComponent->light,
                                                 scene.sceneCenter,
                                                 scene.sceneRadius);
       for (auto &solidPtr : scene.renderables()) {
@@ -147,16 +147,16 @@ public:
     if (scene.selectedSolidIndex >= 0 &&
         scene.selectedSolidIndex < static_cast<int>(scene.solids.size())) {
       auto& selectedSolid = scene.solids[scene.selectedSolidIndex];
-      if (selectedSolid->lightSourceEnabled && selectedSolid->shadowMap) {
-        shadowMapPtr = selectedSolid->shadowMap.get();
+      if (selectedSolid->lightComponent && selectedSolid->lightComponent->shadowMap) {
+        shadowMapPtr = selectedSolid->lightComponent->shadowMap.get();
       }
     }
 
     // Fall back to first light source solid's shadow map
     if (!shadowMapPtr) {
       for (const auto& solidPtr : scene.solids) {
-        if (solidPtr->lightSourceEnabled && solidPtr->shadowMap) {
-          shadowMapPtr = solidPtr->shadowMap.get();
+        if (solidPtr->lightComponent && solidPtr->lightComponent->shadowMap) {
+          shadowMapPtr = solidPtr->lightComponent->shadowMap.get();
           break;
         }
       }

@@ -35,8 +35,8 @@ class Rasterizer {
             scene = scn;
             lightSource = lightSrc;
             if constexpr (isShadowEffect) {
-                screenWidth = lightSource->shadowMap->width;
-                screenHeight = lightSource->shadowMap->height;
+                screenWidth = lightSource->lightComponent->shadowMap->width;
+                screenHeight = lightSource->lightComponent->shadowMap->height;
             } else {
                 screenWidth = scene->screen.width;
                 screenHeight = scene->screen.height;
@@ -163,7 +163,7 @@ class Rasterizer {
         }
 
         bool isFaceVisibleFromLight(const slib::vec3& world, const slib::vec3& faceNormal) const {
-            slib::vec3 normalizedLightDir = lightSource->light.getDirection(world);
+            slib::vec3 normalizedLightDir = lightSource->lightComponent->light.getDirection(world);
             float dotResult = smath::dot(faceNormal, normalizedLightDir);
             return dotResult > 0.0f;
         }
@@ -225,7 +225,7 @@ class Rasterizer {
                     float p_z = left.get().p_z;
                     float p_z_step = (right.get().p_z - p_z) * invDx;
                     for (int x = xStart; x < xEnd; ++x) {
-                        effect.ps(x, p_z, *lightSource->shadowMap);
+                        effect.ps(x, p_z, *lightSource->lightComponent->shadowMap);
                         p_z += p_z_step;
                     }
                 }

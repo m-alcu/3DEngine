@@ -232,8 +232,9 @@ std::unique_ptr<Solid> SceneLoader::parseSolid(const YAML::Node& node) {
 
     // Light source
     if (node["light"]) {
-        solid->lightSourceEnabled = true;
-        parseLight(node["light"], solid->light);
+        LightComponent lc;
+        parseLight(node["light"], lc.light);
+        solid->lightComponent = std::move(lc);
     }
 
     // Emissive color override

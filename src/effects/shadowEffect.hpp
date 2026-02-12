@@ -76,7 +76,7 @@ public:
             vertex.world = solid->transform.modelMatrix * slib::vec4(vData.vertex, 1);
 
             // Transform to light clip space
-            const auto& shadowMap = lightSource->shadowMap;
+            const auto& shadowMap = lightSource->lightComponent->shadowMap;
             vertex.ndc = slib::vec4(vertex.world, 1) * shadowMap->lightSpaceMatrix;
             Projection<Vertex>::view(shadowMap->width, shadowMap->height, vertex, true);
 
