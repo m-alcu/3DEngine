@@ -4,6 +4,8 @@
 #include "../projection.hpp"
 #include "../scene.hpp"
 #include "../slib.hpp"
+#include "../ecs/MeshComponent.hpp"
+#include "../ecs/TransformComponent.hpp"
 
 class ShadowMap;
 
@@ -74,10 +76,10 @@ public:
   class VertexShader {
   public:
     Vertex operator()(const VertexData &vData,
-                      const Solid *solid,
+                      const TransformComponent &transform,
                       const Scene *scene) const {
       Vertex vertex;
-      vertex.world = solid->transform->modelMatrix * slib::vec4(vData.vertex, 1);
+      vertex.world = transform.modelMatrix * slib::vec4(vData.vertex, 1);
       vertex.ndc = slib::vec4(vertex.world, 1) * scene->spaceMatrix;
       vertex.tex = slib::zvec2(vData.texCoord.x, vData.texCoord.y, 1);
       Projection<Vertex>::view(scene->screen.width, scene->screen.height,

@@ -5,7 +5,10 @@
 #include <algorithm>
 #include <type_traits>
 #include "scene.hpp"
-#include "objects/solid.hpp"
+#include "ecs/LightComponent.hpp"
+#include "ecs/MeshComponent.hpp"
+#include "ecs/RenderComponent.hpp"
+#include "ecs/TransformComponent.hpp"
 #include "slib.hpp"
 #include "smath.hpp"
 #include "polygon.hpp"
@@ -30,13 +33,19 @@ class Rasterizer {
         using vertex = typename Effect::Vertex;
         static constexpr bool isShadowEffect = is_shadow_effect_v<Effect>;
 
-        void drawRenderable(Solid* sol, Scene* scn, Solid* lightSrc = nullptr) {
-            solid = sol;
+        void drawRenderable(TransformComponent& transform,
+                            MeshComponent& mesh,
+                            Shading shadingMode,
+                            Scene* scn,
+                            LightComponent* lightSrc = nullptr) {
+            transformComponent = &transform;
+            meshComponent = &mesh;
+            shading = shadingMode;
             scene = scn;
             lightSource = lightSrc;
             if constexpr (isShadowEffect) {
-                screenWidth = lightSource->lightComponent->shadowMap->width;
-                screenHeight = lightSource->lightComponent->shadowMap->height;
+                screenWidth = lightSource->shadowMap->width;
+                screenHeight = lightSource->shadowMap->height;
             } else {
                 screenWidth = scene->screen.width;
                 screenHeight = scene->screen.height;
@@ -53,31 +62,33 @@ class Rasterizer {
 
     private:
         std::vector<vertex> projectedPoints;
-        Solid* solid = nullptr;
+        TransformComponent* transformComponent = nullptr;
+        MeshComponent* meshComponent = nullptr;
         Scene* scene = nullptr;
-        Solid* lightSource = nullptr;
+        LightComponent* lightSource = nullptr;
+        Shading shading = Shading::Flat;
         int32_t screenWidth = 0;
         int32_t screenHeight = 0;
         Effect effect;
 		Projection<vertex> projection;
 
         void processVertices() {
-            projectedPoints.resize(solid->mesh->numVertices);
-            const int n = static_cast<int>(solid->mesh->vertexData.size());
+            projectedPoints.resize(meshComponent->numVertices);
+            const int n = static_cast<int>(meshComponent->vertexData.size());
 
             #pragma omp parallel for if(n > 1000)
             for (int i = 0; i < n; ++i) {
                 if constexpr (isShadowEffect) {
-                    projectedPoints[i] = effect.vs(solid->mesh->vertexData[i], solid, scene, lightSource);
+                    projectedPoints[i] = effect.vs(meshComponent->vertexData[i], *transformComponent, scene, lightSource);
                 } else {
-                    projectedPoints[i] = effect.vs(solid->mesh->vertexData[i], solid, scene);
+                    projectedPoints[i] = effect.vs(meshComponent->vertexData[i], *transformComponent, scene);
                     scene->stats.addProcessedVertex();
                 }
             }
         }
 
         inline slib::vec3 getRotatedNormal(const FaceData& faceDataEntry) const {
-            slib::vec4 rotated = solid->transform->normalMatrix * slib::vec4(faceDataEntry.faceNormal, 0);
+            slib::vec4 rotated = transformComponent->normalMatrix * slib::vec4(faceDataEntry.faceNormal, 0);
             return {rotated.x, rotated.y, rotated.z};
         }
 
@@ -103,18 +114,18 @@ class Rasterizer {
                 float depth;
             };
             std::vector<FaceDepth> visibleFaces;
-            visibleFaces.reserve(solid->mesh->faceData.size());
+            visibleFaces.reserve(meshComponent->faceData.size());
 
             //#pragma omp parallel
             {
                 std::vector<FaceDepth> localVisible;
                 //#pragma omp for nowait
-                for (int i = 0; i < static_cast<int>(solid->mesh->faceData.size()); ++i) {
-                    const auto& faceDataEntry = solid->mesh->faceData[i];
+                for (int i = 0; i < static_cast<int>(meshComponent->faceData.size()); ++i) {
+                    const auto& faceDataEntry = meshComponent->faceData[i];
                     slib::vec3 normal = getRotatedNormal(faceDataEntry);
                     vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];
 
-                    if (solid->shading == Shading::Wireframe || isFaceVisibleFromCamera(p1.world, normal))
+                    if (shading == Shading::Wireframe || isFaceVisibleFromCamera(p1.world, normal))
                         localVisible.push_back({i, p1.p_z});
                 }
                 //#pragma omp critical
@@ -129,13 +140,13 @@ class Rasterizer {
             //#pragma omp parallel for
             //This will wait until we develop a tile-based rasterizer
             for (const auto& fd : visibleFaces) {
-                const auto& faceDataEntry = solid->mesh->faceData[fd.faceIndex];
+                const auto& faceDataEntry = meshComponent->faceData[fd.faceIndex];
                 slib::vec3 normal = getRotatedNormal(faceDataEntry);
 
                 Polygon<vertex> poly(
                     collectPolyVerts(faceDataEntry),
                     normal,
-                    solid->mesh->materials.at(faceDataEntry.face.materialKey)
+                    meshComponent->materials.at(faceDataEntry.face.materialKey)
                 );
                 clipAndDraw(poly);
             }
@@ -143,7 +154,7 @@ class Rasterizer {
 
         void drawShadowFaces()
         {
-            for (const auto &faceDataEntry : solid->mesh->faceData)
+            for (const auto &faceDataEntry : meshComponent->faceData)
             {
                 slib::vec3 normal = getRotatedNormal(faceDataEntry);
                 vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];
@@ -163,7 +174,7 @@ class Rasterizer {
         }
 
         bool isFaceVisibleFromLight(const slib::vec3& world, const slib::vec3& faceNormal) const {
-            slib::vec3 normalizedLightDir = lightSource->lightComponent->light.getDirection(world);
+            slib::vec3 normalizedLightDir = lightSource->light.getDirection(world);
             float dotResult = smath::dot(faceNormal, normalizedLightDir);
             return dotResult > 0.0f;
         }
@@ -177,7 +188,7 @@ class Rasterizer {
             }
 
             if constexpr (!isShadowEffect) {
-                if (solid->shading == Shading::Wireframe) {
+                if (shading == Shading::Wireframe) {
                     polygon.drawWireframe(WHITE_COLOR, pixels, screenWidth, screenHeight, scene->zBuffer.get());
                     return;
                 }
@@ -225,7 +236,7 @@ class Rasterizer {
                     float p_z = left.get().p_z;
                     float p_z_step = (right.get().p_z - p_z) * invDx;
                     for (int x = xStart; x < xEnd; ++x) {
-                        effect.ps(x, p_z, *lightSource->lightComponent->shadowMap);
+                        effect.ps(x, p_z, *lightSource->shadowMap);
                         p_z += p_z_step;
                     }
                 }

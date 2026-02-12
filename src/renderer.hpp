@@ -46,37 +46,37 @@ public:
     for (auto &solidPtr : scene.solids) {
       switch (solidPtr->shading) {
       case Shading::Flat:
-        flatRasterizer.drawRenderable(solidPtr.get(), &scene);
+        flatRasterizer.drawRenderable(*solidPtr->transform, *solidPtr->mesh, solidPtr->shading, &scene);
         break;
       case Shading::Wireframe:
-        flatRasterizer.drawRenderable(solidPtr.get(), &scene);
+        flatRasterizer.drawRenderable(*solidPtr->transform, *solidPtr->mesh, solidPtr->shading, &scene);
         break;
       case Shading::TexturedFlat:
-        texturedFlatRasterizer.drawRenderable(solidPtr.get(), &scene);
+        texturedFlatRasterizer.drawRenderable(*solidPtr->transform, *solidPtr->mesh, solidPtr->shading, &scene);
         break;
       case Shading::Gouraud:
-        gouraudRasterizer.drawRenderable(solidPtr.get(), &scene);
+        gouraudRasterizer.drawRenderable(*solidPtr->transform, *solidPtr->mesh, solidPtr->shading, &scene);
         break;
       case Shading::TexturedGouraud:
-        texturedGouraudRasterizer.drawRenderable(solidPtr.get(), &scene);
+        texturedGouraudRasterizer.drawRenderable(*solidPtr->transform, *solidPtr->mesh, solidPtr->shading, &scene);
         break;
       case Shading::BlinnPhong:
-        blinnPhongRasterizer.drawRenderable(solidPtr.get(), &scene);
+        blinnPhongRasterizer.drawRenderable(*solidPtr->transform, *solidPtr->mesh, solidPtr->shading, &scene);
         break;
       case Shading::TexturedBlinnPhong:
-        texturedBlinnPhongRasterizer.drawRenderable(solidPtr.get(), &scene);
+        texturedBlinnPhongRasterizer.drawRenderable(*solidPtr->transform, *solidPtr->mesh, solidPtr->shading, &scene);
         break;
       case Shading::Phong:
-        phongRasterizer.drawRenderable(solidPtr.get(), &scene);
+        phongRasterizer.drawRenderable(*solidPtr->transform, *solidPtr->mesh, solidPtr->shading, &scene);
         break;
       case Shading::TexturedPhong:
-        texturedPhongRasterizer.drawRenderable(solidPtr.get(), &scene);
+        texturedPhongRasterizer.drawRenderable(*solidPtr->transform, *solidPtr->mesh, solidPtr->shading, &scene);
         break;
       case Shading::EnvironmentMap:
-        environmentMapRasterizer.drawRenderable(solidPtr.get(), &scene);
+        environmentMapRasterizer.drawRenderable(*solidPtr->transform, *solidPtr->mesh, solidPtr->shading, &scene);
         break;
       default:
-        flatRasterizer.drawRenderable(solidPtr.get(), &scene);
+        flatRasterizer.drawRenderable(*solidPtr->transform, *solidPtr->mesh, solidPtr->shading, &scene);
       }
     }
 
@@ -92,7 +92,11 @@ public:
                                                 scene.sceneCenter,
                                                 scene.sceneRadius);
       for (auto &solidPtr : scene.renderables()) {
-          shadowRasterizer.drawRenderable(solidPtr.get(), &scene, lightSource.get());
+          shadowRasterizer.drawRenderable(*solidPtr->transform,
+                                         *solidPtr->mesh,
+                                         solidPtr->shading,
+                                         &scene,
+                                         lightSource->lightComponent);
       }
     }
   }

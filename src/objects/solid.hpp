@@ -11,33 +11,7 @@
 #include "../ecs/Entity.hpp"
 #include "../ecs/LightComponent.hpp"
 #include "../ecs/MeshComponent.hpp"
-
-enum class Shading {
-    Wireframe,
-    Flat,
-    Gouraud,
-    BlinnPhong,
-    Phong,
-    TexturedFlat,
-    TexturedGouraud,
-    TexturedBlinnPhong,
-    TexturedPhong,
-    EnvironmentMap
-};
-
-// Labels for the enum (must match order of enum values)
-static const char* shadingNames[] = {
-    "Wireframe",
-    "Flat",
-    "Gouraud",
-    "Blinn-Phong",
-    "Phong",
-    "Textured Flat",
-    "Textured Gouraud",
-    "Textured Blinn-Phong",
-    "Textured Phong",
-    "Environment Map"
-};
+#include "../ecs/RenderComponent.hpp"
 
 enum class MaterialType {
     Rubber,

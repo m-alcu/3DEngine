@@ -1,7 +1,9 @@
 #pragma once
 #include "../slib.hpp"
 #include "../smath.hpp"
-#include "../objects/solid.hpp"
+#include "../ecs/LightComponent.hpp"
+#include "../ecs/MeshComponent.hpp"
+#include "../ecs/TransformComponent.hpp"
 #include "../ShadowMap.hpp"
 #include "../polygon.hpp"
 #include "../projection.hpp"
@@ -68,15 +70,15 @@ public:
     class VertexShader {
     public:
         Vertex operator()(const VertexData& vData,
-                          const Solid* solid,
+                          const TransformComponent& transform,
                           const Scene* /*scene*/,
-                          const Solid* lightSource) const {
+                          const LightComponent* lightSource) const {
             Vertex vertex;
             // Transform to world space
-            vertex.world = solid->transform->modelMatrix * slib::vec4(vData.vertex, 1);
+            vertex.world = transform.modelMatrix * slib::vec4(vData.vertex, 1);
 
             // Transform to light clip space
-            const auto& shadowMap = lightSource->lightComponent->shadowMap;
+            const auto& shadowMap = lightSource->shadowMap;
             vertex.ndc = slib::vec4(vertex.world, 1) * shadowMap->lightSpaceMatrix;
             Projection<Vertex>::view(shadowMap->width, shadowMap->height, vertex, true);
 
