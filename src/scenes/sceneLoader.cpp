@@ -137,18 +137,18 @@ void SceneLoader::parseOrbit(const YAML::Node& node, Solid& solid) {
 void SceneLoader::parsePosition(const YAML::Node& node, Solid& solid) {
     if (node["position"]) {
         auto p = node["position"];
-        solid.position.x = p[0].as<float>();
-        solid.position.y = p[1].as<float>();
-        solid.position.z = p[2].as<float>();
+        solid.transform.position.x = p[0].as<float>();
+        solid.transform.position.y = p[1].as<float>();
+        solid.transform.position.z = p[2].as<float>();
     }
     if (node["angles"]) {
         auto a = node["angles"];
-        solid.position.xAngle = a[0].as<float>();
-        solid.position.yAngle = a[1].as<float>();
-        solid.position.zAngle = a[2].as<float>();
+        solid.transform.position.xAngle = a[0].as<float>();
+        solid.transform.position.yAngle = a[1].as<float>();
+        solid.transform.position.zAngle = a[2].as<float>();
     }
     if (node["zoom"])
-        solid.position.zoom = node["zoom"].as<float>();
+        solid.transform.position.zoom = node["zoom"].as<float>();
 }
 
 // ---------------------------------------------------------------------------

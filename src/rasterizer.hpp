@@ -77,7 +77,7 @@ class Rasterizer {
         }
 
         inline slib::vec3 getRotatedNormal(const FaceData& faceDataEntry) const {
-            slib::vec4 rotated = solid->normalMatrix * slib::vec4(faceDataEntry.faceNormal, 0);
+            slib::vec4 rotated = solid->transform.normalMatrix * slib::vec4(faceDataEntry.faceNormal, 0);
             return {rotated.x, rotated.y, rotated.z};
         }
 

@@ -77,7 +77,7 @@ public:
                       const Solid *solid,
                       const Scene *scene) const {
       Vertex vertex;
-      vertex.world = solid->modelMatrix * slib::vec4(vData.vertex, 1);
+      vertex.world = solid->transform.modelMatrix * slib::vec4(vData.vertex, 1);
       vertex.ndc = slib::vec4(vertex.world, 1) * scene->spaceMatrix;
       vertex.tex = slib::zvec2(vData.texCoord.x, vData.texCoord.y, 1);
       Projection<Vertex>::view(scene->screen.width, scene->screen.height,

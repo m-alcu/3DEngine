@@ -35,7 +35,7 @@ set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
 set(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(yaml-cpp)
 
-set(SRC_DIRS src src/vendor/imgui src/vendor/stb src/objects src/effects src/backgrounds src/scenes)
+set(SRC_DIRS src src/vendor/imgui src/vendor/stb src/objects src/effects src/backgrounds src/scenes src/ecs)
 
 set(SRC_FILES "")
 foreach(dir ${SRC_DIRS})
@@ -100,6 +100,17 @@ if(BUILD_TESTS)
     target_link_libraries(test_math PRIVATE GTest::gtest_main)
     set_target_properties(test_math PROPERTIES CXX_STANDARD 23 CXX_STANDARD_REQUIRED on)
 
+    # Transform component test
+    add_executable(test_transform
+        tests/test_transform.cpp
+        src/slib.cpp
+        src/smath.cpp
+    )
+    target_include_directories(test_transform PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(test_transform PRIVATE GTest::gtest_main)
+    set_target_properties(test_transform PROPERTIES CXX_STANDARD 23 CXX_STANDARD_REQUIRED on)
+
     include(GoogleTest)
     gtest_discover_tests(test_math)
+    gtest_discover_tests(test_transform)
 endif()

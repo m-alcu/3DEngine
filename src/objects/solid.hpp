@@ -10,6 +10,7 @@
 #include "../constants.hpp"
 #include "../smath.hpp"
 #include "../ShadowMap.hpp"
+#include "../ecs/TransformComponent.hpp"
 
 enum class Shading {
     Wireframe,
@@ -55,16 +56,6 @@ struct FaceData {
     slib::vec3 faceNormal;
 };
 
-typedef struct Position
-{
-    float x = 0.0f;
-    float y = 0.0f;
-    float z = 0.0f;
-    float zoom = 1.0f;
-    float xAngle = 0.0f;
-    float yAngle = 0.0f;
-    float zAngle = 0.0f;
-} Position;
 
 enum class MaterialType {
     Rubber,
@@ -85,23 +76,13 @@ struct MaterialProperties {
     float shininess;
 };
 
-struct OrbitState {
-    slib::vec3 center{ 0,0,0 };   // orbit center
-    float radius = 1.0f;         // orbit radius
-    slib::vec3 n{ 0,1,0 };         // plane normal (unit)
-    float omega = 1.0f;          // angular speed (radians/sec)
-    float phase = 0.0f;          // current angle (radians)
-    bool enabled = false;
-};
 
 class Solid {
 public:
     std::vector<VertexData> vertexData;
     std::vector<FaceData> faceData;
     Shading shading;
-    Position position;
-    slib::mat4 modelMatrix;
-    slib::mat4 normalMatrix;
+    TransformComponent transform;
 	bool rotationEnabled = true;
     float incXangle = 0.0f;  // Rotation speed around X axis
     float incYangle = 0.0f;  // Rotation speed around Y axis
@@ -113,11 +94,6 @@ public:
 	bool lightSourceEnabled = false;
     Light light;  // Light properties when this solid is a light source
     std::shared_ptr<ShadowMap> shadowMap;  // Shadow map for this light source
-
-    // Orthonormal basis of the orbit plane
-    slib::vec3 orbitU{ 1,0,0 };
-    slib::vec3 orbitV{ 0,0,1 };
-    OrbitState orbit_;
 
     // Minimum and maximum coordinates for bounding box
     slib::vec3 minCoord{};

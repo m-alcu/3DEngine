@@ -3,22 +3,14 @@
 #include "solid.hpp"
 #include "../slib.hpp"
 #include "../smath.hpp"
+#include "../ecs/TransformSystem.hpp"
 #include "../vendor/stb/stb_image.h"
 
-Solid::Solid()
-    : modelMatrix(smath::identity()),
-      normalMatrix(smath::identity()) {
+Solid::Solid() {
 }
 
 void Solid::calculateTransformMat() {
-    slib::mat4 rotate = smath::rotation(
-        slib::vec3{position.xAngle, position.yAngle, position.zAngle});
-    slib::mat4 translate = smath::translation(
-        slib::vec3{position.x, position.y, position.z});
-    slib::mat4 scale = smath::scale(
-        slib::vec3{position.zoom, position.zoom, position.zoom});
-    modelMatrix = translate * rotate * scale;
-    normalMatrix = rotate;
+    TransformSystem::updateTransform(transform);
 }
 
 void Solid::calculateFaceNormals() {
@@ -99,37 +91,15 @@ float Solid::getBoundingRadius() const {
 }
 
 slib::vec3 Solid::getWorldCenter() const {
-    slib::vec3 localCenter{(minCoord.x + maxCoord.x) * 0.5f,
-                           (minCoord.y + maxCoord.y) * 0.5f,
-                           (minCoord.z + maxCoord.z) * 0.5f};
-    slib::vec4 world = modelMatrix * slib::vec4(localCenter, 1.0f);
-    return {world.x, world.y, world.z};
+    return TransformSystem::getWorldCenter(transform, minCoord, maxCoord);
 }
 
 void Solid::updateWorldBounds(slib::vec3& worldBoundMin, slib::vec3& worldBoundMax) const {
-    // 8 corners of the AABB
-    slib::vec3 corners[8] = {
-        {minCoord.x, minCoord.y, minCoord.z}, {minCoord.x, minCoord.y, maxCoord.z},
-        {minCoord.x, maxCoord.y, minCoord.z}, {minCoord.x, maxCoord.y, maxCoord.z},
-        {maxCoord.x, minCoord.y, minCoord.z}, {maxCoord.x, minCoord.y, maxCoord.z},
-        {maxCoord.x, maxCoord.y, minCoord.z}, {maxCoord.x, maxCoord.y, maxCoord.z}};
-
-    for (const auto& corner : corners) {
-        slib::vec4 world = modelMatrix * slib::vec4(corner, 1.0f);
-        worldBoundMin.x = std::min(worldBoundMin.x, world.x);
-        worldBoundMin.y = std::min(worldBoundMin.y, world.y);
-        worldBoundMin.z = std::min(worldBoundMin.z, world.z);
-        worldBoundMax.x = std::max(worldBoundMax.x, world.x);
-        worldBoundMax.y = std::max(worldBoundMax.y, world.y);
-        worldBoundMax.z = std::max(worldBoundMax.z, world.z);
-    }
+    TransformSystem::updateWorldBounds(transform, minCoord, maxCoord, worldBoundMin, worldBoundMax);
 }
 
 void Solid::scaleToRadius(float targetRadius) {
-    float radius = getBoundingRadius();
-    if (radius > 0.0f) {
-        position.zoom *= targetRadius / radius;
-    }
+    TransformSystem::scaleToRadius(transform, getBoundingRadius(), targetRadius);
 }
 
 // Function returning MaterialProperties struct
@@ -173,63 +143,30 @@ Texture Solid::LoadTextureFromImg(const char* filename)
 }
 
 void Solid::incAngles(float xAngle, float yAngle, float zAngle) {
-	position.xAngle += xAngle;
-	position.yAngle += yAngle;
-	position.zAngle += zAngle;
+    TransformSystem::incAngles(transform, xAngle, yAngle, zAngle);
 }
 
-static inline float wrapTwoPi(float a) {
-    const float TWO_PI = 6.2831853071795864769f;
-    a = std::fmod(a, TWO_PI);
-    if (a < 0) a += TWO_PI;
-    return a;
-}
-
-// Build U,V in the plane orthogonal to n (n must be unit)
 void Solid::buildOrbitBasis(const slib::vec3& n) {
-    // pick a vector not parallel to n
-    slib::vec3 a = (std::fabs(n.x) < 0.9f) ? slib::vec3{ 1,0,0 } : slib::vec3{ 0,1,0 };
-    orbitU = smath::normalize(smath::cross(n, a));
-    orbitV = smath::normalize(smath::cross(n, orbitU));
+    TransformSystem::buildOrbitBasis(transform, n);
 }
 
-// Enable a circular orbit
 void Solid::enableCircularOrbit(const slib::vec3& center,
     float radius,
     const slib::vec3& planeNormal,
     float angularSpeedRadiansPerSec,
     float initialPhaseRadians,
-    bool faceCenter)
+    bool /*faceCenter*/)
 {
-    orbit_.center = center;
-    orbit_.radius = radius;
-    orbit_.n = smath::normalize(planeNormal);
-    orbit_.omega = angularSpeedRadiansPerSec;
-    orbit_.phase = initialPhaseRadians;
-    orbit_.enabled = true;
-    buildOrbitBasis(orbit_.n);
+    TransformSystem::enableCircularOrbit(transform, center, radius,
+        planeNormal, angularSpeedRadiansPerSec, initialPhaseRadians);
 }
 
-// Disable the orbit motion
-void Solid::disableCircularOrbit() { orbit_.enabled = false; }
+void Solid::disableCircularOrbit() {
+    TransformSystem::disableCircularOrbit(transform);
+}
 
-// Call once per frame with delta time (seconds)
-void Solid::updateOrbit(float dt)
-{
-    if (!orbit_.enabled) return;
-
-    orbit_.phase = wrapTwoPi(orbit_.phase + orbit_.omega * dt);
-
-    float c = std::cos(orbit_.phase);
-    float s = std::sin(orbit_.phase);
-
-    // Position on the circle in the U-V plane
-    slib::vec3 P = orbit_.center + (orbitU * c + orbitV * s) * orbit_.radius;
-
-    position.x = P.x;
-    position.y = P.y;
-    position.z = P.z;
-
+void Solid::updateOrbit(float dt) {
+    TransformSystem::updateOrbit(transform, dt);
 }
 
 // Set emissive color for all materials
