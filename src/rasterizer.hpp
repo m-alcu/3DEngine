@@ -19,6 +19,7 @@
 #include "slope.hpp"
 #include "edge_walker.hpp"
 #include "projection.hpp"
+#include "rasterizer_utils.hpp"
 
 // Trait to detect shadow effects
 template<typename T, typename = void>
@@ -97,14 +98,6 @@ class Rasterizer {
             }
         }
 
-        inline std::vector<vertex> collectPolyVerts(const FaceData& faceDataEntry) const {
-            std::vector<vertex> polyVerts;
-            polyVerts.reserve(faceDataEntry.face.vertexIndices.size());
-            for (int j : faceDataEntry.face.vertexIndices)
-                polyVerts.push_back(projectedPoints[j]);
-            return polyVerts;
-        }
-
         inline void clipAndDraw(Polygon<vertex>& poly) {
             auto clippedPoly = ClipCullPolygon(poly);
             if (!clippedPoly.points.empty()) {
@@ -142,7 +135,7 @@ class Rasterizer {
                 slib::vec3 normal = TransformSystem::rotateNormal(*transformComponent, faceDataEntry.faceNormal);
 
                 Polygon<vertex> poly(
-                    collectPolyVerts(faceDataEntry),
+                    collectPolyVerts(projectedPoints, faceDataEntry),
                     normal,
                     materialComponent->materials.at(faceDataEntry.face.materialKey)
                 );
@@ -159,7 +152,7 @@ class Rasterizer {
 
                 if (lightSource->light.isVisibleFromLight(p1.world, normal))
                 {
-                    Polygon<vertex> poly(collectPolyVerts(faceDataEntry), normal);
+                    Polygon<vertex> poly(collectPolyVerts(projectedPoints, faceDataEntry), normal);
                     clipAndDraw(poly);
                 }
             }
