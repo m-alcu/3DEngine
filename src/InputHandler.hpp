@@ -82,7 +82,7 @@ private:
     }
 
     if (ev.button.button == SDL_BUTTON_LEFT) {
-      if (!ImGui::GetIO().WantCaptureMouse && !scene->solids.empty()) {
+      if (!ImGui::GetIO().WantCaptureMouse && !scene->entities.empty()) {
         pickSolid(ev, scene);
       }
     }
@@ -109,8 +109,8 @@ private:
     int64_t bestDist2 = pickRadiusFP * pickRadiusFP;
     int bestIndex = -1;
 
-    for (size_t i = 0; i < scene->solids.size(); ++i) {
-      slib::vec3 worldCenter = scene->solids[i]->getWorldCenter();
+    for (size_t i = 0; i < scene->entities.size(); ++i) {
+      slib::vec3 worldCenter = scene->getWorldCenter(scene->entities[i]);
       PickVertex pv;
       pv.ndc = slib::vec4(worldCenter, 1.0f) * scene->spaceMatrix;
 
@@ -130,9 +130,9 @@ private:
     }
 
     if (bestIndex >= 0) {
-      scene->selectedSolidIndex = bestIndex;
+      scene->selectedEntityIndex = bestIndex;
       scene->camera.orbitTarget =
-          scene->solids[bestIndex]->getWorldCenter();
+          scene->getWorldCenter(scene->entities[bestIndex]);
       scene->camera.setOrbitFromCurrent();
     }
   }

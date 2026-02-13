@@ -6,6 +6,7 @@
 #include "MeshComponent.hpp"
 #include "MaterialComponent.hpp"
 #include "ShadowComponent.hpp"
+#include "NameComponent.hpp"
 #include "RotationComponent.hpp"
 #include "RenderComponent.hpp"
 
@@ -16,6 +17,7 @@ class Registry {
     ComponentStore<MeshComponent> meshes_;
     ComponentStore<MaterialComponent> materials_;
     ComponentStore<ShadowComponent> shadows_;
+    ComponentStore<NameComponent> names_;
     ComponentStore<RotationComponent> rotations_;
     ComponentStore<RenderComponent> renders_;
 
@@ -28,6 +30,7 @@ public:
         meshes_.remove(e);
         materials_.remove(e);
         shadows_.remove(e);
+        names_.remove(e);
         rotations_.remove(e);
         renders_.remove(e);
     }
@@ -38,6 +41,7 @@ public:
         meshes_.clear();
         materials_.clear();
         shadows_.clear();
+        names_.clear();
         rotations_.clear();
         renders_.clear();
     }
@@ -56,6 +60,9 @@ public:
 
     ComponentStore<ShadowComponent>& shadows() { return shadows_; }
     const ComponentStore<ShadowComponent>& shadows() const { return shadows_; }
+
+    ComponentStore<NameComponent>& names() { return names_; }
+    const ComponentStore<NameComponent>& names() const { return names_; }
 
     ComponentStore<RotationComponent>& rotations() { return rotations_; }
     const ComponentStore<RotationComponent>& rotations() const { return rotations_; }

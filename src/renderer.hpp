@@ -44,40 +44,48 @@ public:
                         0xFFFFFFFFu, 0xFF000000u, true);
     }
 
-    for (auto &solidPtr : scene.solids) {
-      switch (solidPtr->render->shading) {
+    for (Entity entity : scene.renderableEntities()) {
+      auto* transform = scene.registry.transforms().get(entity);
+      auto* mesh = scene.registry.meshes().get(entity);
+      auto* material = scene.registry.materials().get(entity);
+      auto* render = scene.registry.renders().get(entity);
+      if (!transform || !mesh || !material || !render) {
+        continue;
+      }
+
+      switch (render->shading) {
       case Shading::Flat:
-        flatRasterizer.drawRenderable(*solidPtr->transform, *solidPtr->mesh, *solidPtr->materialComponent, solidPtr->render->shading, &scene);
+        flatRasterizer.drawRenderable(*transform, *mesh, *material, render->shading, &scene);
         break;
       case Shading::Wireframe:
-        flatRasterizer.drawRenderable(*solidPtr->transform, *solidPtr->mesh, *solidPtr->materialComponent, solidPtr->render->shading, &scene);
+        flatRasterizer.drawRenderable(*transform, *mesh, *material, render->shading, &scene);
         break;
       case Shading::TexturedFlat:
-        texturedFlatRasterizer.drawRenderable(*solidPtr->transform, *solidPtr->mesh, *solidPtr->materialComponent, solidPtr->render->shading, &scene);
+        texturedFlatRasterizer.drawRenderable(*transform, *mesh, *material, render->shading, &scene);
         break;
       case Shading::Gouraud:
-        gouraudRasterizer.drawRenderable(*solidPtr->transform, *solidPtr->mesh, *solidPtr->materialComponent, solidPtr->render->shading, &scene);
+        gouraudRasterizer.drawRenderable(*transform, *mesh, *material, render->shading, &scene);
         break;
       case Shading::TexturedGouraud:
-        texturedGouraudRasterizer.drawRenderable(*solidPtr->transform, *solidPtr->mesh, *solidPtr->materialComponent, solidPtr->render->shading, &scene);
+        texturedGouraudRasterizer.drawRenderable(*transform, *mesh, *material, render->shading, &scene);
         break;
       case Shading::BlinnPhong:
-        blinnPhongRasterizer.drawRenderable(*solidPtr->transform, *solidPtr->mesh, *solidPtr->materialComponent, solidPtr->render->shading, &scene);
+        blinnPhongRasterizer.drawRenderable(*transform, *mesh, *material, render->shading, &scene);
         break;
       case Shading::TexturedBlinnPhong:
-        texturedBlinnPhongRasterizer.drawRenderable(*solidPtr->transform, *solidPtr->mesh, *solidPtr->materialComponent, solidPtr->render->shading, &scene);
+        texturedBlinnPhongRasterizer.drawRenderable(*transform, *mesh, *material, render->shading, &scene);
         break;
       case Shading::Phong:
-        phongRasterizer.drawRenderable(*solidPtr->transform, *solidPtr->mesh, *solidPtr->materialComponent, solidPtr->render->shading, &scene);
+        phongRasterizer.drawRenderable(*transform, *mesh, *material, render->shading, &scene);
         break;
       case Shading::TexturedPhong:
-        texturedPhongRasterizer.drawRenderable(*solidPtr->transform, *solidPtr->mesh, *solidPtr->materialComponent, solidPtr->render->shading, &scene);
+        texturedPhongRasterizer.drawRenderable(*transform, *mesh, *material, render->shading, &scene);
         break;
       case Shading::EnvironmentMap:
-        environmentMapRasterizer.drawRenderable(*solidPtr->transform, *solidPtr->mesh, *solidPtr->materialComponent, solidPtr->render->shading, &scene);
+        environmentMapRasterizer.drawRenderable(*transform, *mesh, *material, render->shading, &scene);
         break;
       default:
-        flatRasterizer.drawRenderable(*solidPtr->transform, *solidPtr->mesh, *solidPtr->materialComponent, solidPtr->render->shading, &scene);
+        flatRasterizer.drawRenderable(*transform, *mesh, *material, render->shading, &scene);
       }
     }
 
@@ -87,23 +95,32 @@ public:
   }
 
   void renderShadowPass(Scene &scene) {
-    for (auto &lightSource : scene.lightSources()) {
-      if (!lightSource->shadowComponent || !lightSource->shadowComponent->shadowMap) {
+    for (Entity lightEntity : scene.lightSourceEntities()) {
+      auto* lightComponent = scene.registry.lights().get(lightEntity);
+      auto* shadowComponent = scene.registry.shadows().get(lightEntity);
+      if (!lightComponent || !shadowComponent || !shadowComponent->shadowMap) {
         continue;
       }
-      lightSource->shadowComponent->shadowMap->clear();
-      ShadowSystem::buildLightMatrices(*lightSource->shadowComponent,
-                                       lightSource->lightComponent->light,
+      shadowComponent->shadowMap->clear();
+      ShadowSystem::buildLightMatrices(*shadowComponent,
+                                       lightComponent->light,
                                        scene.sceneCenter,
                                        scene.sceneRadius);
-      for (auto &solidPtr : scene.renderables()) {
-          shadowRasterizer.drawRenderable(*solidPtr->transform,
-                                         *solidPtr->mesh,
-                                         *solidPtr->materialComponent,
-                                         solidPtr->render->shading,
-                                         &scene,
-                                         lightSource->lightComponent,
-                                         lightSource->shadowComponent);
+      for (Entity entity : scene.renderableEntities()) {
+        auto* transform = scene.registry.transforms().get(entity);
+        auto* mesh = scene.registry.meshes().get(entity);
+        auto* material = scene.registry.materials().get(entity);
+        auto* render = scene.registry.renders().get(entity);
+        if (!transform || !mesh || !material || !render) {
+          continue;
+        }
+        shadowRasterizer.drawRenderable(*transform,
+                                        *mesh,
+                                        *material,
+                                        render->shading,
+                                        &scene,
+                                        lightComponent,
+                                        shadowComponent);
       }
     }
   }
@@ -153,21 +170,22 @@ public:
     if (!scene.shadowsEnabled)
       return;
 
-    // Use shadow map from selected solid if it has one
+    // Use shadow map from selected entity if it has one
     ShadowMap* shadowMapPtr = nullptr;
-    if (scene.selectedSolidIndex >= 0 &&
-        scene.selectedSolidIndex < static_cast<int>(scene.solids.size())) {
-      auto& selectedSolid = scene.solids[scene.selectedSolidIndex];
-      if (selectedSolid->shadowComponent && selectedSolid->shadowComponent->shadowMap) {
-        shadowMapPtr = selectedSolid->shadowComponent->shadowMap.get();
+    if (scene.selectedEntityIndex >= 0 &&
+        scene.selectedEntityIndex < static_cast<int>(scene.entities.size())) {
+      Entity selectedEntity = scene.entities[scene.selectedEntityIndex];
+      auto* shadowComponent = scene.registry.shadows().get(selectedEntity);
+      if (shadowComponent && shadowComponent->shadowMap) {
+        shadowMapPtr = shadowComponent->shadowMap.get();
       }
     }
 
-    // Fall back to first light source solid's shadow map
+    // Fall back to first light source entity's shadow map
     if (!shadowMapPtr) {
-      for (const auto& solidPtr : scene.solids) {
-        if (solidPtr->shadowComponent && solidPtr->shadowComponent->shadowMap) {
-          shadowMapPtr = solidPtr->shadowComponent->shadowMap.get();
+      for (const auto& [entity, shadowComponent] : scene.registry.shadows()) {
+        if (shadowComponent.shadowMap) {
+          shadowMapPtr = shadowComponent.shadowMap.get();
           break;
         }
       }

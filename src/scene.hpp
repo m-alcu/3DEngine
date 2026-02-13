@@ -20,6 +20,7 @@
 #include "light.hpp"
 #include "objects/solid.hpp"
 #include "ecs/Registry.hpp"
+#include "ecs/NameComponent.hpp"
 #include "ecs/TransformSystem.hpp"
 #include "ecs/LightSystem.hpp"
 #include "ecs/RotationSystem.hpp"
@@ -55,13 +56,18 @@ public:
     delete[] backg;
   }
 
-  // Called to set up the Scene, including creation of Solids, etc.
+  // Called to set up the Scene, including creation of entities, etc.
   // Derived classes should call Scene::setup() at the end of their setup.
   virtual void setup() {
-    // Initialize camera orbit target to first solid
-    if (!solids.empty()) {
-      solids[selectedSolidIndex]->calculateTransformMat();
-      camera.orbitTarget = solids[selectedSolidIndex]->getWorldCenter();
+    // Initialize camera orbit target to first entity
+    if (!entities.empty()) {
+      Entity entity = entities[0];
+      auto* transform = registry.transforms().get(entity);
+      auto* mesh = registry.meshes().get(entity);
+      if (transform && mesh) {
+        TransformSystem::updateTransform(*transform);
+        camera.orbitTarget = TransformSystem::getWorldCenter(*transform, mesh->minCoord, mesh->maxCoord);
+      }
     }
     MeshSystem::updateAllBoundsIfDirty(registry.meshes());
     camera.setOrbitFromCurrent();
@@ -80,12 +86,18 @@ public:
     // --- World bounds (still needs mesh minCoord/maxCoord) ---
     worldBoundMin = slib::vec3::boundMin();
     worldBoundMax = slib::vec3::boundMax();
-    bool hasGeometry = !solids.empty();
-
-    for (auto &solidPtr : solids) {
-      if (!solidPtr->lightComponent) {
-        solidPtr->updateWorldBounds(worldBoundMin, worldBoundMax);
+    bool hasGeometry = !entities.empty();
+    for (Entity entity : entities) {
+      if (registry.lights().has(entity)) {
+        continue;
       }
+      auto* transform = registry.transforms().get(entity);
+      auto* mesh = registry.meshes().get(entity);
+      if (!transform || !mesh) {
+        continue;
+      }
+      TransformSystem::updateWorldBounds(*transform, mesh->minCoord, mesh->maxCoord,
+                                         worldBoundMin, worldBoundMax);
     }
 
     // Calculate scene center and radius
@@ -163,12 +175,11 @@ public:
     }
   }
 
-  // Add a solid to the scene's list of solids.
-  // Using std::unique_ptr is a good practice for ownership.
+  // Add a solid to the scene and transfer its components to ECS.
   void addSolid(std::unique_ptr<Solid> solid) {
     solid->entity = registry.createEntity();
-    solids.push_back(std::move(solid));
-    auto& added = solids.back();
+    entities.push_back(solid->entity);
+    auto& added = solid;
     // Move transform into registry; update pointer to registry-owned copy
     registry.transforms().add(added->entity, std::move(added->localTransform_));
     added->transform = registry.transforms().get(added->entity);
@@ -191,6 +202,7 @@ public:
     // Move material into registry; update pointer to registry-owned copy
     registry.materials().add(added->entity, std::move(added->localMaterial_));
     added->materialComponent = registry.materials().get(added->entity);
+    registry.names().add(added->entity, NameComponent{added->name});
     // Move rotation into registry for non-light entities
     if (!added->lightComponent) {
       registry.rotations().add(added->entity, std::move(added->localRotation_));
@@ -205,15 +217,22 @@ public:
 
   CubeMap* getCubeMap() const { return background ? background->getCubeMap() : nullptr; }
 
+  slib::vec3 getWorldCenter(Entity entity) const {
+    auto* transform = registry.transforms().get(entity);
+    auto* mesh = registry.meshes().get(entity);
+    if (!transform || !mesh) {
+      return {0.0f, 0.0f, 0.0f};
+    }
+    return TransformSystem::getWorldCenter(*transform, mesh->minCoord, mesh->maxCoord);
+  }
+
   void drawBackground() const {
     float aspectRatio = static_cast<float>(screen.width) / screen.height;
     background->draw(backg, screen.height, screen.width, camera, aspectRatio);
   }
 
-  // Add a solid to the scene's list of solids.
-  // Using std::unique_ptr is a good practice for ownership.
   void clearAllSolids() {
-    solids.clear();
+    entities.clear();
     registry.clear();
   }
 
@@ -235,18 +254,34 @@ public:
                                     // indicates camera is still moving)
 
   Camera camera; // Camera object to manage camera properties.
-  // Store solids in a vector of unique_ptr to handle memory automatically.
-  std::vector<std::unique_ptr<Solid>> solids;
+  std::vector<Entity> entities;
   Registry registry; // ECS registry for component storage
 
-  // Returns a filtered view of solids that are light sources
-  auto lightSources() const {
-    return solids | std::views::filter([](const auto& s) { return s->lightComponent != nullptr; });
+  // Returns a list of entities that are light sources
+  std::vector<Entity> lightSourceEntities() const {
+    std::vector<Entity> result;
+    result.reserve(registry.lights().size());
+    for (const auto& [entity, light] : registry.lights()) {
+      result.push_back(entity);
+    }
+    return result;
   }
 
-  // Returns a filtered view of solids that are not light sources (renderables)
-  auto renderables() const {
-    return solids | std::views::filter([](const auto& s) { return s->lightComponent == nullptr; });
+  // Returns a list of entities that are renderables (no light component)
+  std::vector<Entity> renderableEntities() const {
+    std::vector<Entity> result;
+    result.reserve(registry.renders().size());
+    for (const auto& [entity, render] : registry.renders()) {
+      if (registry.lights().has(entity)) {
+        continue;
+      }
+      if (!registry.transforms().has(entity) || !registry.meshes().has(entity) ||
+          !registry.materials().has(entity)) {
+        continue;
+      }
+      result.push_back(entity);
+    }
+    return result;
   }
 
   // Access light components through registry (for effect pixel shaders)
@@ -277,24 +312,26 @@ public:
   // PCF radius control (0 = no filtering, 1 = 3x3, 2 = 5x5)
   int pcfRadius = SHADOW_PCF_RADIUS;
 
-  // Selected solid index for UI
-  int selectedSolidIndex = 0;
+  // Selected entity index for UI
+  int selectedEntityIndex = 0;
 
   // Draw ImGui controls for solid editing
   void drawSolidControls() {
-    if (solids.empty()) return;
+    if (entities.empty()) return;
 
-    selectedSolidIndex = std::clamp(selectedSolidIndex, 0,
-                                    static_cast<int>(solids.size() - 1));
+    selectedEntityIndex = std::clamp(selectedEntityIndex, 0,
+                                     static_cast<int>(entities.size() - 1));
 
     // Build solid labels for combo
     std::vector<std::string> solidLabels;
-    solidLabels.reserve(solids.size());
+    solidLabels.reserve(entities.size());
     std::vector<const char*> solidLabelPtrs;
-    solidLabelPtrs.reserve(solids.size());
+    solidLabelPtrs.reserve(entities.size());
 
-    for (size_t i = 0; i < solids.size(); ++i) {
-      const std::string& solidName = solids[i]->name;
+    for (size_t i = 0; i < entities.size(); ++i) {
+      Entity entity = entities[i];
+      const auto* nameComp = registry.names().get(entity);
+      const std::string& solidName = nameComp ? nameComp->name : std::string();
       if (!solidName.empty()) {
         solidLabels.push_back(solidName);
       } else {
@@ -303,75 +340,88 @@ public:
       solidLabelPtrs.push_back(solidLabels.back().c_str());
     }
 
-    if (ImGui::Combo("Selected Solid", &selectedSolidIndex,
+    if (ImGui::Combo("Selected Solid", &selectedEntityIndex,
                      solidLabelPtrs.data(),
                      static_cast<int>(solidLabelPtrs.size()))) {
-      camera.orbitTarget = solids[selectedSolidIndex]->getWorldCenter();
-      camera.setOrbitFromCurrent();
-    }
-
-    Solid* selectedSolid = solids[selectedSolidIndex].get();
-
-    int currentShading = static_cast<int>(selectedSolid->render->shading);
-    if (ImGui::Combo("Shading", &currentShading, shadingNames,
-                     IM_ARRAYSIZE(shadingNames))) {
-      selectedSolid->render->shading = static_cast<Shading>(currentShading);
-    }
-
-    if (selectedSolid->rotation) {
-      ImGui::Checkbox("Rotate", &selectedSolid->rotation->enabled);
-      ImGui::SliderFloat("Rot X Speed", &selectedSolid->rotation->incXangle, 0.0f, 1.0f);
-      ImGui::SliderFloat("Rot Y Speed", &selectedSolid->rotation->incYangle, 0.0f, 1.0f);
-    }
-
-    float position[3] = {selectedSolid->transform->position.x,
-                         selectedSolid->transform->position.y,
-                         selectedSolid->transform->position.z};
-    if (ImGui::DragFloat3("Position", position, 1.0f)) {
-      selectedSolid->transform->position.x = position[0];
-      selectedSolid->transform->position.y = position[1];
-      selectedSolid->transform->position.z = position[2];
-    }
-
-    ImGui::DragFloat("Zoom", &selectedSolid->transform->position.zoom, 0.1f, 0.01f, 500.0f);
-
-    float angles[3] = {selectedSolid->transform->position.xAngle,
-                       selectedSolid->transform->position.yAngle,
-                       selectedSolid->transform->position.zAngle};
-    if (ImGui::DragFloat3("Angles", angles, 1.0f, -360.0f, 360.0f)) {
-      selectedSolid->transform->position.xAngle = angles[0];
-      selectedSolid->transform->position.yAngle = angles[1];
-      selectedSolid->transform->position.zAngle = angles[2];
-    }
-
-    bool orbitEnabled = selectedSolid->transform->orbit.enabled;
-    if (ImGui::Checkbox("Enable Orbit", &orbitEnabled)) {
-      if (orbitEnabled) {
-        selectedSolid->enableCircularOrbit(selectedSolid->transform->orbit.center,
-                                           selectedSolid->transform->orbit.radius,
-                                           selectedSolid->transform->orbit.n,
-                                           selectedSolid->transform->orbit.omega,
-                                           selectedSolid->transform->orbit.phase);
-      } else {
-        selectedSolid->disableCircularOrbit();
+      Entity entity = entities[selectedEntityIndex];
+      auto* transform = registry.transforms().get(entity);
+      auto* mesh = registry.meshes().get(entity);
+      if (transform && mesh) {
+        camera.orbitTarget = TransformSystem::getWorldCenter(*transform, mesh->minCoord, mesh->maxCoord);
+        camera.setOrbitFromCurrent();
       }
     }
 
-    float orbitCenter[3] = {selectedSolid->transform->orbit.center.x,
-                            selectedSolid->transform->orbit.center.y,
-                            selectedSolid->transform->orbit.center.z};
-    if (ImGui::DragFloat3("Orbit Center", orbitCenter, 1.0f)) {
-      selectedSolid->transform->orbit.center = {orbitCenter[0], orbitCenter[1], orbitCenter[2]};
+    Entity entity = entities[selectedEntityIndex];
+    auto* render = registry.renders().get(entity);
+    auto* transform = registry.transforms().get(entity);
+    if (!render || !transform) {
+      return;
     }
 
-    ImGui::DragFloat("Orbit Radius", &selectedSolid->transform->orbit.radius, 0.1f, 0.0f, 10000.0f);
-    ImGui::DragFloat("Orbit Speed", &selectedSolid->transform->orbit.omega, 0.01f, -10.0f, 10.0f);
+    int currentShading = static_cast<int>(render->shading);
+    if (ImGui::Combo("Shading", &currentShading, shadingNames,
+                     IM_ARRAYSIZE(shadingNames))) {
+      render->shading = static_cast<Shading>(currentShading);
+    }
+
+    auto* rotation = registry.rotations().get(entity);
+    if (rotation) {
+      ImGui::Checkbox("Rotate", &rotation->enabled);
+      ImGui::SliderFloat("Rot X Speed", &rotation->incXangle, 0.0f, 1.0f);
+      ImGui::SliderFloat("Rot Y Speed", &rotation->incYangle, 0.0f, 1.0f);
+    }
+
+    float position[3] = {transform->position.x,
+                         transform->position.y,
+                         transform->position.z};
+    if (ImGui::DragFloat3("Position", position, 1.0f)) {
+      transform->position.x = position[0];
+      transform->position.y = position[1];
+      transform->position.z = position[2];
+    }
+
+    ImGui::DragFloat("Zoom", &transform->position.zoom, 0.1f, 0.01f, 500.0f);
+
+    float angles[3] = {transform->position.xAngle,
+                       transform->position.yAngle,
+                       transform->position.zAngle};
+    if (ImGui::DragFloat3("Angles", angles, 1.0f, -360.0f, 360.0f)) {
+      transform->position.xAngle = angles[0];
+      transform->position.yAngle = angles[1];
+      transform->position.zAngle = angles[2];
+    }
+
+    bool orbitEnabled = transform->orbit.enabled;
+    if (ImGui::Checkbox("Enable Orbit", &orbitEnabled)) {
+      if (orbitEnabled) {
+        TransformSystem::enableCircularOrbit(*transform,
+                                             transform->orbit.center,
+                                             transform->orbit.radius,
+                                             transform->orbit.n,
+                                             transform->orbit.omega,
+                                             transform->orbit.phase);
+      } else {
+        TransformSystem::disableCircularOrbit(*transform);
+      }
+    }
+
+    float orbitCenter[3] = {transform->orbit.center.x,
+                            transform->orbit.center.y,
+                            transform->orbit.center.z};
+    if (ImGui::DragFloat3("Orbit Center", orbitCenter, 1.0f)) {
+      transform->orbit.center = {orbitCenter[0], orbitCenter[1], orbitCenter[2]};
+    }
+
+    ImGui::DragFloat("Orbit Radius", &transform->orbit.radius, 0.1f, 0.0f, 10000.0f);
+    ImGui::DragFloat("Orbit Speed", &transform->orbit.omega, 0.01f, -10.0f, 10.0f);
 
     // Light properties (only shown if solid is a light source)
-    if (selectedSolid->lightComponent) {
+    auto* lightComponent = registry.lights().get(entity);
+    if (lightComponent) {
       ImGui::Separator();
       ImGui::Text("Light Source");
-      ImGui::SliderFloat("Light Intensity", &selectedSolid->lightComponent->light.intensity, 0.0f, 100.0f);
+      ImGui::SliderFloat("Light Intensity", &lightComponent->light.intensity, 0.0f, 100.0f);
     }
   }
 
