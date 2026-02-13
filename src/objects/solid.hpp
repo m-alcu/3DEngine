@@ -11,6 +11,7 @@
 #include "../ecs/Entity.hpp"
 #include "../ecs/LightComponent.hpp"
 #include "../ecs/MeshComponent.hpp"
+#include "../ecs/RotationComponent.hpp"
 #include "../ecs/RenderComponent.hpp"
 
 enum class MaterialType {
@@ -42,9 +43,8 @@ public:
 
     MeshComponent localMesh_;
     MeshComponent* mesh = &localMesh_;
-	bool rotationEnabled = true;
-    float incXangle = 0.0f;  // Rotation speed around X axis
-    float incYangle = 0.0f;  // Rotation speed around Y axis
+    RotationComponent localRotation_;
+    RotationComponent* rotation = &localRotation_;
     std::string name;
     std::optional<LightComponent> localLight_;
     LightComponent* lightComponent = nullptr;

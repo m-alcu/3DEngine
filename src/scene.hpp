@@ -22,6 +22,7 @@
 #include "ecs/Registry.hpp"
 #include "ecs/TransformSystem.hpp"
 #include "ecs/LightSystem.hpp"
+#include "ecs/RotationSystem.hpp"
 #include "slib.hpp"
 #include "smath.hpp"
 #include "stats.hpp"
@@ -67,20 +68,18 @@ public:
 
     // --- System pipeline: iterate component stores directly ---
     TransformSystem::updateAllOrbits(registry.transforms(), dt);
+    RotationSystem::updateAll(registry);
     TransformSystem::updateAllTransforms(registry.transforms());
     LightSystem::syncPositions(registry);
     LightSystem::ensureShadowMaps(registry.lights(), pcfRadius);
 
-    // --- Solid-coupled remnants (future: RotationComponent) ---
+    // --- World bounds (still needs mesh minCoord/maxCoord) ---
     worldBoundMin = slib::vec3::boundMin();
     worldBoundMax = slib::vec3::boundMax();
     bool hasGeometry = !solids.empty();
 
     for (auto &solidPtr : solids) {
       if (!solidPtr->lightComponent) {
-        if (solidPtr->rotationEnabled) {
-          TransformSystem::incAngles(*solidPtr->transform, solidPtr->incXangle, solidPtr->incYangle, 0.0f);
-        }
         solidPtr->updateWorldBounds(worldBoundMin, worldBoundMax);
       }
     }
@@ -179,6 +178,13 @@ public:
     // Move mesh into registry; update pointer to registry-owned copy
     registry.meshes().add(added->entity, std::move(added->localMesh_));
     added->mesh = registry.meshes().get(added->entity);
+    // Move rotation into registry for non-light entities
+    if (!added->lightComponent) {
+      registry.rotations().add(added->entity, std::move(added->localRotation_));
+      added->rotation = registry.rotations().get(added->entity);
+    } else {
+      added->rotation = nullptr;
+    }
   }
 
   CubeMap* getCubeMap() const { return background ? background->getCubeMap() : nullptr; }
@@ -293,9 +299,11 @@ public:
       selectedSolid->shading = static_cast<Shading>(currentShading);
     }
 
-    ImGui::Checkbox("Rotate", &selectedSolid->rotationEnabled);
-    ImGui::SliderFloat("Rot X Speed", &selectedSolid->incXangle, 0.0f, 1.0f);
-    ImGui::SliderFloat("Rot Y Speed", &selectedSolid->incYangle, 0.0f, 1.0f);
+    if (selectedSolid->rotation) {
+      ImGui::Checkbox("Rotate", &selectedSolid->rotation->enabled);
+      ImGui::SliderFloat("Rot X Speed", &selectedSolid->rotation->incXangle, 0.0f, 1.0f);
+      ImGui::SliderFloat("Rot Y Speed", &selectedSolid->rotation->incYangle, 0.0f, 1.0f);
+    }
 
     float position[3] = {selectedSolid->transform->position.x,
                          selectedSolid->transform->position.y,

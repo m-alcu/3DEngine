@@ -222,12 +222,12 @@ std::unique_ptr<Solid> SceneLoader::parseSolid(const YAML::Node& node) {
         solid->shading = parseShading(node["shading"].as<std::string>());
 
     if (node["rotation_enabled"])
-        solid->rotationEnabled = node["rotation_enabled"].as<bool>();
+        solid->rotation->enabled = node["rotation_enabled"].as<bool>();
 
     if (node["rotation_speed"]) {
         auto rs = node["rotation_speed"];
-        solid->incXangle = rs[0].as<float>();
-        solid->incYangle = rs[1].as<float>();
+        solid->rotation->incXangle = rs[0].as<float>();
+        solid->rotation->incYangle = rs[1].as<float>();
     }
 
     // Light source
