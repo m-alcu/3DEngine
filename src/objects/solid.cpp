@@ -4,6 +4,7 @@
 #include "../slib.hpp"
 #include "../smath.hpp"
 #include "../ecs/TransformSystem.hpp"
+#include "../ecs/MeshSystem.hpp"
 #include "../vendor/stb/stb_image.h"
 
 Solid::Solid() {
@@ -15,74 +16,17 @@ void Solid::calculateTransformMat() {
 
 void Solid::calculateFaceNormals() {
     if (!mesh) return;
-
-    for (int i = 0; i < mesh->numFaces; i++) {
-        const Face &face = mesh->faceData[i].face;
-        const size_t n = face.vertexIndices.size();
-
-        // Newell's method: works for any polygon (tri, quad, n-gon)
-        // and handles degenerate edges gracefully
-        // https://every-algorithm.github.io/2024/03/06/newells_algorithm.html
-        slib::vec3 normal = {0.0f, 0.0f, 0.0f};
-
-        for (size_t j = 0; j < n; ++j) {
-            const slib::vec3& curr = mesh->vertexData[face.vertexIndices[j]].vertex;
-            const slib::vec3& next = mesh->vertexData[face.vertexIndices[(j + 1) % n]].vertex;
-
-            normal.x += (curr.y - next.y) * (curr.z + next.z);
-            normal.y += (curr.z - next.z) * (curr.x + next.x);
-            normal.z += (curr.x - next.x) * (curr.y + next.y);
-        }
-        mesh->faceData[i].faceNormal = smath::normalize(normal);
-    }
+    MeshSystem::updateFaceNormals(*mesh);
 }
 
 void Solid::calculateVertexNormals() {
     if (!mesh) return;
-
-    for (int i = 0; i < mesh->numVertices; i++) {
-        slib::vec3 vertexNormal = { 0, 0, 0 };
-        for(int j = 0; j < mesh->numFaces; j++) {
-
-            for (int vi : mesh->faceData[j].face.vertexIndices) {
-                // guard in case your data can contain bad indices
-                if (vi == i) {
-                    vertexNormal += mesh->faceData[j].faceNormal;
-                }
-            }        
-        }
-        mesh->vertexData[i].normal = smath::normalize(vertexNormal);
-    }
-
+    MeshSystem::updateVertexNormals(*mesh);
 }
 
 void Solid::calculateMinMaxCoords() {
-    if (!mesh || mesh->numVertices == 0) {
-        if (mesh) {
-            mesh->minCoord = {0.0f, 0.0f, 0.0f};
-            mesh->maxCoord = {0.0f, 0.0f, 0.0f};
-        }
-        return;
-    }
-
-    // Initialize with the first vertex
-    mesh->minCoord = mesh->vertexData[0].vertex;
-    mesh->maxCoord = mesh->vertexData[0].vertex;
-
-    // Iterate through all vertices to find min and max coordinates
-    for (int i = 1; i < mesh->numVertices; i++) {
-        const slib::vec3& v = mesh->vertexData[i].vertex;
-
-        // Update minimum coordinates
-        if (v.x < mesh->minCoord.x) mesh->minCoord.x = v.x;
-        if (v.y < mesh->minCoord.y) mesh->minCoord.y = v.y;
-        if (v.z < mesh->minCoord.z) mesh->minCoord.z = v.z;
-
-        // Update maximum coordinates
-        if (v.x > mesh->maxCoord.x) mesh->maxCoord.x = v.x;
-        if (v.y > mesh->maxCoord.y) mesh->maxCoord.y = v.y;
-        if (v.z > mesh->maxCoord.z) mesh->maxCoord.z = v.z;
-    }
+    if (!mesh) return;
+    MeshSystem::updateMinMaxCoords(*mesh);
 }
 
 float Solid::getBoundingRadius() const {

@@ -23,6 +23,7 @@
 #include "ecs/TransformSystem.hpp"
 #include "ecs/LightSystem.hpp"
 #include "ecs/RotationSystem.hpp"
+#include "ecs/MeshSystem.hpp"
 #include "slib.hpp"
 #include "smath.hpp"
 #include "stats.hpp"
@@ -61,6 +62,7 @@ public:
       solids[selectedSolidIndex]->calculateTransformMat();
       camera.orbitTarget = solids[selectedSolidIndex]->getWorldCenter();
     }
+    MeshSystem::updateAllBounds(registry.meshes());
     camera.setOrbitFromCurrent();
   }
 
