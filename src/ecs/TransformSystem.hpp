@@ -19,6 +19,11 @@ namespace TransformSystem {
         t.normalMatrix = rotate;
     }
 
+    inline slib::vec3 rotateNormal(const TransformComponent& t, const slib::vec3& normal) {
+        slib::vec4 rotated = t.normalMatrix * slib::vec4(normal, 0);
+        return {rotated.x, rotated.y, rotated.z};
+    }
+
     inline void incAngles(TransformComponent& t, float xAngle, float yAngle, float zAngle) {
         t.position.xAngle += xAngle;
         t.position.yAngle += yAngle;

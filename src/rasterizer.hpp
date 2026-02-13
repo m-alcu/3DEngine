@@ -10,6 +10,7 @@
 #include "ecs/MaterialComponent.hpp"
 #include "ecs/RenderComponent.hpp"
 #include "ecs/TransformComponent.hpp"
+#include "ecs/TransformSystem.hpp"
 #include "slib.hpp"
 #include "smath.hpp"
 #include "polygon.hpp"
@@ -92,11 +93,6 @@ class Rasterizer {
             }
         }
 
-        inline slib::vec3 getRotatedNormal(const FaceData& faceDataEntry) const {
-            slib::vec4 rotated = transformComponent->normalMatrix * slib::vec4(faceDataEntry.faceNormal, 0);
-            return {rotated.x, rotated.y, rotated.z};
-        }
-
         inline std::vector<vertex> collectPolyVerts(const FaceData& faceDataEntry) const {
             std::vector<vertex> polyVerts;
             polyVerts.reserve(faceDataEntry.face.vertexIndices.size());
@@ -127,7 +123,7 @@ class Rasterizer {
                 //#pragma omp for nowait
                 for (int i = 0; i < static_cast<int>(meshComponent->faceData.size()); ++i) {
                     const auto& faceDataEntry = meshComponent->faceData[i];
-                    slib::vec3 normal = getRotatedNormal(faceDataEntry);
+                    slib::vec3 normal = TransformSystem::rotateNormal(*transformComponent, faceDataEntry.faceNormal);
                     vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];
 
                     if (shading == Shading::Wireframe || scene->camera.isVisibleFromCamera(p1.world, normal))
@@ -146,7 +142,7 @@ class Rasterizer {
             //This will wait until we develop a tile-based rasterizer
             for (const auto& fd : visibleFaces) {
                 const auto& faceDataEntry = meshComponent->faceData[fd.faceIndex];
-                slib::vec3 normal = getRotatedNormal(faceDataEntry);
+                slib::vec3 normal = TransformSystem::rotateNormal(*transformComponent, faceDataEntry.faceNormal);
 
                 Polygon<vertex> poly(
                     collectPolyVerts(faceDataEntry),
@@ -161,7 +157,7 @@ class Rasterizer {
         {
             for (const auto &faceDataEntry : meshComponent->faceData)
             {
-                slib::vec3 normal = getRotatedNormal(faceDataEntry);
+                slib::vec3 normal = TransformSystem::rotateNormal(*transformComponent, faceDataEntry.faceNormal);
                 vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];
 
                 if (lightSource->light.isVisibleFromLight(p1.world, normal))
