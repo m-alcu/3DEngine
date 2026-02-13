@@ -77,7 +77,7 @@ This is a software 3D rendering engine (no GPU/OpenGL) using SDL3 for windowing 
 
 2. **Solid** (`src/objects/solid.hpp`) - Abstract base class for 3D objects. Stores vertex data, face data, normals, materials. Derived classes (Torus, Cube, Icosahedron, etc.) implement `loadVertices()` and `loadFaces()`.
 
-3. **Renderer** (`src/renderer.hpp`) - Dispatches rendering based on shading mode. Owns multiple `Rasterizer<Effect>` instances.
+3. **RenderSystem** (`src/ecs/RenderSystem.hpp`, `src/renderSystem.hpp`) - Dispatches rendering based on shading mode. Owns multiple `Rasterizer<Effect>` instances.
 
 4. **Rasterizer** (`src/rasterizer.hpp`) - Template class parameterized by Effect type. Handles:
    - Transform matrix calculation (model -> world)
@@ -139,7 +139,7 @@ Each light-source solid maintains its own shadow map for shadow calculations.
 **Key components**:
 - `ShadowMap` (`src/ShadowMap.hpp`) - Depth buffer rendered from light's perspective
 - `Solid::shadowMap` - Each light-source solid owns a `std::shared_ptr<ShadowMap>`
-- `Renderer::renderShadowPass()` - Renders depth from each light source before main rendering
+- `RenderSystem::renderShadowPass()` - Renders depth from each light source before main rendering
 
 **Shadow rendering flow**:
 1. For each solid with `lightSourceEnabled`, build light matrices and render scene depth to its shadow map

@@ -109,16 +109,12 @@ public:
       for (Entity entity : scene.renderableEntities()) {
         auto* transform = scene.registry.transforms().get(entity);
         auto* mesh = scene.registry.meshes().get(entity);
-        auto* material = scene.registry.materials().get(entity);
         auto* render = scene.registry.renders().get(entity);
-        if (!transform || !mesh || !material || !render) {
+        if (!transform || !mesh || !render) {
           continue;
         }
         shadowRasterizer.drawRenderable(*transform,
                                         *mesh,
-                                        *material,
-                                        render->shading,
-                                        &scene,
                                         lightComponent,
                                         shadowComponent);
       }

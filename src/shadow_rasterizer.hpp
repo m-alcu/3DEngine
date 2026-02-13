@@ -4,7 +4,6 @@
 #include "scene.hpp"
 #include "ecs/LightComponent.hpp"
 #include "ecs/MeshComponent.hpp"
-#include "ecs/MaterialComponent.hpp"
 #include "ecs/ShadowComponent.hpp"
 #include "ecs/RenderComponent.hpp"
 #include "ecs/TransformComponent.hpp"
@@ -25,16 +24,10 @@ class ShadowRasterizer {
 
         void drawRenderable(TransformComponent& transform,
                             MeshComponent& mesh,
-                            MaterialComponent& material,
-                            Shading shadingMode,
-                            Scene* scn,
                             LightComponent* lightSrc,
                             ShadowComponent* shadowSrc) {
             transformComponent = &transform;
             meshComponent = &mesh;
-            materialComponent = &material;
-            shading = shadingMode;
-            scene = scn;
             lightSource = lightSrc;
             shadowComponent = shadowSrc;
             screenWidth = shadowComponent->shadowMap->width;
@@ -48,11 +41,8 @@ class ShadowRasterizer {
         std::vector<vertex> projectedPoints;
         TransformComponent* transformComponent = nullptr;
         MeshComponent* meshComponent = nullptr;
-        MaterialComponent* materialComponent = nullptr;
-        Scene* scene = nullptr;
         LightComponent* lightSource = nullptr;
         ShadowComponent* shadowComponent = nullptr;
-        Shading shading = Shading::Flat;
         int32_t screenWidth = 0;
         int32_t screenHeight = 0;
         Effect effect;
@@ -64,7 +54,7 @@ class ShadowRasterizer {
 
             #pragma omp parallel for if(n > 1000)
             for (int i = 0; i < n; ++i) {
-                projectedPoints[i] = effect.vs(meshComponent->vertexData[i], *transformComponent, scene, shadowComponent);
+                projectedPoints[i] = effect.vs(meshComponent->vertexData[i], *transformComponent, shadowComponent);
             }
         }
 
@@ -72,7 +62,6 @@ class ShadowRasterizer {
             auto clippedPoly = ClipCullPolygon(poly);
             if (!clippedPoly.points.empty()) {
                 drawPolygon(clippedPoly);
-                scene->stats.addDrawCall();
             }
         }
 
@@ -89,7 +78,7 @@ class ShadowRasterizer {
         }
 
         void drawPolygon(Polygon<vertex>& polygon) {
-            effect.gs(polygon, screenWidth, screenHeight, *scene);
+            effect.gs(polygon, screenWidth, screenHeight);
             rasterizeFilledPolygon(polygon);
         }
 
