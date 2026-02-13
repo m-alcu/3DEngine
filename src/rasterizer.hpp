@@ -117,20 +117,13 @@ class Rasterizer {
             std::vector<FaceDepth> visibleFaces;
             visibleFaces.reserve(meshComponent->faceData.size());
 
-            //#pragma omp parallel
-            {
-                std::vector<FaceDepth> localVisible;
-                //#pragma omp for nowait
-                for (int i = 0; i < static_cast<int>(meshComponent->faceData.size()); ++i) {
-                    const auto& faceDataEntry = meshComponent->faceData[i];
-                    slib::vec3 normal = TransformSystem::rotateNormal(*transformComponent, faceDataEntry.faceNormal);
-                    vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];
+            for (int i = 0; i < static_cast<int>(meshComponent->faceData.size()); ++i) {
+                const auto& faceDataEntry = meshComponent->faceData[i];
+                slib::vec3 normal = TransformSystem::rotateNormal(*transformComponent, faceDataEntry.faceNormal);
+                vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];
 
-                    if (shading == Shading::Wireframe || scene->camera.isVisibleFromCamera(p1.world, normal))
-                        localVisible.push_back({i, p1.p_z});
-                }
-                //#pragma omp critical
-                visibleFaces.insert(visibleFaces.end(), localVisible.begin(), localVisible.end());
+                if (shading == Shading::Wireframe || scene->camera.isVisibleFromCamera(p1.world, normal))
+                    visibleFaces.push_back({i, p1.p_z});
             }
 
             if (scene->depthSortEnabled) {
