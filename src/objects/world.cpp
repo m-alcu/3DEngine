@@ -81,7 +81,7 @@ void World::loadFaces(int lat, int lon) {
     material.Kd = { properties.k_d * 0xff, properties.k_d * 0x00, properties.k_d * 0x00 }; 
     material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };
     material.Ns = properties.shininess;
-    material.map_Kd = LoadTextureFromImg(std::string(RES_PATH + mtlPath).c_str());
+    material.map_Kd = Texture::loadFromFile(std::string(RES_PATH + mtlPath));
     material.map_Kd.setFilter(TextureFilter::BILINEAR_INT);
     mesh->materials.insert({"red", material});
 
@@ -89,7 +89,7 @@ void World::loadFaces(int lat, int lon) {
     material.Kd = { properties.k_d * 0xff, properties.k_d * 0xff, properties.k_d * 0xff };
     material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };
     material.Ns = properties.shininess;
-    material.map_Kd = LoadTextureFromImg(std::string(RES_PATH + mtlPath).c_str());
+    material.map_Kd = Texture::loadFromFile(std::string(RES_PATH + mtlPath));
     material.map_Kd.setFilter(TextureFilter::BILINEAR_INT);
     mesh->materials.insert({"white", material});  
 

@@ -1,7 +1,10 @@
 #pragma once
 #include <algorithm>
 #include <cstdint>
+#include <iostream>
+#include <string>
 #include <vector>
+#include "vendor/stb/stb_image.h"
 
 enum class TextureFilter {
     NEIGHBOUR,
@@ -22,6 +25,28 @@ public:
     int h = 0;
     std::vector<unsigned char> data;
     SampleFn sampleFn = &Texture::sampleNearest; // Function pointer to avoid branch
+
+    static Texture loadFromFile(const std::string& filename) {
+        int width = 0;
+        int height = 0;
+        int channels = 0;
+        unsigned char* imageData = stbi_load(filename.c_str(), &width, &height, &channels, 4);
+
+        if (!imageData) {
+            std::cout << "Failed to load image: " << filename
+                      << " - " << stbi_failure_reason() << std::endl;
+            return {};
+        }
+
+        std::vector<unsigned char> image(imageData, imageData + (width * height * 4));
+        stbi_image_free(imageData);
+
+        Texture texture;
+        texture.w = width;
+        texture.h = height;
+        texture.data = std::move(image);
+        return texture;
+    }
 
     // Get pixels as RGBA8 array
     const RGBA8* pixels() const {
@@ -202,4 +227,3 @@ public:
         (this->*sampleFn)(u, v, r, g, b);
     }
 };
-

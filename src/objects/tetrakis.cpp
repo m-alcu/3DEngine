@@ -50,7 +50,7 @@ void Tetrakis::loadFaces() {
     material.Ka = { properties.k_a * 0x00, properties.k_a * 0x58, properties.k_a * 0xfc };
     material.Kd = { properties.k_d * 0x00, properties.k_d * 0x58, properties.k_d * 0xfc }; 
     material.Ks = { properties.k_s * 0x00, properties.k_s * 0x58, properties.k_s * 0xfc };
-    material.map_Kd = LoadTextureFromImg(std::string(RES_PATH + mtlPath).c_str());
+    material.map_Kd = Texture::loadFromFile(std::string(RES_PATH + mtlPath));
     material.map_Kd.setFilter(TextureFilter::NEIGHBOUR);
     material.Ns = properties.shininess;
     mesh->materials.insert({"blue", material});
@@ -58,7 +58,7 @@ void Tetrakis::loadFaces() {
     material.Ka = { properties.k_a * 0xff, properties.k_a * 0xff, properties.k_a * 0xff };
     material.Kd = { properties.k_d * 0xff, properties.k_d * 0xff, properties.k_d * 0xff };
     material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };
-    material.map_Kd = LoadTextureFromImg(std::string(RES_PATH + mtlPath).c_str());
+    material.map_Kd = Texture::loadFromFile(std::string(RES_PATH + mtlPath));
     material.map_Kd.setFilter(TextureFilter::NEIGHBOUR);    
     material.Ns = properties.shininess;
     mesh->materials.insert({"white", material});    

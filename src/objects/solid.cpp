@@ -5,7 +5,6 @@
 #include "../smath.hpp"
 #include "../ecs/TransformSystem.hpp"
 #include "../ecs/MeshSystem.hpp"
-#include "../vendor/stb/stb_image.h"
 
 Solid::Solid() {
 }
@@ -84,24 +83,6 @@ int Solid::getColorFromMaterial(const float color) {
     float kaR = std::fmod(color, 1.0f);
     kaR = kaR < 0 ? 1.0f + kaR : kaR;
     return (static_cast<int>(kaR * 255));
-}
-
-Texture Solid::LoadTextureFromImg(const char* filename)
-{
-    int width, height, channels;
-    // Load image with 4 channels (RGBA) regardless of source format
-    unsigned char* data = stbi_load(filename, &width, &height, &channels, 4);
-
-    if (!data) {
-        std::cout << "Failed to load image: " << filename << " - " << stbi_failure_reason() << std::endl;
-        return {0, 0, {}};
-    }
-
-    // Copy data into vector
-    std::vector<unsigned char> image(data, data + (width * height * 4));
-    stbi_image_free(data);
-
-    return {width, height, image};
 }
 
 void Solid::incAngles(float xAngle, float yAngle, float zAngle) {

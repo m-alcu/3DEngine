@@ -80,8 +80,6 @@ public:
 
     virtual int getColorFromMaterial(const float color);
 
-    Texture LoadTextureFromImg(const char* filename);
-
     virtual void incAngles(float xAngle, float yAngle, float zAngle);
 
     virtual void buildOrbitBasis(const slib::vec3& n);

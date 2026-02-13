@@ -61,7 +61,7 @@ void ObjLoader::loadVertices(const std::string& filename) {
     defaultMaterial.Ka = { properties.k_a * 0.1f, properties.k_a * 0.1f, properties.k_a * 0.1f };
     defaultMaterial.Kd = { properties.k_d * 0.8f, properties.k_d * 0.8f, properties.k_d * 0.8f };
     defaultMaterial.Ks = { properties.k_s * 1.0f, properties.k_s * 1.0f, properties.k_s * 1.0f };
-    defaultMaterial.map_Kd = LoadTextureFromImg(std::string(RES_PATH + defaultTexturePath).c_str());
+    defaultMaterial.map_Kd = Texture::loadFromFile(std::string(RES_PATH + defaultTexturePath));
     defaultMaterial.map_Kd.setFilter(TextureFilter::NEIGHBOUR);
     defaultMaterial.Ns = properties.shininess;
     mesh->materials.insert({"default", defaultMaterial});
@@ -84,7 +84,7 @@ void ObjLoader::loadVertices(const std::string& filename) {
         if (!mat.diffuse_texname.empty()) {
             std::filesystem::path texPath = basePath / mat.diffuse_texname;
             if (std::filesystem::exists(texPath)) {
-                material.map_Kd = LoadTextureFromImg(texPath.string().c_str());
+                material.map_Kd = Texture::loadFromFile(texPath.string());
             } else {
                 std::cerr << "Texture not found: " << texPath << "\n";
             }
@@ -94,7 +94,7 @@ void ObjLoader::loadVertices(const std::string& filename) {
         if (!mat.specular_texname.empty()) {
             std::filesystem::path texPath = basePath / mat.specular_texname;
             if (std::filesystem::exists(texPath)) {
-                material.map_Ks = LoadTextureFromImg(texPath.string().c_str());
+                material.map_Ks = Texture::loadFromFile(texPath.string());
             }
         }
 
@@ -102,7 +102,7 @@ void ObjLoader::loadVertices(const std::string& filename) {
         if (!mat.specular_highlight_texname.empty()) {
             std::filesystem::path texPath = basePath / mat.specular_highlight_texname;
             if (std::filesystem::exists(texPath)) {
-                material.map_Ns = LoadTextureFromImg(texPath.string().c_str());
+                material.map_Ns = Texture::loadFromFile(texPath.string());
             }
         }
 

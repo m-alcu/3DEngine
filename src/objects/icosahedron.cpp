@@ -49,7 +49,7 @@ void Icosahedron::loadFaces() {
     mat.Ka = { props.k_a * 0xff, props.k_a * 0xff, props.k_a * 0xff };
     mat.Kd = { props.k_d * 0xff, props.k_d * 0xff, props.k_d * 0xff };
     mat.Ks = { props.k_s * 0xff, props.k_s * 0xff, props.k_s * 0xff };
-    mat.map_Kd = LoadTextureFromImg(std::string(RES_PATH + mtlPath).c_str());
+    mat.map_Kd = Texture::loadFromFile(std::string(RES_PATH + mtlPath));
     mat.map_Kd.setFilter(TextureFilter::NEIGHBOUR);
     mat.Ns = props.shininess;
     mat.illum = 1; // Emissive material
