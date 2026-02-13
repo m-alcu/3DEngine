@@ -6,6 +6,7 @@
 #include "../smath.hpp"
 #include "../constants.hpp"
 #include "../ecs/MeshSystem.hpp"
+#include "../ecs/MaterialSystem.hpp"
 
 void World::loadVertices() {
 }
@@ -72,7 +73,7 @@ void World::loadFaces(int lat, int lon) {
 
     std::vector<FaceData> faces;
 
-    MaterialProperties properties = getMaterialProperties(MaterialType::Metal);
+    MaterialProperties properties = MaterialSystem::getMaterialProperties(MaterialType::Metal);
 
     std::string mtlPath = "earth_texture.png";
 
@@ -83,7 +84,7 @@ void World::loadFaces(int lat, int lon) {
     material.Ns = properties.shininess;
     material.map_Kd = Texture::loadFromFile(std::string(RES_PATH + mtlPath));
     material.map_Kd.setFilter(TextureFilter::BILINEAR_INT);
-    mesh->materials.insert({"red", material});
+    materialComponent->materials.insert({"red", material});
 
     material.Ka = { properties.k_a * 0x00, properties.k_a * 0x00, properties.k_a * 0x00 };
     material.Kd = { properties.k_d * 0xff, properties.k_d * 0xff, properties.k_d * 0xff };
@@ -91,7 +92,7 @@ void World::loadFaces(int lat, int lon) {
     material.Ns = properties.shininess;
     material.map_Kd = Texture::loadFromFile(std::string(RES_PATH + mtlPath));
     material.map_Kd.setFilter(TextureFilter::BILINEAR_INT);
-    mesh->materials.insert({"white", material});  
+    materialComponent->materials.insert({"white", material});  
 
     for (int i = 0; i < lat; i++) {
         for (int j = 0; j < lon; j++) {

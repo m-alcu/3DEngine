@@ -1,0 +1,52 @@
+#pragma once
+#include <cmath>
+#include "MaterialComponent.hpp"
+#include "../slib.hpp"
+
+enum class MaterialType {
+    Rubber,
+    Plastic,
+    Wood,
+    Marble,
+    Glass,
+    Metal,
+    Mirror,
+    Light
+};
+
+struct MaterialProperties {
+    float k_s;
+    float k_a;
+    float k_d;
+    float shininess;
+};
+
+namespace MaterialSystem {
+
+    inline MaterialProperties getMaterialProperties(MaterialType type) {
+        switch (type) {
+            case MaterialType::Rubber:   return {0.1f, 0.2f, 0.5f, 2};
+            case MaterialType::Plastic:  return {0.3f, 0.2f, 0.6f, 2};
+            case MaterialType::Wood:     return {0.2f, 0.3f, 0.7f, 2};
+            case MaterialType::Marble:   return {0.4f, 0.4f, 0.8f, 2};
+            case MaterialType::Glass:    return {0.6f, 0.1f, 0.2f, 2};
+            case MaterialType::Metal:    return {0.4f, 0.2f, 0.4f, 30};
+            case MaterialType::Mirror:   return {1.0f, 0.0f, 0.0f, 2};
+            case MaterialType::Light:    return {0.0f, 1.0f, 0.0f, 1};
+            default:                     return {0.0f, 0.0f, 0.0f, 0};
+        }
+    }
+
+    inline int getColorFromMaterial(const float color) {
+        float kaR = std::fmod(color, 1.0f);
+        kaR = kaR < 0 ? 1.0f + kaR : kaR;
+        return static_cast<int>(kaR * 255);
+    }
+
+    inline void setEmissiveColor(MaterialComponent& material, const slib::vec3& color) {
+        for (auto& kv : material.materials) {
+            kv.second.Ke = color * 255.0f;
+        }
+    }
+
+} // namespace MaterialSystem

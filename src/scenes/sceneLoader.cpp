@@ -15,6 +15,7 @@
 #include "../objects/amiga.hpp"
 #include "../objects/test.hpp"
 #include "../backgrounds/backgroundFactory.hpp"
+#include "../ecs/MaterialSystem.hpp"
 
 // ---------------------------------------------------------------------------
 // Enum parsers
@@ -240,9 +241,10 @@ std::unique_ptr<Solid> SceneLoader::parseSolid(const YAML::Node& node) {
     // Emissive color override
     if (node["emissive_color"]) {
         auto ec = node["emissive_color"];
-        solid->setEmissiveColor({ec[0].as<float>(),
-                                  ec[1].as<float>(),
-                                  ec[2].as<float>()});
+        MaterialSystem::setEmissiveColor(*solid->materialComponent,
+                                         {ec[0].as<float>(),
+                                          ec[1].as<float>(),
+                                          ec[2].as<float>()});
     }
 
     // Orbit

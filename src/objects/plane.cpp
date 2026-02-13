@@ -1,5 +1,6 @@
 #include "plane.hpp"
 #include "../material.hpp"
+#include "../ecs/MaterialSystem.hpp"
 
 void Plane::loadVertices() {
     const float half = size;
@@ -18,7 +19,7 @@ void Plane::loadVertices() {
 }
 
 void Plane::loadFaces() {
-    MaterialProperties properties = getMaterialProperties(MaterialType::Plastic);
+    MaterialProperties properties = MaterialSystem::getMaterialProperties(MaterialType::Plastic);
 
     std::string materialKey = "planeMaterial";
 
@@ -27,7 +28,7 @@ void Plane::loadFaces() {
     material.Kd = { properties.k_d * 0xaa, properties.k_d * 0xaa, properties.k_d * 0xaa };
     material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };
     material.Ns = properties.shininess;
-    mesh->materials.insert({materialKey, material});
+    materialComponent->materials.insert({materialKey, material});
 
     FaceData face;
     face.face.vertexIndices = { 0, 1, 2, 3 };

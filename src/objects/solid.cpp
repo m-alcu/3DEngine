@@ -63,28 +63,6 @@ void Solid::scaleToRadius(float targetRadius) {
     TransformSystem::scaleToRadius(*transform, getBoundingRadius(), targetRadius);
 }
 
-// Function returning MaterialProperties struct
-MaterialProperties Solid::getMaterialProperties(MaterialType type) {
-    switch (type) {
-        case MaterialType::Rubber:   return {0.1f, 0.2f, 0.5f, 2};  // Low specular, moderate ambient, height diffuse
-        case MaterialType::Plastic:  return {0.3f, 0.2f, 0.6f, 2};
-        case MaterialType::Wood:     return {0.2f, 0.3f, 0.7f, 2};
-        case MaterialType::Marble:   return {0.4f, 0.4f, 0.8f, 2};
-        case MaterialType::Glass:    return {0.6f, 0.1f, 0.2f, 2};  // High specular, low ambient, low diffuse
-        case MaterialType::Metal:    return {0.4f, 0.2f, 0.4f, 30}; // Almost no diffuse, very reflective
-        case MaterialType::Mirror:   return {1.0f, 0.0f, 0.0f, 2};  // Perfect specular reflection, no ambient or diffuse
-        case MaterialType::Light:   return  {0.0f, 1.0f, 0.0f, 1};  // Lighr source all is ambient
-        default: return {0.0f, 0.0f, 0.0f, 0};
-    }
-}
-
-int Solid::getColorFromMaterial(const float color) {
-
-    float kaR = std::fmod(color, 1.0f);
-    kaR = kaR < 0 ? 1.0f + kaR : kaR;
-    return (static_cast<int>(kaR * 255));
-}
-
 void Solid::incAngles(float xAngle, float yAngle, float zAngle) {
     TransformSystem::incAngles(*transform, xAngle, yAngle, zAngle);
 }
@@ -110,12 +88,4 @@ void Solid::disableCircularOrbit() {
 
 void Solid::updateOrbit(float dt) {
     TransformSystem::updateOrbit(*transform, dt);
-}
-
-// Set emissive color for all materials
-void Solid::setEmissiveColor(const slib::vec3& color) {
-    if (!mesh) return;
-    for (auto& kv : mesh->materials) {
-        kv.second.Ke = color * 255.0f;
-    }
 }

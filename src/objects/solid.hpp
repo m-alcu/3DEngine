@@ -11,27 +11,9 @@
 #include "../ecs/Entity.hpp"
 #include "../ecs/LightComponent.hpp"
 #include "../ecs/MeshComponent.hpp"
+#include "../ecs/MaterialComponent.hpp"
 #include "../ecs/RotationComponent.hpp"
 #include "../ecs/RenderComponent.hpp"
-
-enum class MaterialType {
-    Rubber,
-    Plastic,
-    Wood,
-    Marble,
-    Glass,
-    Metal,
-    Mirror,
-    Light
-};
-
-// Struct to hold k_s, k_a, and k_d values
-struct MaterialProperties {
-    float k_s; // Specular reflection coefficient
-    float k_a; // Ambient reflection coefficient
-    float k_d; // Diffuse reflection coefficient
-    float shininess;
-};
 
 
 class Solid {
@@ -44,6 +26,8 @@ public:
 
     MeshComponent localMesh_;
     MeshComponent* mesh = &localMesh_;
+    MaterialComponent localMaterial_;
+    MaterialComponent* materialComponent = &localMaterial_;
     RotationComponent localRotation_;
     RotationComponent* rotation = &localRotation_;
     std::string name;
@@ -76,10 +60,6 @@ public:
 
     void calculateTransformMat();
 
-    virtual MaterialProperties getMaterialProperties(MaterialType type);
-
-    virtual int getColorFromMaterial(const float color);
-
     virtual void incAngles(float xAngle, float yAngle, float zAngle);
 
     virtual void buildOrbitBasis(const slib::vec3& n);
@@ -95,8 +75,6 @@ public:
     virtual void disableCircularOrbit();
 
     virtual void updateOrbit(float dt);
-
-    void setEmissiveColor(const slib::vec3& color);
 
     void initLight(LightComponent lc) {
         localLight_ = std::move(lc);

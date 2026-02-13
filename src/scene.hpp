@@ -182,6 +182,9 @@ public:
     registry.meshes().add(added->entity, std::move(added->localMesh_));
     added->mesh = registry.meshes().get(added->entity);
     MeshSystem::markBoundsDirty(*added->mesh);
+    // Move material into registry; update pointer to registry-owned copy
+    registry.materials().add(added->entity, std::move(added->localMaterial_));
+    added->materialComponent = registry.materials().get(added->entity);
     // Move rotation into registry for non-light entities
     if (!added->lightComponent) {
       registry.rotations().add(added->entity, std::move(added->localRotation_));

@@ -6,6 +6,7 @@
 #include "objLoader.hpp"
 #include "../material.hpp"
 #include "../ecs/MeshSystem.hpp"
+#include "../ecs/MaterialSystem.hpp"
 
 #include <rapidobj/rapidobj.hpp>
 
@@ -54,7 +55,7 @@ void ObjLoader::loadVertices(const std::string& filename) {
     hasLoadedNormals = !attrib.normals.empty();
 
     // Create default material
-    MaterialProperties properties = getMaterialProperties(MaterialType::Metal);
+    MaterialProperties properties = MaterialSystem::getMaterialProperties(MaterialType::Metal);
     std::string defaultTexturePath = "checker-map_tho.png";
 
     Material defaultMaterial{};
@@ -64,7 +65,7 @@ void ObjLoader::loadVertices(const std::string& filename) {
     defaultMaterial.map_Kd = Texture::loadFromFile(std::string(RES_PATH + defaultTexturePath));
     defaultMaterial.map_Kd.setFilter(TextureFilter::NEIGHBOUR);
     defaultMaterial.Ns = properties.shininess;
-    mesh->materials.insert({"default", defaultMaterial});
+    materialComponent->materials.insert({"default", defaultMaterial});
 
     // Load materials from rapidobj
     for (size_t i = 0; i < mats.size(); ++i) {
@@ -106,7 +107,7 @@ void ObjLoader::loadVertices(const std::string& filename) {
             }
         }
 
-        mesh->materials[mat.name] = material;
+        materialComponent->materials[mat.name] = material;
     }
 
     // Map to track unique vertex combinations (position_index, texcoord_index, normal_index) -> final index
@@ -218,7 +219,7 @@ void ObjLoader::loadVertices(const std::string& filename) {
     std::cout << "  Normals: " << attrib.normals.size() / 3 << (hasLoadedNormals ? " (using file normals)" : " (will calculate)") << "\n";
     std::cout << "  Final vertices: " << finalVertices.size() << "\n";
     std::cout << "  Faces: " << faces.size() << "\n";
-    std::cout << "  Materials: " << mesh->materials.size() << "\n";
+    std::cout << "  Materials: " << materialComponent->materials.size() << "\n";
 
     mesh->vertexData = std::move(finalVertices);
     mesh->faceData = std::move(faces);

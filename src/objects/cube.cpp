@@ -3,6 +3,7 @@
 #include <cstdint>
 #include "cube.hpp"
 #include "../material.hpp"
+#include "../ecs/MaterialSystem.hpp"
 
 
 void Cube::loadVertices() {
@@ -52,7 +53,7 @@ void Cube::loadVertices() {
 }
 
 void Cube::loadFaces() {
-    MaterialProperties properties = getMaterialProperties(MaterialType::Metal);
+    MaterialProperties properties = MaterialSystem::getMaterialProperties(MaterialType::Metal);
 
     std::string materialKey = "floorTexture";
     std::string mtlPath = "checker-map_tho.png";
@@ -65,7 +66,7 @@ void Cube::loadFaces() {
     material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };
     material.Ns = properties.shininess;
     material.map_Kd = Texture::loadFromFile(std::string(RES_PATH + mtlPath));
-    mesh->materials.insert({materialKey, material});
+    materialComponent->materials.insert({materialKey, material});
 
     // Each face has 2 triangles, so for each face we generate 6 indices
     for (int baseIndex = 0; baseIndex < 4*6; baseIndex += 4) {

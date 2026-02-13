@@ -11,6 +11,7 @@
 #include "ascLoader.hpp"
 #include "../material.hpp"
 #include "../ecs/MeshSystem.hpp"
+#include "../ecs/MaterialSystem.hpp"
 
 void AscLoader::setup(const std::string& filename) {
     std::filesystem::path filePath(filename);
@@ -40,7 +41,7 @@ void AscLoader::loadVertices(const std::string& filename) {
     std::vector<VertexData> vertices;
     std::vector<FaceData> faces;
 
-    MaterialProperties properties = getMaterialProperties(MaterialType::Metal);
+    MaterialProperties properties = MaterialSystem::getMaterialProperties(MaterialType::Metal);
 
     std::string mtlPath = "checker-map_tho.png";
 
@@ -51,7 +52,7 @@ void AscLoader::loadVertices(const std::string& filename) {
     material.map_Kd = Texture::loadFromFile(std::string(RES_PATH + mtlPath));
     material.map_Kd.setFilter(TextureFilter::NEIGHBOUR);    
     material.Ns = properties.shininess;
-    mesh->materials.insert({"blue", material});
+    materialComponent->materials.insert({"blue", material});
 
     material.Ka = { properties.k_a * 0x00, properties.k_a * 0x00, properties.k_a * 0x00 };
     material.Kd = { properties.k_d * 0xff, properties.k_d * 0xff, properties.k_d * 0xff };
@@ -59,7 +60,7 @@ void AscLoader::loadVertices(const std::string& filename) {
     material.map_Kd = Texture::loadFromFile(std::string(RES_PATH + mtlPath));
     material.map_Kd.setFilter(TextureFilter::NEIGHBOUR);    
     material.Ns = properties.shininess;
-    mesh->materials.insert({"white", material});          
+    materialComponent->materials.insert({"white", material});          
 
     while (std::getline(file, line)) {
         // Remove leading/trailing spaces

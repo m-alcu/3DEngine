@@ -3,6 +3,7 @@
 #include <cstdint>
 #include "test.hpp"
 #include "../material.hpp"
+#include "../ecs/MaterialSystem.hpp"
 
 
 void Test::loadVertices() {
@@ -25,7 +26,7 @@ void Test::loadVertices() {
 
 void Test::loadFaces() {
 
-    MaterialProperties properties = getMaterialProperties(MaterialType::Metal);
+    MaterialProperties properties = MaterialSystem::getMaterialProperties(MaterialType::Metal);
 
     
     std::vector<FaceData> faces;
@@ -36,13 +37,13 @@ void Test::loadFaces() {
     material.Kd = { properties.k_d * 0x00, properties.k_d * 0x58, properties.k_d * 0xfc }; 
     material.Ks = { properties.k_s * 0x00, properties.k_s * 0x58, properties.k_s * 0xfc };
     material.Ns = properties.shininess;
-    mesh->materials.insert({"blue", material});
+    materialComponent->materials.insert({"blue", material});
 
     material.Ka = { properties.k_a * 0xff, properties.k_a * 0xff, properties.k_a * 0xff };
     material.Kd = { properties.k_d * 0xff, properties.k_d * 0xff, properties.k_d * 0xff };
     material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };
     material.Ns = properties.shininess;
-    mesh->materials.insert({"white", material});
+    materialComponent->materials.insert({"white", material});
 
     FaceData face1;
 

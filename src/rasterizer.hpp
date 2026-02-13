@@ -7,6 +7,7 @@
 #include "scene.hpp"
 #include "ecs/LightComponent.hpp"
 #include "ecs/MeshComponent.hpp"
+#include "ecs/MaterialComponent.hpp"
 #include "ecs/RenderComponent.hpp"
 #include "ecs/TransformComponent.hpp"
 #include "slib.hpp"
@@ -36,11 +37,13 @@ class Rasterizer {
 
         void drawRenderable(TransformComponent& transform,
                             MeshComponent& mesh,
+                            MaterialComponent& material,
                             Shading shadingMode,
                             Scene* scn,
                             LightComponent* lightSrc = nullptr) {
             transformComponent = &transform;
             meshComponent = &mesh;
+            materialComponent = &material;
             shading = shadingMode;
             scene = scn;
             lightSource = lightSrc;
@@ -65,6 +68,7 @@ class Rasterizer {
         std::vector<vertex> projectedPoints;
         TransformComponent* transformComponent = nullptr;
         MeshComponent* meshComponent = nullptr;
+        MaterialComponent* materialComponent = nullptr;
         Scene* scene = nullptr;
         LightComponent* lightSource = nullptr;
         Shading shading = Shading::Flat;
@@ -147,7 +151,7 @@ class Rasterizer {
                 Polygon<vertex> poly(
                     collectPolyVerts(faceDataEntry),
                     normal,
-                    meshComponent->materials.at(faceDataEntry.face.materialKey)
+                    materialComponent->materials.at(faceDataEntry.face.materialKey)
                 );
                 clipAndDraw(poly);
             }

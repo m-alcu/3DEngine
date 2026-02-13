@@ -1,8 +1,5 @@
 #pragma once
-#include <map>
-#include <string>
 #include <vector>
-#include "../material.hpp"
 #include "../slib.hpp"
 
 struct VertexData {
@@ -24,7 +21,6 @@ struct FaceData {
 struct MeshComponent {
     std::vector<VertexData> vertexData;
     std::vector<FaceData> faceData;
-    std::map<std::string, Material> materials;
     int numVertices = 0;
     int numFaces = 0;
     slib::vec3 minCoord{};

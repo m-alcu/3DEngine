@@ -3,6 +3,7 @@
 #include <cstdint>
 #include "icosahedron.hpp"
 #include "../material.hpp"
+#include "../ecs/MaterialSystem.hpp"
 
 void Icosahedron::loadVertices() {
     const float half = 50.f;
@@ -42,7 +43,7 @@ void Icosahedron::loadVertices() {
 void Icosahedron::loadFaces() {
     std::vector<FaceData> faces;
 
-    MaterialProperties props = getMaterialProperties(MaterialType::Light);
+    MaterialProperties props = MaterialSystem::getMaterialProperties(MaterialType::Light);
     std::string mtlPath = "checker-map_tho.png";
 
     Material mat{};
@@ -54,7 +55,7 @@ void Icosahedron::loadFaces() {
     mat.Ns = props.shininess;
     mat.illum = 1; // Emissive material
     mat.Ke = { props.k_a * 0xff, props.k_a * 0xff, props.k_a * 0xff }; // Emissive color
-    mesh->materials.insert({ "white", mat });
+    materialComponent->materials.insert({ "white", mat });
 
     // 20 triangular faces of the icosahedron (indices match the vertex order above)
     const uint16_t F[20][3] = {
