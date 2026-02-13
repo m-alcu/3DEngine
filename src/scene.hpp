@@ -272,9 +272,6 @@ public:
     std::vector<Entity> result;
     result.reserve(registry.renders().size());
     for (const auto& [entity, render] : registry.renders()) {
-      if (registry.lights().has(entity)) {
-        continue;
-      }
       if (!registry.transforms().has(entity) || !registry.meshes().has(entity) ||
           !registry.materials().has(entity)) {
         continue;
