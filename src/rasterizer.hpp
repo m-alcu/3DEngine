@@ -3,12 +3,10 @@
 #include <cstdint>
 #include <cmath>
 #include <algorithm>
-#include <type_traits>
 #include "scene.hpp"
 #include "ecs/LightComponent.hpp"
 #include "ecs/MeshComponent.hpp"
 #include "ecs/MaterialComponent.hpp"
-#include "ecs/ShadowComponent.hpp"
 #include "ecs/RenderComponent.hpp"
 #include "ecs/TransformComponent.hpp"
 #include "ecs/TransformSystem.hpp"
@@ -21,52 +19,26 @@
 #include "projection.hpp"
 #include "rasterizer_utils.hpp"
 
-// Trait to detect shadow effects
-template<typename T, typename = void>
-struct is_shadow_effect : std::false_type {};
-
-template<typename T>
-struct is_shadow_effect<T, std::void_t<decltype(T::is_shadow_effect)>>
-    : std::bool_constant<T::is_shadow_effect> {};
-
-template<typename T>
-inline constexpr bool is_shadow_effect_v = is_shadow_effect<T>::value;
-
 template<class Effect>
 class Rasterizer {
     public:
         using vertex = typename Effect::Vertex;
-        static constexpr bool isShadowEffect = is_shadow_effect_v<Effect>;
 
         void drawRenderable(TransformComponent& transform,
                             MeshComponent& mesh,
                             MaterialComponent& material,
                             Shading shadingMode,
-                            Scene* scn,
-                            LightComponent* lightSrc = nullptr,
-                            ShadowComponent* shadowSrc = nullptr) {
+                            Scene* scn) {
             transformComponent = &transform;
             meshComponent = &mesh;
             materialComponent = &material;
             shading = shadingMode;
             scene = scn;
-            lightSource = lightSrc;
-            shadowComponent = shadowSrc;
-            if constexpr (isShadowEffect) {
-                screenWidth = shadowComponent->shadowMap->width;
-                screenHeight = shadowComponent->shadowMap->height;
-            } else {
-                screenWidth = scene->screen.width;
-                screenHeight = scene->screen.height;
-            }
+            screenWidth = scene->screen.width;
+            screenHeight = scene->screen.height;
 
             processVertices();
-
-            if constexpr (isShadowEffect) {
-                drawShadowFaces();
-            } else {
-                drawFaces();
-            }
+            drawFaces();
         }
 
     private:
@@ -75,8 +47,6 @@ class Rasterizer {
         MeshComponent* meshComponent = nullptr;
         MaterialComponent* materialComponent = nullptr;
         Scene* scene = nullptr;
-        LightComponent* lightSource = nullptr;
-        ShadowComponent* shadowComponent = nullptr;
         Shading shading = Shading::Flat;
         int32_t screenWidth = 0;
         int32_t screenHeight = 0;
@@ -89,12 +59,8 @@ class Rasterizer {
 
             #pragma omp parallel for if(n > 1000)
             for (int i = 0; i < n; ++i) {
-                if constexpr (isShadowEffect) {
-                    projectedPoints[i] = effect.vs(meshComponent->vertexData[i], *transformComponent, scene, shadowComponent);
-                } else {
-                    projectedPoints[i] = effect.vs(meshComponent->vertexData[i], *transformComponent, scene);
-                    scene->stats.addProcessedVertex();
-                }
+                projectedPoints[i] = effect.vs(meshComponent->vertexData[i], *transformComponent, scene);
+                scene->stats.addProcessedVertex();
             }
         }
 
@@ -143,21 +109,6 @@ class Rasterizer {
             }
         }
 
-        void drawShadowFaces()
-        {
-            for (const auto &faceDataEntry : meshComponent->faceData)
-            {
-                slib::vec3 normal = TransformSystem::rotateNormal(*transformComponent, faceDataEntry.faceNormal);
-                vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];
-
-                if (lightSource->light.isVisibleFromLight(p1.world, normal))
-                {
-                    Polygon<vertex> poly(collectPolyVerts(projectedPoints, faceDataEntry), normal);
-                    clipAndDraw(poly);
-                }
-            }
-        }
-
         // Unified polygon drawing for both regular and shadow rendering
         void drawPolygon(Polygon<vertex>& polygon) {
             uint32_t* pixels = beginPolygonDraw(polygon);
@@ -169,18 +120,14 @@ class Rasterizer {
 
         inline uint32_t* beginPolygonDraw(Polygon<vertex>& polygon) {
             effect.gs(polygon, screenWidth, screenHeight, *scene);
-            if constexpr (!isShadowEffect) {
-                scene->stats.addPoly();
-            }
+            scene->stats.addPoly();
             return static_cast<uint32_t*>(scene->pixels);
         }
 
         inline bool drawWireframeIfNeeded(Polygon<vertex>& polygon, uint32_t* pixels) const {
-            if constexpr (!isShadowEffect) {
-                if (shading == Shading::Wireframe) {
-                    polygon.drawWireframe(WHITE_COLOR, pixels, screenWidth, screenHeight, scene->zBuffer.get());
-                    return true;
-                }
+            if (shading == Shading::Wireframe) {
+                polygon.drawWireframe(WHITE_COLOR, pixels, screenWidth, screenHeight, scene->zBuffer.get());
+                return true;
             }
             return false;
         }
@@ -188,26 +135,16 @@ class Rasterizer {
         void rasterizeFilledPolygon(Polygon<vertex>& polygon, uint32_t* pixels) {
             EdgeWalker<vertex> walker(polygon.points, screenWidth);
             walker.walk([&](int xStart, int xEnd, int dx, Slope<vertex>& left, Slope<vertex>& right) {
-                if constexpr (isShadowEffect) {
-                    float invDx = 1.0f / dx;
-                    float p_z = left.get().p_z;
-                    float p_z_step = (right.get().p_z - p_z) * invDx;
-                    for (int x = xStart; x < xEnd; ++x) {
-                        effect.ps(x, p_z, *shadowComponent->shadowMap);
-                        p_z += p_z_step;
-                    }
-                } else {
-                    float invDx = 1.0f / dx;
-                    vertex vStart = left.get();
-                    vertex vStep = (right.get() - vStart) * invDx;
+                float invDx = 1.0f / dx;
+                vertex vStart = left.get();
+                vertex vStep = (right.get() - vStart) * invDx;
 
-                    for (int x = xStart; x < xEnd; ++x) {
-                        if (scene->zBuffer->TestAndSet(x, vStart.p_z)) {
-                            pixels[x] = effect.ps(vStart, *scene, polygon);
-                            scene->stats.addPixel();
-                        }
-                        vStart.hraster(vStep);
+                for (int x = xStart; x < xEnd; ++x) {
+                    if (scene->zBuffer->TestAndSet(x, vStart.p_z)) {
+                        pixels[x] = effect.ps(vStart, *scene, polygon);
+                        scene->stats.addPixel();
                     }
+                    vStart.hraster(vStep);
                 }
             });
         }

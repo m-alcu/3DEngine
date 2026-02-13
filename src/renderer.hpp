@@ -13,6 +13,7 @@
 #include "axisRenderer.hpp"
 #include "bresenham.hpp"
 #include "rasterizer.hpp"
+#include "shadow_rasterizer.hpp"
 #include <cstdint>
 #include "fonts.hpp"
 #include "ecs/ShadowSystem.hpp"
@@ -209,5 +210,5 @@ public:
   Rasterizer<TexturedPhongEffect> texturedPhongRasterizer;
   Rasterizer<TexturedBlinnPhongEffect> texturedBlinnPhongRasterizer;
   Rasterizer<EnvironmentMapEffect> environmentMapRasterizer;
-  Rasterizer<ShadowEffect> shadowRasterizer;
+  ShadowRasterizer<ShadowEffect> shadowRasterizer;
 };
