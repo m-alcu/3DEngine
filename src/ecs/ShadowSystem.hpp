@@ -4,6 +4,11 @@
 #include "../constants.hpp"
 #include "../slib.hpp"
 
+class Scene;
+class ShadowEffect;
+template<class Effect>
+class Rasterizer;
+
 namespace ShadowSystem {
 
     inline void ensureShadowMaps(ComponentStore<ShadowComponent>& shadows,
@@ -32,5 +37,7 @@ namespace ShadowSystem {
             shadow.shadowMap->buildLightMatrices(light, sceneCenter, sceneRadius);
         }
     }
+
+    void renderShadowPass(Scene &scene, Rasterizer<ShadowEffect> &shadowRasterizer);
 
 } // namespace ShadowSystem
