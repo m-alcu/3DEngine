@@ -10,6 +10,7 @@
 #include <filesystem>
 #include "ascLoader.hpp"
 #include "../material.hpp"
+#include "../ecs/MeshSystem.hpp"
 
 void AscLoader::setup(const std::string& filename) {
     std::filesystem::path filePath(filename);
@@ -19,6 +20,9 @@ void AscLoader::setup(const std::string& filename) {
     calculateFaceNormals();
     calculateVertexNormals();
     calculateMinMaxCoords();
+    if (mesh) {
+        MeshSystem::markBoundsDirty(*mesh);
+    }
 }
 
 void AscLoader::loadVertices(const std::string& filename) {

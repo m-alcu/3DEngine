@@ -5,6 +5,7 @@
 #include "../smath.hpp"
 #include "../constants.hpp"
 #include "../material.hpp"
+#include "../ecs/MeshSystem.hpp"
 
 void Amiga::loadVertices() {
 }
@@ -17,6 +18,9 @@ void Amiga::setup(int lat, int lon) {
     loadFaces(lat, lon);
     calculateFaceNormals();
     calculateVertexNormals();
+    if (mesh) {
+        MeshSystem::markBoundsDirty(*mesh);
+    }
 }
 
 bool Amiga::isRedTile(float u, float v, int rows, int cols) {

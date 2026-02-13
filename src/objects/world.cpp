@@ -5,6 +5,7 @@
 #include "../material.hpp"
 #include "../smath.hpp"
 #include "../constants.hpp"
+#include "../ecs/MeshSystem.hpp"
 
 void World::loadVertices() {
 }
@@ -17,6 +18,9 @@ void World::setup(int lat, int lon) {
     loadFaces(lat, lon);
     calculateFaceNormals();
     calculateVertexNormals();
+    if (mesh) {
+        MeshSystem::markBoundsDirty(*mesh);
+    }
 }
 
 bool World::isRedTile(float u, float v, int rows, int cols) {

@@ -5,6 +5,7 @@
 #include <tuple>
 #include "objLoader.hpp"
 #include "../material.hpp"
+#include "../ecs/MeshSystem.hpp"
 
 #include <rapidobj/rapidobj.hpp>
 
@@ -20,6 +21,9 @@ void ObjLoader::setup(const std::string& filename) {
     }
     calculateMinMaxCoords();
     this->scaleToRadius(400.0f);
+    if (mesh) {
+        MeshSystem::markBoundsDirty(*mesh);
+    }
 }
 
 void ObjLoader::loadVertices(const std::string& filename) {

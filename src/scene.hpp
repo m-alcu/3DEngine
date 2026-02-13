@@ -62,7 +62,7 @@ public:
       solids[selectedSolidIndex]->calculateTransformMat();
       camera.orbitTarget = solids[selectedSolidIndex]->getWorldCenter();
     }
-    MeshSystem::updateAllBounds(registry.meshes());
+    MeshSystem::updateAllBoundsIfDirty(registry.meshes());
     camera.setOrbitFromCurrent();
   }
 
@@ -74,6 +74,7 @@ public:
     TransformSystem::updateAllTransforms(registry.transforms());
     LightSystem::syncPositions(registry);
     LightSystem::ensureShadowMaps(registry.lights(), pcfRadius);
+    MeshSystem::updateAllBoundsIfDirty(registry.meshes());
 
     // --- World bounds (still needs mesh minCoord/maxCoord) ---
     worldBoundMin = slib::vec3::boundMin();
@@ -180,6 +181,7 @@ public:
     // Move mesh into registry; update pointer to registry-owned copy
     registry.meshes().add(added->entity, std::move(added->localMesh_));
     added->mesh = registry.meshes().get(added->entity);
+    MeshSystem::markBoundsDirty(*added->mesh);
     // Move rotation into registry for non-light entities
     if (!added->lightComponent) {
       registry.rotations().add(added->entity, std::move(added->localRotation_));

@@ -4,6 +4,7 @@
 #include "torus.hpp"
 #include "../material.hpp"
 #include "../constants.hpp"
+#include "../ecs/MeshSystem.hpp"
 
 void Torus::loadVertices() {
 }
@@ -16,6 +17,9 @@ void Torus::setup(int uSteps, int vSteps, float R, float r) {
     loadFaces(uSteps, vSteps);
     calculateFaceNormals();
     calculateVertexNormals();
+    if (mesh) {
+        MeshSystem::markBoundsDirty(*mesh);
+    }
 }
 
 void Torus::loadVertices(int uSteps, int vSteps, float R, float r) {

@@ -58,13 +58,7 @@ public:
     virtual ~Solid() = default;
 
     // A common setup method that calls the helper functions.
-    virtual void setup() {
-        loadVertices();
-        loadFaces();
-        calculateFaceNormals();
-        calculateVertexNormals();
-        calculateMinMaxCoords();
-    }
+    virtual void setup();
 
     virtual void calculateFaceNormals();
 

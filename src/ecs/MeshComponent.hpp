@@ -29,4 +29,5 @@ struct MeshComponent {
     int numFaces = 0;
     slib::vec3 minCoord{};
     slib::vec3 maxCoord{};
+    bool boundsDirty = true;
 };

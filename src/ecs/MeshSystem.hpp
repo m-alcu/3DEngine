@@ -50,6 +50,7 @@ namespace MeshSystem {
         if (mesh.numVertices == 0) {
             mesh.minCoord = {0.0f, 0.0f, 0.0f};
             mesh.maxCoord = {0.0f, 0.0f, 0.0f};
+            mesh.boundsDirty = false;
             return;
         }
 
@@ -66,6 +67,17 @@ namespace MeshSystem {
             if (v.x > mesh.maxCoord.x) mesh.maxCoord.x = v.x;
             if (v.y > mesh.maxCoord.y) mesh.maxCoord.y = v.y;
             if (v.z > mesh.maxCoord.z) mesh.maxCoord.z = v.z;
+        }
+        mesh.boundsDirty = false;
+    }
+
+    inline void markBoundsDirty(MeshComponent& mesh) {
+        mesh.boundsDirty = true;
+    }
+
+    inline void updateBoundsIfDirty(MeshComponent& mesh) {
+        if (mesh.boundsDirty) {
+            updateMinMaxCoords(mesh);
         }
     }
 
@@ -84,6 +96,12 @@ namespace MeshSystem {
     inline void updateAllBounds(ComponentStore<MeshComponent>& store) {
         for (auto& [entity, mesh] : store) {
             updateMinMaxCoords(mesh);
+        }
+    }
+
+    inline void updateAllBoundsIfDirty(ComponentStore<MeshComponent>& store) {
+        for (auto& [entity, mesh] : store) {
+            updateBoundsIfDirty(mesh);
         }
     }
 

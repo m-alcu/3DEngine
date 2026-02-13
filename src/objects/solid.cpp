@@ -10,6 +10,17 @@
 Solid::Solid() {
 }
 
+void Solid::setup() {
+    loadVertices();
+    loadFaces();
+    calculateFaceNormals();
+    calculateVertexNormals();
+    calculateMinMaxCoords();
+    if (mesh) {
+        MeshSystem::markBoundsDirty(*mesh);
+    }
+}
+
 void Solid::calculateTransformMat() {
     TransformSystem::updateTransform(*transform);
 }
