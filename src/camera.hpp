@@ -1,5 +1,8 @@
 #pragma once
+#include <cmath>
+#include "constants.hpp"
 #include "slib.hpp"
+#include "smath.hpp"
 
 inline static float clampf(float v, float a, float b) { return v < a ? a : (v > b ? b : v); }
 
@@ -49,5 +52,11 @@ public:
         forward = smath::normalize(orbitTarget - pos);
         yaw = std::atan2(forward.x, -forward.z);
         pitch = std::asin(-forward.y);
+    }
+
+    bool isVisibleFromCamera(const slib::vec3& world, const slib::vec3& faceNormal) const {
+        slib::vec3 viewDir = pos - world;
+        float dotResult = smath::dot(faceNormal, smath::normalize(viewDir));
+        return dotResult > 0.0f;
     }
 };

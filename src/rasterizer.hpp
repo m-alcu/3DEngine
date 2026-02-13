@@ -126,7 +126,7 @@ class Rasterizer {
                     slib::vec3 normal = getRotatedNormal(faceDataEntry);
                     vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];
 
-                    if (shading == Shading::Wireframe || isFaceVisibleFromCamera(p1.world, normal))
+                    if (shading == Shading::Wireframe || scene->camera.isVisibleFromCamera(p1.world, normal))
                         localVisible.push_back({i, p1.p_z});
                 }
                 //#pragma omp critical
@@ -160,24 +160,12 @@ class Rasterizer {
                 slib::vec3 normal = getRotatedNormal(faceDataEntry);
                 vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];
 
-                if (isFaceVisibleFromLight(p1.world, normal))
+                if (lightSource->light.isVisibleFromLight(p1.world, normal))
                 {
                     Polygon<vertex> poly(collectPolyVerts(faceDataEntry), normal);
                     clipAndDraw(poly);
                 }
             }
-        }
-
-        bool isFaceVisibleFromCamera(const slib::vec3& world, const slib::vec3& faceNormal) const {
-            slib::vec3 viewDir = scene->camera.pos - world;
-            float dotResult = smath::dot(faceNormal, smath::normalize(viewDir));
-            return dotResult > 0.0f;
-        }
-
-        bool isFaceVisibleFromLight(const slib::vec3& world, const slib::vec3& faceNormal) const {
-            slib::vec3 normalizedLightDir = lightSource->light.getDirection(world);
-            float dotResult = smath::dot(faceNormal, normalizedLightDir);
-            return dotResult > 0.0f;
         }
 
         // Unified polygon drawing for both regular and shadow rendering

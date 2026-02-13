@@ -67,4 +67,10 @@ public:
 
     return attenuation;
   }
+
+  bool isVisibleFromLight(const slib::vec3 &surfacePos, const slib::vec3 &faceNormal) const {
+    slib::vec3 normalizedLightDir = getDirection(surfacePos);
+    float dotResult = smath::dot(faceNormal, normalizedLightDir);
+    return dotResult > 0.0f;
+  }
 };
