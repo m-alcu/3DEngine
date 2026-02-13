@@ -30,7 +30,7 @@ public:
 
     // Shadow pass - render depth from light's perspective for each light source
     if (scene.shadowsEnabled) {
-      ShadowSystem::renderShadowPass(scene, shadowRasterizer);
+      renderShadowPass(scene);
     }
 
     scene.drawBackground();
@@ -83,6 +83,28 @@ public:
 
     if (scene.showShadowMapOverlay) {
       drawShadowMapOverlay(scene);
+    }
+  }
+
+  void renderShadowPass(Scene &scene) {
+    for (auto &lightSource : scene.lightSources()) {
+      if (!lightSource->shadowComponent || !lightSource->shadowComponent->shadowMap) {
+        continue;
+      }
+      lightSource->shadowComponent->shadowMap->clear();
+      ShadowSystem::buildLightMatrices(*lightSource->shadowComponent,
+                                       lightSource->lightComponent->light,
+                                       scene.sceneCenter,
+                                       scene.sceneRadius);
+      for (auto &solidPtr : scene.renderables()) {
+          shadowRasterizer.drawRenderable(*solidPtr->transform,
+                                         *solidPtr->mesh,
+                                         *solidPtr->materialComponent,
+                                         solidPtr->render->shading,
+                                         &scene,
+                                         lightSource->lightComponent,
+                                         lightSource->shadowComponent);
+      }
     }
   }
 
