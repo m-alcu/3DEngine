@@ -82,7 +82,7 @@ public:
       vertex.world = transform.modelMatrix * slib::vec4(vData.vertex, 1);
       vertex.ndc = slib::vec4(vertex.world, 1) * scene->spaceMatrix;
       vertex.tex = slib::zvec2(vData.texCoord.x, vData.texCoord.y, 1);
-      Projection<Vertex>::view(scene->screen.width, scene->screen.height,
+      Projection<Vertex>::texturedView(scene->screen.width, scene->screen.height,
                                vertex, true);
       return vertex;
     }
@@ -94,7 +94,7 @@ public:
                     const Scene &scene) const {
 
       for (auto &point : poly.points) {
-        Projection<Vertex>::view(width, height, point, false);
+        Projection<Vertex>::texturedView(width, height, point, false);
       }
     }
   };
