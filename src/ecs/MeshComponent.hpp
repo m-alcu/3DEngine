@@ -6,6 +6,10 @@ struct VertexData {
     slib::vec3 vertex;
     slib::vec3 normal;
     slib::vec2 texCoord;
+
+    VertexData() = default;
+    explicit VertexData(const slib::vec3& v) : vertex(v) {}
+    VertexData(float x, float y, float z) : vertex(x, y, z) {}
 };
 
 typedef struct Face {

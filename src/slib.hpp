@@ -23,6 +23,8 @@ namespace slib
     struct zvec2
     {
         float x, y, w;
+        constexpr zvec2() : x(0.0f), y(0.0f), w(1.0f) {}
+        constexpr zvec2(float _x, float _y, float _w = 1.0f) : x(_x), y(_y), w(_w) {}
         zvec2& operator*=(const zvec2& rhs);
         zvec2& operator*=(float rhs);
         zvec2& operator/=(float rhs);
@@ -36,6 +38,8 @@ namespace slib
     struct vec2
     {
         float x, y;
+        constexpr vec2() : x(0.0f), y(0.0f) {}
+        constexpr vec2(float _x, float _y) : x(_x), y(_y) {}
         vec2& operator*=(const vec2& rhs);
         vec2& operator*=(float rhs);
         vec2 operator-(const vec2& rhs) const;
@@ -45,6 +49,8 @@ namespace slib
     struct vec3
     {
         float x, y, z;
+        constexpr vec3() : x(0.0f), y(0.0f), z(0.0f) {}
+        constexpr vec3(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}
         vec3& operator+=(float rhs);
         vec3& operator-=(float rhs);
         vec3& operator*=(float rhs);

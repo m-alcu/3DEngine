@@ -10,7 +10,7 @@ Software 3D engine using SDL3, Dear ImGui, and modern CMake.
 - **stb_image** (incluido en `src/vendor/stb/`) - Carga de imágenes (PNG, JPG, BMP, TGA, etc.).
 - **Google Test** (descargado via CMake FetchContent para tests).
 - **CMake** ≥ 3.28.
-- Toolchain C++23 (GCC/Clang/MSVC o `emcc`).
+- Toolchain C++17 (GCC/Clang/MSVC o `emcc`).
 - Opcional: Emscripten SDK para builds WebAssembly.
 
 ## Configuración y compilación (desktop)
@@ -91,7 +91,7 @@ Se pueden descargar texturas de skybox gratuitas desde: https://freestylized.com
 ## Problemas comunes
 - **Assets no encontrados**: asegúrate de ejecutar el binario desde la raíz del proyecto para que los paths relativos apunten a `resources/`. Si lo lanzas desde otro directorio, usa `--workdir` o ajusta las rutas de recursos en el código.
 - **SDL3 no detectado**: verifica que los headers y la librería estén en las rutas de tu toolchain (`CMAKE_PREFIX_PATH`, `SDL3_DIR`, o variables de entorno como `PKG_CONFIG_PATH`).
-- **Compilador antiguo**: se requiere un compilador con soporte C++20; actualiza GCC/Clang o usa el toolchain provisto por tu SDK.
+- **Compilador antiguo**: se requiere un compilador con soporte C++17; actualiza GCC/Clang o usa el toolchain provisto por tu SDK.
 
 ## Build en Raspberry Pi (Raspberry Pi OS / Debian)
 

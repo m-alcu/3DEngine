@@ -71,7 +71,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     $<$<CONFIG:Release>:-O3>
 )
 
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 23 CXX_STANDARD_REQUIRED on)
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED on)
 
 # ============================================================================
 # Testing with Google Test
@@ -98,7 +98,7 @@ if(BUILD_TESTS)
     )
     target_include_directories(test_math PRIVATE ${CMAKE_SOURCE_DIR}/src)
     target_link_libraries(test_math PRIVATE GTest::gtest_main)
-    set_target_properties(test_math PROPERTIES CXX_STANDARD 23 CXX_STANDARD_REQUIRED on)
+    set_target_properties(test_math PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED on)
 
     # Transform component test
     add_executable(test_transform
@@ -108,7 +108,7 @@ if(BUILD_TESTS)
     )
     target_include_directories(test_transform PRIVATE ${CMAKE_SOURCE_DIR}/src)
     target_link_libraries(test_transform PRIVATE GTest::gtest_main)
-    set_target_properties(test_transform PROPERTIES CXX_STANDARD 23 CXX_STANDARD_REQUIRED on)
+    set_target_properties(test_transform PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED on)
 
     # ECS (Entity, ComponentStore, Registry) test
     add_executable(test_ecs
@@ -120,7 +120,7 @@ if(BUILD_TESTS)
     )
     target_include_directories(test_ecs PRIVATE ${CMAKE_SOURCE_DIR}/src)
     target_link_libraries(test_ecs PRIVATE GTest::gtest_main rapidobj::rapidobj)
-    set_target_properties(test_ecs PROPERTIES CXX_STANDARD 23 CXX_STANDARD_REQUIRED on)
+    set_target_properties(test_ecs PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED on)
 
     include(GoogleTest)
     gtest_discover_tests(test_math)
