@@ -71,6 +71,17 @@ namespace MeshSystem {
         mesh.boundsDirty = false;
     }
 
+    inline float getBoundingRadius(const MeshComponent& mesh) {
+        if (mesh.numVertices == 0) return 0.0f;
+        slib::vec3 center{(mesh.minCoord.x + mesh.maxCoord.x) * 0.5f,
+                          (mesh.minCoord.y + mesh.maxCoord.y) * 0.5f,
+                          (mesh.minCoord.z + mesh.maxCoord.z) * 0.5f};
+        slib::vec3 halfDiag{mesh.maxCoord.x - center.x,
+                            mesh.maxCoord.y - center.y,
+                            mesh.maxCoord.z - center.z};
+        return smath::distance(halfDiag);
+    }
+
     inline void markBoundsDirty(MeshComponent& mesh) {
         mesh.boundsDirty = true;
     }

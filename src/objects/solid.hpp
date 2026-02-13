@@ -53,8 +53,6 @@ public:
 
     virtual void calculateMinMaxCoords();
 
-    float getBoundingRadius() const;
-
     slib::vec3 getWorldCenter() const;
 
     void updateWorldBounds(slib::vec3& minV, slib::vec3& maxV) const;

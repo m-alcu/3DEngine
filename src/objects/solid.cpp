@@ -39,16 +39,6 @@ void Solid::calculateMinMaxCoords() {
     MeshSystem::updateMinMaxCoords(*mesh);
 }
 
-float Solid::getBoundingRadius() const {
-    if (!mesh) return 0.0f;
-    slib::vec3 center{(mesh->minCoord.x + mesh->maxCoord.x) * 0.5f,
-                      (mesh->minCoord.y + mesh->maxCoord.y) * 0.5f,
-                      (mesh->minCoord.z + mesh->maxCoord.z) * 0.5f};
-    slib::vec3 halfDiag{mesh->maxCoord.x - center.x, mesh->maxCoord.y - center.y,
-                        mesh->maxCoord.z - center.z};
-    return smath::distance(halfDiag);
-}
-
 slib::vec3 Solid::getWorldCenter() const {
     if (!mesh) return {0.0f, 0.0f, 0.0f};
     return TransformSystem::getWorldCenter(*transform, mesh->minCoord, mesh->maxCoord);
@@ -60,7 +50,8 @@ void Solid::updateWorldBounds(slib::vec3& worldBoundMin, slib::vec3& worldBoundM
 }
 
 void Solid::scaleToRadius(float targetRadius) {
-    TransformSystem::scaleToRadius(*transform, getBoundingRadius(), targetRadius);
+    if (!mesh) return;
+    TransformSystem::scaleToRadius(*transform, MeshSystem::getBoundingRadius(*mesh), targetRadius);
 }
 
 void Solid::incAngles(float xAngle, float yAngle, float zAngle) {
