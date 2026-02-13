@@ -58,13 +58,6 @@ class ShadowRasterizer {
             }
         }
 
-        inline void clipAndDraw(Polygon<vertex>& poly) {
-            auto clippedPoly = ClipCullPolygon(poly);
-            if (!clippedPoly.points.empty()) {
-                drawPolygon(clippedPoly);
-            }
-        }
-
         void drawShadowFaces() {
             for (const auto &faceDataEntry : meshComponent->faceData) {
                 slib::vec3 normal = TransformSystem::rotateNormal(*transformComponent, faceDataEntry.faceNormal);
@@ -77,6 +70,13 @@ class ShadowRasterizer {
             }
         }
 
+        inline void clipAndDraw(Polygon<vertex>& poly) {
+            auto clippedPoly = ClipCullPolygon(poly);
+            if (!clippedPoly.points.empty()) {
+                drawPolygon(clippedPoly);
+            }
+        }
+        
         void drawPolygon(Polygon<vertex>& polygon) {
             effect.gs(polygon, screenWidth, screenHeight);
             rasterizeFilledPolygon(polygon);

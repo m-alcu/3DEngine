@@ -111,25 +111,14 @@ class Rasterizer {
 
         // Unified polygon drawing for both regular and shadow rendering
         void drawPolygon(Polygon<vertex>& polygon) {
-            uint32_t* pixels = beginPolygonDraw(polygon);
-            if (drawWireframeIfNeeded(polygon, pixels)) {
-                return;
-            }
-            rasterizeFilledPolygon(polygon, pixels);
-        }
-
-        inline uint32_t* beginPolygonDraw(Polygon<vertex>& polygon) {
             effect.gs(polygon, screenWidth, screenHeight, *scene);
             scene->stats.addPoly();
-            return static_cast<uint32_t*>(scene->pixels);
-        }
-
-        inline bool drawWireframeIfNeeded(Polygon<vertex>& polygon, uint32_t* pixels) const {
+            uint32_t* pixels = static_cast<uint32_t*>(scene->pixels);
             if (shading == Shading::Wireframe) {
                 polygon.drawWireframe(WHITE_COLOR, pixels, screenWidth, screenHeight, scene->zBuffer.get());
-                return true;
+            } else {
+                rasterizeFilledPolygon(polygon, pixels);
             }
-            return false;
         }
 
         void rasterizeFilledPolygon(Polygon<vertex>& polygon, uint32_t* pixels) {
