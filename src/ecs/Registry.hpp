@@ -5,6 +5,7 @@
 #include "LightComponent.hpp"
 #include "MeshComponent.hpp"
 #include "RotationComponent.hpp"
+#include "RenderComponent.hpp"
 
 class Registry {
     EntityGenerator generator_;
@@ -12,6 +13,7 @@ class Registry {
     ComponentStore<LightComponent> lights_;
     ComponentStore<MeshComponent> meshes_;
     ComponentStore<RotationComponent> rotations_;
+    ComponentStore<RenderComponent> renders_;
 
 public:
     Entity createEntity() { return generator_.create(); }
@@ -21,6 +23,7 @@ public:
         lights_.remove(e);
         meshes_.remove(e);
         rotations_.remove(e);
+        renders_.remove(e);
     }
 
     void clear() {
@@ -28,6 +31,7 @@ public:
         lights_.clear();
         meshes_.clear();
         rotations_.clear();
+        renders_.clear();
     }
 
     ComponentStore<TransformComponent>& transforms() { return transforms_; }
@@ -41,4 +45,7 @@ public:
 
     ComponentStore<RotationComponent>& rotations() { return rotations_; }
     const ComponentStore<RotationComponent>& rotations() const { return rotations_; }
+
+    ComponentStore<RenderComponent>& renders() { return renders_; }
+    const ComponentStore<RenderComponent>& renders() const { return renders_; }
 };

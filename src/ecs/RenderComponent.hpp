@@ -26,3 +26,7 @@ static const char* shadingNames[] = {
     "Textured Phong",
     "Environment Map"
 };
+
+struct RenderComponent {
+    Shading shading = Shading::Flat;
+};

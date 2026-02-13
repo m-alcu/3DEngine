@@ -37,7 +37,8 @@ struct MaterialProperties {
 class Solid {
 public:
     Entity entity = NULL_ENTITY;
-    Shading shading;
+    RenderComponent localRender_;
+    RenderComponent* render = &localRender_;
     TransformComponent localTransform_;
     TransformComponent* transform = &localTransform_;
 

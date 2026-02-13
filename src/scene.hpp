@@ -185,6 +185,9 @@ public:
     } else {
       added->rotation = nullptr;
     }
+    // Move render into registry; update pointer to registry-owned copy
+    registry.renders().add(added->entity, std::move(added->localRender_));
+    added->render = registry.renders().get(added->entity);
   }
 
   CubeMap* getCubeMap() const { return background ? background->getCubeMap() : nullptr; }
@@ -293,10 +296,10 @@ public:
 
     Solid* selectedSolid = solids[selectedSolidIndex].get();
 
-    int currentShading = static_cast<int>(selectedSolid->shading);
+    int currentShading = static_cast<int>(selectedSolid->render->shading);
     if (ImGui::Combo("Shading", &currentShading, shadingNames,
                      IM_ARRAYSIZE(shadingNames))) {
-      selectedSolid->shading = static_cast<Shading>(currentShading);
+      selectedSolid->render->shading = static_cast<Shading>(currentShading);
     }
 
     if (selectedSolid->rotation) {

@@ -219,7 +219,7 @@ std::unique_ptr<Solid> SceneLoader::parseSolid(const YAML::Node& node) {
     parsePosition(node, *solid);
 
     if (node["shading"])
-        solid->shading = parseShading(node["shading"].as<std::string>());
+        solid->render->shading = parseShading(node["shading"].as<std::string>());
 
     if (node["rotation_enabled"])
         solid->rotation->enabled = node["rotation_enabled"].as<bool>();

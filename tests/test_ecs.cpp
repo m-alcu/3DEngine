@@ -8,6 +8,7 @@
 #include "../src/ecs/LightSystem.hpp"
 #include "../src/ecs/RotationComponent.hpp"
 #include "../src/ecs/RotationSystem.hpp"
+#include "../src/ecs/RenderComponent.hpp"
 
 // ============================================================================
 // Entity Tests
@@ -162,17 +163,21 @@ TEST(RegistryTest, DestroyEntityRemovesFromAllStores) {
     TransformComponent t;
     LightComponent lc;
     RotationComponent rc;
+    RenderComponent ren;
     reg.transforms().add(e, t);
     reg.lights().add(e, lc);
     reg.rotations().add(e, rc);
+    reg.renders().add(e, ren);
     EXPECT_TRUE(reg.transforms().has(e));
     EXPECT_TRUE(reg.lights().has(e));
     EXPECT_TRUE(reg.rotations().has(e));
+    EXPECT_TRUE(reg.renders().has(e));
 
     reg.destroyEntity(e);
     EXPECT_FALSE(reg.transforms().has(e));
     EXPECT_FALSE(reg.lights().has(e));
     EXPECT_FALSE(reg.rotations().has(e));
+    EXPECT_FALSE(reg.renders().has(e));
 }
 
 TEST(RegistryTest, ClearRemovesAllComponents) {
@@ -180,6 +185,7 @@ TEST(RegistryTest, ClearRemovesAllComponents) {
     TransformComponent t1, t2;
     LightComponent lc;
     RotationComponent rc;
+    RenderComponent ren1, ren2;
 
     Entity e1 = reg.createEntity();
     Entity e2 = reg.createEntity();
@@ -187,14 +193,18 @@ TEST(RegistryTest, ClearRemovesAllComponents) {
     reg.transforms().add(e2, t2);
     reg.lights().add(e1, lc);
     reg.rotations().add(e2, rc);
+    reg.renders().add(e1, ren1);
+    reg.renders().add(e2, ren2);
 
     EXPECT_EQ(reg.transforms().size(), 2u);
     EXPECT_EQ(reg.lights().size(), 1u);
     EXPECT_EQ(reg.rotations().size(), 1u);
+    EXPECT_EQ(reg.renders().size(), 2u);
     reg.clear();
     EXPECT_EQ(reg.transforms().size(), 0u);
     EXPECT_EQ(reg.lights().size(), 0u);
     EXPECT_EQ(reg.rotations().size(), 0u);
+    EXPECT_EQ(reg.renders().size(), 0u);
 }
 
 TEST(RegistryTest, SystemIterationPattern) {
@@ -514,4 +524,49 @@ TEST(RotationSystemTest, MultipleEntities) {
 
     EXPECT_FLOAT_EQ(reg.transforms().get(e1)->position.xAngle, 1.0f);
     EXPECT_FLOAT_EQ(reg.transforms().get(e2)->position.xAngle, 102.0f);
+}
+
+// ============================================================================
+// RenderComponent Store Tests
+// ============================================================================
+
+TEST(RenderComponentTest, StoreAndRetrieve) {
+    ComponentStore<RenderComponent> store;
+    RenderComponent rc;
+    rc.shading = Shading::Phong;
+
+    store.add(1, rc);
+    auto* result = store.get(1);
+    ASSERT_NE(result, nullptr);
+    EXPECT_EQ(result->shading, Shading::Phong);
+}
+
+TEST(RenderComponentTest, DefaultShading) {
+    RenderComponent rc;
+    EXPECT_EQ(rc.shading, Shading::Flat);
+}
+
+TEST(RenderComponentTest, MutationThroughPointer) {
+    ComponentStore<RenderComponent> store;
+    RenderComponent rc;
+    rc.shading = Shading::Wireframe;
+
+    store.add(1, rc);
+    store.get(1)->shading = Shading::BlinnPhong;
+
+    EXPECT_EQ(store.get(1)->shading, Shading::BlinnPhong);
+    // Original unchanged
+    EXPECT_EQ(rc.shading, Shading::Wireframe);
+}
+
+TEST(RenderComponentTest, RegistryIntegration) {
+    Registry reg;
+    Entity e = reg.createEntity();
+
+    RenderComponent rc;
+    rc.shading = Shading::TexturedPhong;
+    reg.renders().add(e, rc);
+
+    EXPECT_TRUE(reg.renders().has(e));
+    EXPECT_EQ(reg.renders().get(e)->shading, Shading::TexturedPhong);
 }
