@@ -14,6 +14,7 @@
 #include "polygon.hpp"
 #include "clipping.hpp"
 #include "slope.hpp"
+#include "edge_walker.hpp"
 #include "projection.hpp"
 
 // Trait to detect shadow effects
@@ -181,57 +182,35 @@ class Rasterizer {
 
         // Unified polygon drawing for both regular and shadow rendering
         void drawPolygon(Polygon<vertex>& polygon) {
-            uint32_t* pixels = static_cast<uint32_t*>(scene->pixels);
+            uint32_t* pixels = beginPolygonDraw(polygon);
+            if (drawWireframeIfNeeded(polygon, pixels)) {
+                return;
+            }
+            rasterizeFilledPolygon(polygon, pixels);
+        }
+
+        inline uint32_t* beginPolygonDraw(Polygon<vertex>& polygon) {
             effect.gs(polygon, screenWidth, screenHeight, *scene);
             if constexpr (!isShadowEffect) {
                 scene->stats.addPoly();
             }
+            return static_cast<uint32_t*>(scene->pixels);
+        }
 
+        inline bool drawWireframeIfNeeded(Polygon<vertex>& polygon, uint32_t* pixels) const {
             if constexpr (!isShadowEffect) {
                 if (shading == Shading::Wireframe) {
                     polygon.drawWireframe(WHITE_COLOR, pixels, screenWidth, screenHeight, scene->zBuffer.get());
-                    return;
+                    return true;
                 }
             }
-
-            auto begin = std::begin(polygon.points), end = std::end(polygon.points);
-
-            auto cmp_top_left = [&](const vertex& a, const vertex& b) {
-                return std::tie(a.p_y, a.p_x) < std::tie(b.p_y, b.p_x);
-            };
-            auto [first, last] = std::minmax_element(begin, end, cmp_top_left);
-
-            std::array<decltype(first), 2> cur{ first, first };
-            auto gety = [&](int side) -> int { return cur[side]->p_y >> 16; };
-
-            int forwards = 0;
-            Slope<vertex> slopes[2] {};
-
-            for(int side = 0, cury = gety(side), nexty[2] = {cury,cury}, hy = cury * screenWidth; cur[side] != last; )
-            {
-                auto prev = std::move(cur[side]);
-
-                if(side == forwards) cur[side] = (std::next(prev) == end) ? begin : std::next(prev);
-                else                 cur[side] = std::prev(prev == begin ? end : prev);
-
-                nexty[side]  = gety(side);
-                slopes[side] = Slope<vertex>(*prev, *cur[side], nexty[side] - cury);
-
-                side = (nexty[0] <= nexty[1]) ? 0 : 1;
-                for(int limit = nexty[side]; cury < limit; ++cury, hy+= screenWidth) {
-                    drawScanline(hy, slopes[0], slopes[1], polygon, pixels);
-                }
-            }
+            return false;
         }
 
-        inline void drawScanline(const int& hy, Slope<vertex>& left, Slope<vertex>& right, Polygon<vertex>& polygon, uint32_t* pixels) {
-            int xStart = left.getx() + hy;
-            int xEnd = right.getx() + hy;
-            int dx = xEnd - xStart;
-
-
-            if constexpr (isShadowEffect) {
-                if (dx > 0) {
+        void rasterizeFilledPolygon(Polygon<vertex>& polygon, uint32_t* pixels) {
+            EdgeWalker<vertex> walker(polygon.points, screenWidth);
+            walker.walk([&](int xStart, int xEnd, int dx, Slope<vertex>& left, Slope<vertex>& right) {
+                if constexpr (isShadowEffect) {
                     float invDx = 1.0f / dx;
                     float p_z = left.get().p_z;
                     float p_z_step = (right.get().p_z - p_z) * invDx;
@@ -239,9 +218,7 @@ class Rasterizer {
                         effect.ps(x, p_z, *lightSource->shadowMap);
                         p_z += p_z_step;
                     }
-                }
-            } else {
-                if (dx > 0) {
+                } else {
                     float invDx = 1.0f / dx;
                     vertex vStart = left.get();
                     vertex vStep = (right.get() - vStart) * invDx;
@@ -254,10 +231,7 @@ class Rasterizer {
                         vStart.hraster(vStep);
                     }
                 }
-            }
-
-            left.down();
-            right.down();
+            });
         }
 
     };
