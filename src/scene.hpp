@@ -18,7 +18,6 @@
 #include "cubemap.hpp"
 #include "camera.hpp"
 #include "light.hpp"
-#include "objects/solid.hpp"
 #include "ecs/Registry.hpp"
 #include "ecs/NameComponent.hpp"
 #include "ecs/TransformSystem.hpp"
@@ -175,44 +174,10 @@ public:
     }
   }
 
-  // Add a solid to the scene and transfer its components to ECS.
-  void addSolid(std::unique_ptr<Solid> solid) {
-    solid->entity = registry.createEntity();
-    entities.push_back(solid->entity);
-    auto& added = solid;
-    // Move transform into registry; update pointer to registry-owned copy
-    registry.transforms().add(added->entity, std::move(added->localTransform_));
-    added->transform = registry.transforms().get(added->entity);
-    // Move light into registry if present
-    if (added->localLight_) {
-      registry.lights().add(added->entity, std::move(*added->localLight_));
-      added->lightComponent = registry.lights().get(added->entity);
-      added->localLight_.reset();
-      if (added->localShadow_) {
-        registry.shadows().add(added->entity, std::move(*added->localShadow_));
-        added->shadowComponent = registry.shadows().get(added->entity);
-        added->localShadow_.reset();
-      }
-    }
-
-    // Move mesh into registry; update pointer to registry-owned copy
-    registry.meshes().add(added->entity, std::move(added->localMesh_));
-    added->mesh = registry.meshes().get(added->entity);
-    MeshSystem::markBoundsDirty(*added->mesh);
-    // Move material into registry; update pointer to registry-owned copy
-    registry.materials().add(added->entity, std::move(added->localMaterial_));
-    added->materialComponent = registry.materials().get(added->entity);
-    registry.names().add(added->entity, NameComponent{added->name});
-    // Move rotation into registry for non-light entities
-    if (!added->lightComponent) {
-      registry.rotations().add(added->entity, std::move(added->localRotation_));
-      added->rotation = registry.rotations().get(added->entity);
-    } else {
-      added->rotation = nullptr;
-    }
-    // Move render into registry; update pointer to registry-owned copy
-    registry.renders().add(added->entity, std::move(added->localRender_));
-    added->render = registry.renders().get(added->entity);
+  Entity createEntity() {
+    Entity entity = registry.createEntity();
+    entities.push_back(entity);
+    return entity;
   }
 
   CubeMap* getCubeMap() const { return background ? background->getCubeMap() : nullptr; }
@@ -231,7 +196,7 @@ public:
     background->draw(backg, screen.height, screen.width, camera, aspectRatio);
   }
 
-  void clearAllSolids() {
+  void clearAllEntities() {
     entities.clear();
     registry.clear();
   }

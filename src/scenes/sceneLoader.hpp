@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include "../scene.hpp"
+#include "../ecs/TransformComponent.hpp"
 
 namespace YAML { class Node; }
 
@@ -16,9 +17,9 @@ private:
     static LightType parseLightType(const std::string& str);
     static BackgroundType parseBackgroundType(const std::string& str);
 
-    static std::unique_ptr<Solid> parseSolid(const YAML::Node& solidNode);
+    static Entity parseEntity(const YAML::Node& solidNode, Scene& scene);
     static void parseCamera(const YAML::Node& cameraNode, Camera& camera);
     static void parseLight(const YAML::Node& lightNode, Light& light);
-    static void parseOrbit(const YAML::Node& orbitNode, Solid& solid);
-    static void parsePosition(const YAML::Node& solidNode, Solid& solid);
+    static void parseOrbit(const YAML::Node& orbitNode, TransformComponent& transform);
+    static void parsePosition(const YAML::Node& solidNode, TransformComponent& transform);
 };

@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <filesystem>
 #include "../src/ecs/Entity.hpp"
 #include "../src/ecs/ComponentStore.hpp"
 #include "../src/ecs/Registry.hpp"
@@ -10,6 +11,7 @@
 #include "../src/ecs/RotationComponent.hpp"
 #include "../src/ecs/RotationSystem.hpp"
 #include "../src/ecs/RenderComponent.hpp"
+#include "../src/ecs/PrefabFactory.hpp"
 
 // ============================================================================
 // Entity Tests
@@ -443,6 +445,48 @@ TEST(ShadowSystemTest, EnsureShadowMapsIdempotent) {
     // Calling again should not create a new map
     ShadowSystem::ensureShadowMaps(store, 0);
     EXPECT_EQ(store.get(1)->shadowMap.get(), firstMap);
+}
+
+// ============================================================================
+// Prefab Tests
+// ============================================================================
+
+TEST(PrefabFactoryTest, BuildCube) {
+    MeshComponent mesh;
+    MaterialComponent material;
+
+    PrefabFactory::buildCube(mesh, material);
+
+    EXPECT_EQ(mesh.numVertices, 24);
+    EXPECT_EQ(mesh.numFaces, 6);
+    EXPECT_FALSE(material.materials.empty());
+    EXPECT_TRUE(material.materials.count("floorTexture") > 0);
+}
+
+TEST(PrefabFactoryTest, BuildPlane) {
+    MeshComponent mesh;
+    MaterialComponent material;
+
+    PrefabFactory::buildPlane(mesh, material, 10.0f);
+
+    EXPECT_EQ(mesh.numVertices, 4);
+    EXPECT_EQ(mesh.numFaces, 1);
+    EXPECT_TRUE(material.materials.count("planeMaterial") > 0);
+}
+
+TEST(PrefabFactoryTest, BuildObj) {
+    MeshComponent mesh;
+    MaterialComponent material;
+    TransformComponent transform;
+
+    std::filesystem::path objPath = std::filesystem::path(__FILE__).parent_path() /
+        "fixtures" / "triangle.obj";
+    bool hasNormals = PrefabFactory::buildObj(objPath.string(), mesh, material, transform);
+
+    EXPECT_FALSE(hasNormals);
+    EXPECT_EQ(mesh.numVertices, 3);
+    EXPECT_EQ(mesh.numFaces, 1);
+    EXPECT_TRUE(material.materials.count("default") > 0);
 }
 
 // ============================================================================

@@ -1,21 +1,15 @@
 #include "sceneLoader.hpp"
 #include <yaml-cpp/yaml.h>
+#include <filesystem>
 #include <stdexcept>
 #include <unordered_map>
 
 #include "../backgrounds/skybox.hpp"
-#include "../objects/objLoader.hpp"
-#include "../objects/ascLoader.hpp"
-#include "../objects/cube.hpp"
-#include "../objects/icosahedron.hpp"
-#include "../objects/tetrakis.hpp"
-#include "../objects/torus.hpp"
-#include "../objects/plane.hpp"
-#include "../objects/world.hpp"
-#include "../objects/amiga.hpp"
-#include "../objects/test.hpp"
 #include "../backgrounds/backgroundFactory.hpp"
 #include "../ecs/MaterialSystem.hpp"
+#include "../ecs/MeshSystem.hpp"
+#include "../ecs/PrefabFactory.hpp"
+#include "../ecs/NameComponent.hpp"
 
 // ---------------------------------------------------------------------------
 // Enum parsers
@@ -110,7 +104,7 @@ void SceneLoader::parseLight(const YAML::Node& node, Light& light) {
         light.outerCutoff = node["outer_cutoff"].as<float>();
 }
 
-void SceneLoader::parseOrbit(const YAML::Node& node, Solid& solid) {
+void SceneLoader::parseOrbit(const YAML::Node& node, TransformComponent& transform) {
     slib::vec3 center{0, 0, 0};
     float radius = 1.0f;
     slib::vec3 planeNormal{0, 1, 0};
@@ -132,126 +126,137 @@ void SceneLoader::parseOrbit(const YAML::Node& node, Solid& solid) {
     if (node["initial_phase"])
         initialPhase = node["initial_phase"].as<float>();
 
-    solid.enableCircularOrbit(center, radius, planeNormal, omega, initialPhase);
+    TransformSystem::enableCircularOrbit(transform, center, radius, planeNormal, omega, initialPhase);
 }
 
-void SceneLoader::parsePosition(const YAML::Node& node, Solid& solid) {
+void SceneLoader::parsePosition(const YAML::Node& node, TransformComponent& transform) {
     if (node["position"]) {
         auto p = node["position"];
-        solid.transform->position.x = p[0].as<float>();
-        solid.transform->position.y = p[1].as<float>();
-        solid.transform->position.z = p[2].as<float>();
+        transform.position.x = p[0].as<float>();
+        transform.position.y = p[1].as<float>();
+        transform.position.z = p[2].as<float>();
     }
     if (node["angles"]) {
         auto a = node["angles"];
-        solid.transform->position.xAngle = a[0].as<float>();
-        solid.transform->position.yAngle = a[1].as<float>();
-        solid.transform->position.zAngle = a[2].as<float>();
+        transform.position.xAngle = a[0].as<float>();
+        transform.position.yAngle = a[1].as<float>();
+        transform.position.zAngle = a[2].as<float>();
     }
     if (node["zoom"])
-        solid.transform->position.zoom = node["zoom"].as<float>();
+        transform.position.zoom = node["zoom"].as<float>();
 }
 
 // ---------------------------------------------------------------------------
-// Solid factory
+// Entity factory
 // ---------------------------------------------------------------------------
 
-std::unique_ptr<Solid> SceneLoader::parseSolid(const YAML::Node& node) {
+Entity SceneLoader::parseEntity(const YAML::Node& node, Scene& scene) {
     std::string type = node["type"].as<std::string>();
-    std::unique_ptr<Solid> solid;
+    Entity entity = scene.createEntity();
+
+    TransformComponent transform{};
+    MeshComponent mesh{};
+    MaterialComponent material{};
+    RenderComponent render{};
+    RotationComponent rotation{};
+    NameComponent name{};
+    bool isLight = false;
 
     if (type == "obj_loader") {
-        auto obj = std::make_unique<ObjLoader>();
-        obj->setup(node["file"].as<std::string>());
-        solid = std::move(obj);
+        std::string file = node["file"].as<std::string>();
+        PrefabFactory::buildObj(file, mesh, material, transform);
+        if (!node["name"]) {
+            std::filesystem::path filePath(file);
+            name.name = filePath.stem().string();
+        }
     } else if (type == "asc_loader") {
-        auto asc = std::make_unique<AscLoader>();
-        asc->setup(node["file"].as<std::string>());
-        solid = std::move(asc);
+        std::string file = node["file"].as<std::string>();
+        PrefabFactory::buildAsc(file, mesh, material);
+        if (!node["name"]) {
+            std::filesystem::path filePath(file);
+            name.name = filePath.stem().string();
+        }
     } else if (type == "cube") {
-        auto s = std::make_unique<Cube>();
-        s->setup();
-        solid = std::move(s);
+        PrefabFactory::buildCube(mesh, material);
     } else if (type == "icosahedron") {
-        auto s = std::make_unique<Icosahedron>();
-        s->setup();
-        solid = std::move(s);
+        PrefabFactory::buildIcosahedron(mesh, material);
     } else if (type == "tetrakis") {
-        auto s = std::make_unique<Tetrakis>();
-        s->setup();
-        solid = std::move(s);
+        PrefabFactory::buildTetrakis(mesh, material);
     } else if (type == "torus") {
-        auto s = std::make_unique<Torus>();
         int uSteps = node["u_steps"] ? node["u_steps"].as<int>() : 20;
         int vSteps = node["v_steps"] ? node["v_steps"].as<int>() : 10;
         float R    = node["major_radius"] ? node["major_radius"].as<float>() : 500.0f;
         float r    = node["minor_radius"] ? node["minor_radius"].as<float>() : 250.0f;
-        s->setup(uSteps, vSteps, R, r);
-        solid = std::move(s);
+        PrefabFactory::buildTorus(mesh, material, uSteps, vSteps, R, r);
     } else if (type == "plane") {
         float size = node["size"] ? node["size"].as<float>() : 10.0f;
-        auto s = std::make_unique<Plane>(size);
-        s->setup();
-        solid = std::move(s);
+        PrefabFactory::buildPlane(mesh, material, size);
     } else if (type == "world") {
-        auto s = std::make_unique<World>();
         int lat = node["latitude"]  ? node["latitude"].as<int>()  : 16;
         int lon = node["longitude"] ? node["longitude"].as<int>() : 32;
-        s->setup(lat, lon);
-        solid = std::move(s);
+        PrefabFactory::buildWorld(mesh, material, lat, lon);
     } else if (type == "amiga") {
-        auto s = std::make_unique<Amiga>();
         int lat = node["latitude"]  ? node["latitude"].as<int>()  : 16;
         int lon = node["longitude"] ? node["longitude"].as<int>() : 32;
-        s->setup(lat, lon);
-        solid = std::move(s);
+        PrefabFactory::buildAmiga(mesh, material, lat, lon);
     } else if (type == "test") {
-        auto s = std::make_unique<Test>();
-        s->setup();
-        solid = std::move(s);
+        PrefabFactory::buildTest(mesh, material);
     } else {
         throw std::runtime_error("Unknown solid type: " + type);
     }
 
-    // Common properties
-    if (node["name"])
-        solid->name = node["name"].as<std::string>();
+    if (node["name"]) {
+        name.name = node["name"].as<std::string>();
+    }
 
-    parsePosition(node, *solid);
+    parsePosition(node, transform);
 
-    if (node["shading"])
-        solid->render->shading = parseShading(node["shading"].as<std::string>());
+    if (node["shading"]) {
+        render.shading = parseShading(node["shading"].as<std::string>());
+    }
 
-    if (node["rotation_enabled"])
-        solid->rotation->enabled = node["rotation_enabled"].as<bool>();
+    if (node["rotation_enabled"]) {
+        rotation.enabled = node["rotation_enabled"].as<bool>();
+    }
 
     if (node["rotation_speed"]) {
         auto rs = node["rotation_speed"];
-        solid->rotation->incXangle = rs[0].as<float>();
-        solid->rotation->incYangle = rs[1].as<float>();
+        rotation.incXangle = rs[0].as<float>();
+        rotation.incYangle = rs[1].as<float>();
     }
 
-    // Light source
     if (node["light"]) {
         LightComponent lc;
         parseLight(node["light"], lc.light);
-        solid->initLight(std::move(lc));
+        scene.registry.lights().add(entity, std::move(lc));
+        scene.registry.shadows().add(entity, ShadowComponent{});
+        isLight = true;
     }
 
-    // Emissive color override
     if (node["emissive_color"]) {
         auto ec = node["emissive_color"];
-        MaterialSystem::setEmissiveColor(*solid->materialComponent,
+        MaterialSystem::setEmissiveColor(material,
                                          {ec[0].as<float>(),
                                           ec[1].as<float>(),
                                           ec[2].as<float>()});
     }
 
-    // Orbit
-    if (node["orbit"])
-        parseOrbit(node["orbit"], *solid);
+    if (node["orbit"]) {
+        parseOrbit(node["orbit"], transform);
+    }
 
-    return solid;
+    scene.registry.transforms().add(entity, std::move(transform));
+    scene.registry.meshes().add(entity, std::move(mesh));
+    MeshSystem::markBoundsDirty(*scene.registry.meshes().get(entity));
+    scene.registry.materials().add(entity, std::move(material));
+    scene.registry.renders().add(entity, std::move(render));
+    scene.registry.names().add(entity, std::move(name));
+
+    if (!isLight) {
+        scene.registry.rotations().add(entity, std::move(rotation));
+    }
+
+    return entity;
 }
 
 // ---------------------------------------------------------------------------
@@ -321,7 +326,7 @@ std::unique_ptr<Scene> SceneLoader::loadFromFile(const std::string& yamlPath,
     // Solids
     if (sceneNode["solids"]) {
         for (const auto& solidNode : sceneNode["solids"]) {
-            scene->addSolid(parseSolid(solidNode));
+            parseEntity(solidNode, *scene);
         }
     }
 

@@ -115,9 +115,11 @@ if(BUILD_TESTS)
         tests/test_ecs.cpp
         src/slib.cpp
         src/smath.cpp
+        src/ecs/PrefabFactory.cpp
+        src/vendor/stb/stb_image.cpp
     )
     target_include_directories(test_ecs PRIVATE ${CMAKE_SOURCE_DIR}/src)
-    target_link_libraries(test_ecs PRIVATE GTest::gtest_main)
+    target_link_libraries(test_ecs PRIVATE GTest::gtest_main rapidobj::rapidobj)
     set_target_properties(test_ecs PROPERTIES CXX_STANDARD 23 CXX_STANDARD_REQUIRED on)
 
     include(GoogleTest)

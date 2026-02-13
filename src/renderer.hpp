@@ -10,7 +10,6 @@
 #include "effects/texturedGouraudEffect.hpp"
 #include "effects/texturedPhongEffect.hpp"
 #include "effects/environmentMapEffect.hpp"
-#include "objects/solid.hpp"
 #include "axisRenderer.hpp"
 #include "bresenham.hpp"
 #include "rasterizer.hpp"
