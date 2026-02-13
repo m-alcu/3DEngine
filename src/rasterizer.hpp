@@ -64,14 +64,6 @@ class Rasterizer {
             }
         }
 
-        inline void clipAndDraw(Polygon<vertex>& poly) {
-            auto clippedPoly = ClipCullPolygon(poly);
-            if (!clippedPoly.points.empty()) {
-                drawPolygon(clippedPoly);
-                scene->stats.addDrawCall();
-            }
-        }
-
         void drawFaces() {
             struct FaceDepth {
                 int faceIndex;
@@ -108,6 +100,14 @@ class Rasterizer {
                 clipAndDraw(poly);
             }
         }
+
+        inline void clipAndDraw(Polygon<vertex>& poly) {
+            auto clippedPoly = ClipCullPolygon(poly);
+            if (!clippedPoly.points.empty()) {
+                drawPolygon(clippedPoly);
+                scene->stats.addDrawCall();
+            }
+        }        
 
         // Unified polygon drawing for both regular and shadow rendering
         void drawPolygon(Polygon<vertex>& polygon) {
