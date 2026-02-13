@@ -58,14 +58,13 @@ void Cube::loadFaces() {
     std::string materialKey = "floorTexture";
     std::string mtlPath = "checker-map_tho.png";
 
-    // Create and store the material
-    Material material{};
-
-    material.Ka = { properties.k_a * 0x00, properties.k_a * 0x00, properties.k_a * 0x00 };
-    material.Kd = { properties.k_d * 0xff, properties.k_d * 0xff, properties.k_d * 0xff };
-    material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };
-    material.Ns = properties.shininess;
-    material.map_Kd = Texture::loadFromFile(std::string(RES_PATH + mtlPath));
+    Material material = MaterialSystem::initDefaultMaterial(
+        properties,
+        slib::vec3{0x00, 0x00, 0x00},
+        slib::vec3{0xff, 0xff, 0xff},
+        slib::vec3{0xff, 0xff, 0xff},
+        std::string(RES_PATH + mtlPath)
+    );
     materialComponent->materials.insert({materialKey, material});
 
     // Each face has 2 triangles, so for each face we generate 6 indices

@@ -31,18 +31,20 @@ void Test::loadFaces() {
     
     std::vector<FaceData> faces;
 
-    // Create and store the material
-    Material material{};
-    material.Ka = { properties.k_a * 0x00, properties.k_a * 0x58, properties.k_a * 0xfc };
-    material.Kd = { properties.k_d * 0x00, properties.k_d * 0x58, properties.k_d * 0xfc }; 
-    material.Ks = { properties.k_s * 0x00, properties.k_s * 0x58, properties.k_s * 0xfc };
-    material.Ns = properties.shininess;
+    Material material = MaterialSystem::initDefaultMaterial(
+        properties,
+        slib::vec3{0x00, 0x58, 0xfc},
+        slib::vec3{0x00, 0x58, 0xfc},
+        slib::vec3{0x00, 0x58, 0xfc}
+    );
     materialComponent->materials.insert({"blue", material});
 
-    material.Ka = { properties.k_a * 0xff, properties.k_a * 0xff, properties.k_a * 0xff };
-    material.Kd = { properties.k_d * 0xff, properties.k_d * 0xff, properties.k_d * 0xff };
-    material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };
-    material.Ns = properties.shininess;
+    material = MaterialSystem::initDefaultMaterial(
+        properties,
+        slib::vec3{0xff, 0xff, 0xff},
+        slib::vec3{0xff, 0xff, 0xff},
+        slib::vec3{0xff, 0xff, 0xff}
+    );
     materialComponent->materials.insert({"white", material});
 
     FaceData face1;

@@ -58,13 +58,14 @@ void ObjLoader::loadVertices(const std::string& filename) {
     MaterialProperties properties = MaterialSystem::getMaterialProperties(MaterialType::Metal);
     std::string defaultTexturePath = "checker-map_tho.png";
 
-    Material defaultMaterial{};
-    defaultMaterial.Ka = { properties.k_a * 0.1f, properties.k_a * 0.1f, properties.k_a * 0.1f };
-    defaultMaterial.Kd = { properties.k_d * 0.8f, properties.k_d * 0.8f, properties.k_d * 0.8f };
-    defaultMaterial.Ks = { properties.k_s * 1.0f, properties.k_s * 1.0f, properties.k_s * 1.0f };
-    defaultMaterial.map_Kd = Texture::loadFromFile(std::string(RES_PATH + defaultTexturePath));
-    defaultMaterial.map_Kd.setFilter(TextureFilter::NEIGHBOUR);
-    defaultMaterial.Ns = properties.shininess;
+    Material defaultMaterial = MaterialSystem::initDefaultMaterial(
+        properties,
+        slib::vec3{0.1f, 0.1f, 0.1f},
+        slib::vec3{0.8f, 0.8f, 0.8f},
+        slib::vec3{1.0f, 1.0f, 1.0f},
+        std::string(RES_PATH + defaultTexturePath),
+        TextureFilter::NEIGHBOUR
+    );
     materialComponent->materials.insert({"default", defaultMaterial});
 
     // Load materials from rapidobj

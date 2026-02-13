@@ -23,11 +23,12 @@ void Plane::loadFaces() {
 
     std::string materialKey = "planeMaterial";
 
-    Material material{};
-    material.Ka = { properties.k_a * 0x40, properties.k_a * 0x40, properties.k_a * 0x40 };
-    material.Kd = { properties.k_d * 0xaa, properties.k_d * 0xaa, properties.k_d * 0xaa };
-    material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };
-    material.Ns = properties.shininess;
+    Material material = MaterialSystem::initDefaultMaterial(
+        properties,
+        slib::vec3{0x40, 0x40, 0x40},
+        slib::vec3{0xaa, 0xaa, 0xaa},
+        slib::vec3{0xff, 0xff, 0xff}
+    );
     materialComponent->materials.insert({materialKey, material});
 
     FaceData face;

@@ -46,22 +46,24 @@ void Tetrakis::loadFaces() {
     MaterialProperties properties = MaterialSystem::getMaterialProperties(MaterialType::Metal);
 
     std::string mtlPath = "checker-map_tho.png";
-    // Create and store the material
-    Material material{};
-    material.Ka = { properties.k_a * 0x00, properties.k_a * 0x58, properties.k_a * 0xfc };
-    material.Kd = { properties.k_d * 0x00, properties.k_d * 0x58, properties.k_d * 0xfc }; 
-    material.Ks = { properties.k_s * 0x00, properties.k_s * 0x58, properties.k_s * 0xfc };
-    material.map_Kd = Texture::loadFromFile(std::string(RES_PATH + mtlPath));
-    material.map_Kd.setFilter(TextureFilter::NEIGHBOUR);
-    material.Ns = properties.shininess;
+    Material material = MaterialSystem::initDefaultMaterial(
+        properties,
+        slib::vec3{0x00, 0x58, 0xfc},
+        slib::vec3{0x00, 0x58, 0xfc},
+        slib::vec3{0x00, 0x58, 0xfc},
+        std::string(RES_PATH + mtlPath),
+        TextureFilter::NEIGHBOUR
+    );
     materialComponent->materials.insert({"blue", material});
 
-    material.Ka = { properties.k_a * 0xff, properties.k_a * 0xff, properties.k_a * 0xff };
-    material.Kd = { properties.k_d * 0xff, properties.k_d * 0xff, properties.k_d * 0xff };
-    material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };
-    material.map_Kd = Texture::loadFromFile(std::string(RES_PATH + mtlPath));
-    material.map_Kd.setFilter(TextureFilter::NEIGHBOUR);    
-    material.Ns = properties.shininess;
+    material = MaterialSystem::initDefaultMaterial(
+        properties,
+        slib::vec3{0xff, 0xff, 0xff},
+        slib::vec3{0xff, 0xff, 0xff},
+        slib::vec3{0xff, 0xff, 0xff},
+        std::string(RES_PATH + mtlPath),
+        TextureFilter::NEIGHBOUR
+    );
     materialComponent->materials.insert({"white", material});    
 
     // Define the quadrilaterals (outer vertices) and centers for each face group.

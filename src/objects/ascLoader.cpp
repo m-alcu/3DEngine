@@ -45,21 +45,24 @@ void AscLoader::loadVertices(const std::string& filename) {
 
     std::string mtlPath = "checker-map_tho.png";
 
-    Material material{};
-    material.Ka = { properties.k_a * 0x00, properties.k_a * 0x00, properties.k_a * 0x00 };
-    material.Kd = { properties.k_d * 0x00, properties.k_d * 0x58, properties.k_d * 0xfc }; 
-    material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };
-    material.map_Kd = Texture::loadFromFile(std::string(RES_PATH + mtlPath));
-    material.map_Kd.setFilter(TextureFilter::NEIGHBOUR);    
-    material.Ns = properties.shininess;
+    Material material = MaterialSystem::initDefaultMaterial(
+        properties,
+        slib::vec3{0x00, 0x00, 0x00},
+        slib::vec3{0x00, 0x58, 0xfc},
+        slib::vec3{0xff, 0xff, 0xff},
+        std::string(RES_PATH + mtlPath),
+        TextureFilter::NEIGHBOUR
+    );
     materialComponent->materials.insert({"blue", material});
 
-    material.Ka = { properties.k_a * 0x00, properties.k_a * 0x00, properties.k_a * 0x00 };
-    material.Kd = { properties.k_d * 0xff, properties.k_d * 0xff, properties.k_d * 0xff };
-    material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };
-    material.map_Kd = Texture::loadFromFile(std::string(RES_PATH + mtlPath));
-    material.map_Kd.setFilter(TextureFilter::NEIGHBOUR);    
-    material.Ns = properties.shininess;
+    material = MaterialSystem::initDefaultMaterial(
+        properties,
+        slib::vec3{0x00, 0x00, 0x00},
+        slib::vec3{0xff, 0xff, 0xff},
+        slib::vec3{0xff, 0xff, 0xff},
+        std::string(RES_PATH + mtlPath),
+        TextureFilter::NEIGHBOUR
+    );
     materialComponent->materials.insert({"white", material});          
 
     while (std::getline(file, line)) {

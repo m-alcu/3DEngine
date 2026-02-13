@@ -74,21 +74,24 @@ void Amiga::loadFaces(int lat, int lon) {
 
     std::string mtlPath = "checker-map_tho.png";
 
-    Material material{};
-    material.Ka = { properties.k_a * 0x00, properties.k_a * 0x00, properties.k_a * 0x00 };
-    material.Kd = { properties.k_d * 0xff, properties.k_d * 0x00, properties.k_d * 0x00 }; 
-    material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };
-    material.Ns = properties.shininess;
-    material.map_Kd = Texture::loadFromFile(std::string(RES_PATH + mtlPath));
-    material.map_Kd.setFilter(TextureFilter::NEIGHBOUR);
+    Material material = MaterialSystem::initDefaultMaterial(
+        properties,
+        slib::vec3{0x00, 0x00, 0x00},
+        slib::vec3{0xff, 0x00, 0x00},
+        slib::vec3{0xff, 0xff, 0xff},
+        std::string(RES_PATH + mtlPath),
+        TextureFilter::NEIGHBOUR
+    );
     materialComponent->materials.insert({"red", material});
 
-    material.Ka = { properties.k_a * 0x00, properties.k_a * 0x00, properties.k_a * 0x00 };
-    material.Kd = { properties.k_d * 0xff, properties.k_d * 0xff, properties.k_d * 0xff };
-    material.Ks = { properties.k_s * 0xff, properties.k_s * 0xff, properties.k_s * 0xff };
-    material.Ns = properties.shininess;
-    material.map_Kd = Texture::loadFromFile(std::string(RES_PATH + mtlPath));
-    material.map_Kd.setFilter(TextureFilter::NEIGHBOUR);
+    material = MaterialSystem::initDefaultMaterial(
+        properties,
+        slib::vec3{0x00, 0x00, 0x00},
+        slib::vec3{0xff, 0xff, 0xff},
+        slib::vec3{0xff, 0xff, 0xff},
+        std::string(RES_PATH + mtlPath),
+        TextureFilter::NEIGHBOUR
+    );
     materialComponent->materials.insert({"white", material});  
 
     for (int i = 0; i < lat; i++) {
