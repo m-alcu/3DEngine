@@ -107,7 +107,10 @@ public:
         float attenuation = light.getAttenuation(vRaster.world);
         const slib::vec3 &luxDirection = light.getDirection(vRaster.world);
         float diff = std::max(0.0f, smath::dot(vRaster.normal, luxDirection));           
-        float shadow = scene.shadowsEnabled && lightComp.shadowMap ? lightComp.shadowMap->sampleShadow(vRaster.world, diff) : 1.0f;
+        const auto* shadowComp = scene.shadows().get(entity_);
+        float shadow = scene.shadowsEnabled && shadowComp && shadowComp->shadowMap
+          ? shadowComp->shadowMap->sampleShadow(vRaster.world, diff)
+          : 1.0f;
         diffuseColor += light.color * (diff * light.intensity * attenuation * shadow);
       }
       return Color(poly.material->Ka + poly.material->Kd * diffuseColor).toBgra();

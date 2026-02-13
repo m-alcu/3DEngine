@@ -24,6 +24,7 @@
 #include "ecs/LightSystem.hpp"
 #include "ecs/RotationSystem.hpp"
 #include "ecs/MeshSystem.hpp"
+#include "ecs/ShadowSystem.hpp"
 #include "slib.hpp"
 #include "smath.hpp"
 #include "stats.hpp"
@@ -73,7 +74,7 @@ public:
     RotationSystem::updateAll(registry);
     TransformSystem::updateAllTransforms(registry.transforms());
     LightSystem::syncPositions(registry);
-    LightSystem::ensureShadowMaps(registry.lights(), pcfRadius);
+    ShadowSystem::ensureShadowMaps(registry.shadows(), pcfRadius);
     MeshSystem::updateAllBoundsIfDirty(registry.meshes());
 
     // --- World bounds (still needs mesh minCoord/maxCoord) ---
@@ -176,6 +177,11 @@ public:
       registry.lights().add(added->entity, std::move(*added->localLight_));
       added->lightComponent = registry.lights().get(added->entity);
       added->localLight_.reset();
+      if (added->localShadow_) {
+        registry.shadows().add(added->entity, std::move(*added->localShadow_));
+        added->shadowComponent = registry.shadows().get(added->entity);
+        added->localShadow_.reset();
+      }
     }
 
     // Move mesh into registry; update pointer to registry-owned copy
@@ -246,6 +252,9 @@ public:
   // Access light components through registry (for effect pixel shaders)
   auto& lights() { return registry.lights(); }
   const auto& lights() const { return registry.lights(); }
+
+  auto& shadows() { return registry.shadows(); }
+  const auto& shadows() const { return registry.shadows(); }
 
   bool orbiting = false;
   bool shadowsEnabled = true;        // Enable/disable shadow rendering

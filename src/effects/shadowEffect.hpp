@@ -1,7 +1,7 @@
 #pragma once
 #include "../slib.hpp"
 #include "../smath.hpp"
-#include "../ecs/LightComponent.hpp"
+#include "../ecs/ShadowComponent.hpp"
 #include "../ecs/MeshComponent.hpp"
 #include "../ecs/TransformComponent.hpp"
 #include "../ShadowMap.hpp"
@@ -72,13 +72,13 @@ public:
         Vertex operator()(const VertexData& vData,
                           const TransformComponent& transform,
                           const Scene* /*scene*/,
-                          const LightComponent* lightSource) const {
+                          const ShadowComponent* shadowSource) const {
             Vertex vertex;
             // Transform to world space
             vertex.world = transform.modelMatrix * slib::vec4(vData.vertex, 1);
 
             // Transform to light clip space
-            const auto& shadowMap = lightSource->shadowMap;
+            const auto& shadowMap = shadowSource->shadowMap;
             vertex.ndc = slib::vec4(vertex.world, 1) * shadowMap->lightSpaceMatrix;
             Projection<Vertex>::view(shadowMap->width, shadowMap->height, vertex, true);
 

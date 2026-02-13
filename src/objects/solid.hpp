@@ -12,6 +12,7 @@
 #include "../ecs/LightComponent.hpp"
 #include "../ecs/MeshComponent.hpp"
 #include "../ecs/MaterialComponent.hpp"
+#include "../ecs/ShadowComponent.hpp"
 #include "../ecs/RotationComponent.hpp"
 #include "../ecs/RenderComponent.hpp"
 
@@ -33,6 +34,8 @@ public:
     std::string name;
     std::optional<LightComponent> localLight_;
     LightComponent* lightComponent = nullptr;
+    std::optional<ShadowComponent> localShadow_;
+    ShadowComponent* shadowComponent = nullptr;
  
 public:
     // Base constructor that initializes common data members.
@@ -79,6 +82,8 @@ public:
     void initLight(LightComponent lc) {
         localLight_ = std::move(lc);
         lightComponent = &*localLight_;
+        localShadow_ = ShadowComponent{};
+        shadowComponent = &*localShadow_;
     }
 
 protected:

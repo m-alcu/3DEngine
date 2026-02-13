@@ -103,7 +103,10 @@ public:
         float diff =
           std::max(0.0f, smath::dot(poly.rotatedFaceNormal, light.getDirection(poly.points[0].world)));
         float attenuation = light.getAttenuation(poly.points[0].world);
-        float shadow = scene.shadowsEnabled && lightComp.shadowMap ? lightComp.shadowMap->sampleShadow(vRaster.world, diff) : 1.0f;
+        const auto* shadowComp = scene.shadows().get(entity_);
+        float shadow = scene.shadowsEnabled && shadowComp && shadowComp->shadowMap
+          ? shadowComp->shadowMap->sampleShadow(vRaster.world, diff)
+          : 1.0f;
         float factor = light.intensity * attenuation * shadow;
         slib::vec3 lightColor = light.color * factor;
         diffuseColor += lightColor * diff;

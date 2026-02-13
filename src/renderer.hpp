@@ -16,6 +16,7 @@
 #include "rasterizer.hpp"
 #include <cstdint>
 #include "fonts.hpp"
+#include "ecs/ShadowSystem.hpp"
 
 class Renderer {
 
@@ -87,17 +88,22 @@ public:
 
   void renderShadowPass(Scene &scene) {
     for (auto &lightSource : scene.lightSources()) {
-      lightSource->lightComponent->shadowMap->clear();
-      lightSource->lightComponent->shadowMap->buildLightMatrices(lightSource->lightComponent->light,
-                                                scene.sceneCenter,
-                                                scene.sceneRadius);
+      if (!lightSource->shadowComponent || !lightSource->shadowComponent->shadowMap) {
+        continue;
+      }
+      lightSource->shadowComponent->shadowMap->clear();
+      ShadowSystem::buildLightMatrices(*lightSource->shadowComponent,
+                                       lightSource->lightComponent->light,
+                                       scene.sceneCenter,
+                                       scene.sceneRadius);
       for (auto &solidPtr : scene.renderables()) {
           shadowRasterizer.drawRenderable(*solidPtr->transform,
                                          *solidPtr->mesh,
                                          *solidPtr->materialComponent,
                                          solidPtr->render->shading,
                                          &scene,
-                                         lightSource->lightComponent);
+                                         lightSource->lightComponent,
+                                         lightSource->shadowComponent);
       }
     }
   }
@@ -152,16 +158,16 @@ public:
     if (scene.selectedSolidIndex >= 0 &&
         scene.selectedSolidIndex < static_cast<int>(scene.solids.size())) {
       auto& selectedSolid = scene.solids[scene.selectedSolidIndex];
-      if (selectedSolid->lightComponent && selectedSolid->lightComponent->shadowMap) {
-        shadowMapPtr = selectedSolid->lightComponent->shadowMap.get();
+      if (selectedSolid->shadowComponent && selectedSolid->shadowComponent->shadowMap) {
+        shadowMapPtr = selectedSolid->shadowComponent->shadowMap.get();
       }
     }
 
     // Fall back to first light source solid's shadow map
     if (!shadowMapPtr) {
       for (const auto& solidPtr : scene.solids) {
-        if (solidPtr->lightComponent && solidPtr->lightComponent->shadowMap) {
-          shadowMapPtr = solidPtr->lightComponent->shadowMap.get();
+        if (solidPtr->shadowComponent && solidPtr->shadowComponent->shadowMap) {
+          shadowMapPtr = solidPtr->shadowComponent->shadowMap.get();
           break;
         }
       }

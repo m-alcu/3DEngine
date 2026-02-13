@@ -6,6 +6,7 @@
 #include "../src/ecs/TransformSystem.hpp"
 #include "../src/ecs/LightComponent.hpp"
 #include "../src/ecs/LightSystem.hpp"
+#include "../src/ecs/ShadowSystem.hpp"
 #include "../src/ecs/RotationComponent.hpp"
 #include "../src/ecs/RotationSystem.hpp"
 #include "../src/ecs/RenderComponent.hpp"
@@ -412,35 +413,35 @@ TEST(LightSystemTest, SyncPositionsMultipleLights) {
     EXPECT_FLOAT_EQ(reg.lights().get(e2)->light.position.x, 20.0f);
 }
 
-TEST(LightSystemTest, EnsureShadowMaps) {
-    ComponentStore<LightComponent> store;
-    LightComponent lc1, lc2;
-    store.add(1, lc1);
-    store.add(2, lc2);
+TEST(ShadowSystemTest, EnsureShadowMaps) {
+    ComponentStore<ShadowComponent> store;
+    ShadowComponent sc1, sc2;
+    store.add(1, sc1);
+    store.add(2, sc2);
 
     // Neither should have a shadow map yet
     EXPECT_EQ(store.get(1)->shadowMap, nullptr);
     EXPECT_EQ(store.get(2)->shadowMap, nullptr);
 
-    LightSystem::ensureShadowMaps(store, 0);
+    ShadowSystem::ensureShadowMaps(store, 0);
 
     // Both should now have shadow maps
     EXPECT_NE(store.get(1)->shadowMap, nullptr);
     EXPECT_NE(store.get(2)->shadowMap, nullptr);
 }
 
-TEST(LightSystemTest, EnsureShadowMapsIdempotent) {
-    ComponentStore<LightComponent> store;
-    LightComponent lc;
-    store.add(1, lc);
+TEST(ShadowSystemTest, EnsureShadowMapsIdempotent) {
+    ComponentStore<ShadowComponent> store;
+    ShadowComponent sc;
+    store.add(1, sc);
 
-    LightSystem::ensureShadowMaps(store, 0);
+    ShadowSystem::ensureShadowMaps(store, 0);
 
     auto* firstMap = store.get(1)->shadowMap.get();
     ASSERT_NE(firstMap, nullptr);
 
     // Calling again should not create a new map
-    LightSystem::ensureShadowMaps(store, 0);
+    ShadowSystem::ensureShadowMaps(store, 0);
     EXPECT_EQ(store.get(1)->shadowMap.get(), firstMap);
 }
 

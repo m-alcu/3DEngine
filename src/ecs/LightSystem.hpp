@@ -1,6 +1,5 @@
 #pragma once
 #include "Registry.hpp"
-#include "../constants.hpp"
 
 namespace LightSystem {
 
@@ -11,17 +10,6 @@ namespace LightSystem {
             if (t) {
                 light.light.position = {t->position.x, t->position.y, t->position.z};
             }
-        }
-    }
-
-    // Ensure every light has a shadow map allocated
-    inline void ensureShadowMaps(ComponentStore<LightComponent>& lights,
-                                  int pcfRadius) {
-        for (auto& [entity, light] : lights) {
-            if (!light.shadowMap) {
-                light.shadowMap = std::make_shared<ShadowMap>(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
-            }
-            light.shadowMap->pcfRadius = pcfRadius;
         }
     }
 

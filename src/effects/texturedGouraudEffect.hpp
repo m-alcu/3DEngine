@@ -116,7 +116,10 @@ public:
         slib::vec3 luxDirection = light.getDirection(vRaster.world);
         float diff = std::max(0.0f, smath::dot(vRaster.normal, luxDirection));
         float attenuation = light.getAttenuation(vRaster.world);
-        float shadow = scene.shadowsEnabled && lightComp.shadowMap ? lightComp.shadowMap->sampleShadow(vRaster.world, diff) : 1.0f;
+        const auto* shadowComp = scene.shadows().get(entity_);
+        float shadow = scene.shadowsEnabled && shadowComp && shadowComp->shadowMap
+          ? shadowComp->shadowMap->sampleShadow(vRaster.world, diff)
+          : 1.0f;
         float factor = light.intensity * attenuation * shadow;
         slib::vec3 lightColor = light.color * factor;
         color += texColor * lightColor * diff;

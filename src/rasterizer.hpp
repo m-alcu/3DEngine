@@ -8,6 +8,7 @@
 #include "ecs/LightComponent.hpp"
 #include "ecs/MeshComponent.hpp"
 #include "ecs/MaterialComponent.hpp"
+#include "ecs/ShadowComponent.hpp"
 #include "ecs/RenderComponent.hpp"
 #include "ecs/TransformComponent.hpp"
 #include "ecs/TransformSystem.hpp"
@@ -41,16 +42,18 @@ class Rasterizer {
                             MaterialComponent& material,
                             Shading shadingMode,
                             Scene* scn,
-                            LightComponent* lightSrc = nullptr) {
+                            LightComponent* lightSrc = nullptr,
+                            ShadowComponent* shadowSrc = nullptr) {
             transformComponent = &transform;
             meshComponent = &mesh;
             materialComponent = &material;
             shading = shadingMode;
             scene = scn;
             lightSource = lightSrc;
+            shadowComponent = shadowSrc;
             if constexpr (isShadowEffect) {
-                screenWidth = lightSource->shadowMap->width;
-                screenHeight = lightSource->shadowMap->height;
+                screenWidth = shadowComponent->shadowMap->width;
+                screenHeight = shadowComponent->shadowMap->height;
             } else {
                 screenWidth = scene->screen.width;
                 screenHeight = scene->screen.height;
@@ -72,6 +75,7 @@ class Rasterizer {
         MaterialComponent* materialComponent = nullptr;
         Scene* scene = nullptr;
         LightComponent* lightSource = nullptr;
+        ShadowComponent* shadowComponent = nullptr;
         Shading shading = Shading::Flat;
         int32_t screenWidth = 0;
         int32_t screenHeight = 0;
@@ -85,7 +89,7 @@ class Rasterizer {
             #pragma omp parallel for if(n > 1000)
             for (int i = 0; i < n; ++i) {
                 if constexpr (isShadowEffect) {
-                    projectedPoints[i] = effect.vs(meshComponent->vertexData[i], *transformComponent, scene, lightSource);
+                    projectedPoints[i] = effect.vs(meshComponent->vertexData[i], *transformComponent, scene, shadowComponent);
                 } else {
                     projectedPoints[i] = effect.vs(meshComponent->vertexData[i], *transformComponent, scene);
                     scene->stats.addProcessedVertex();
@@ -196,7 +200,7 @@ class Rasterizer {
                     float p_z = left.get().p_z;
                     float p_z_step = (right.get().p_z - p_z) * invDx;
                     for (int x = xStart; x < xEnd; ++x) {
-                        effect.ps(x, p_z, *lightSource->shadowMap);
+                        effect.ps(x, p_z, *shadowComponent->shadowMap);
                         p_z += p_z_step;
                     }
                 } else {
