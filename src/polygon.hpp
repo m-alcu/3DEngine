@@ -2,7 +2,6 @@
 #include <cstdint>
 #include "slib.hpp"
 #include "material.hpp"
-#include "ecs/MeshComponent.hpp"
 #include "ZBuffer.hpp"
 #include "bresenham.hpp"
 

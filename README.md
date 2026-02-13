@@ -37,14 +37,17 @@ El proyecto incluye tests unitarios usando Google Test. Para compilar y ejecutar
 # Configurar (incluye tests por defecto)
 cmake -S . -B build
 
-# Compilar solo los tests
+# Compilar tests específicos
 cmake --build build --target test_math --config Release
+cmake --build build --target test_ecs --config Release
 
 # Ejecutar tests directamente
 ./build/bin/Release/test_math.exe   # Windows
 ./build/bin/test_math               # Linux/macOS
+./build/bin/Release/test_ecs.exe    # Windows
+./build/bin/test_ecs                # Linux/macOS
 
-# O usar CTest
+# O usar CTest (todos los tests)
 cd build && ctest -C Release --output-on-failure
 ```
 
@@ -167,4 +170,3 @@ cmake --build build --parallel $(nproc)
    cmake --build build-wasm
    ```
 4. Sirve los artefactos generados (HTML/JS/WASM) con un servidor web y abre el HTML principal en el navegador. Asegúrate de habilitar el preloading de recursos en el script de despliegue si necesitas texturas o escenas externas.
-
