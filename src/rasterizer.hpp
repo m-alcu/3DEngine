@@ -111,7 +111,7 @@ class Rasterizer {
 
         // Unified polygon drawing for both regular and shadow rendering
         void drawPolygon(Polygon<vertex>& polygon) {
-            effect.gs(polygon, screenWidth, screenHeight, *scene);
+            effect.gs(polygon, screenWidth, screenHeight);
             scene->stats.addPoly();
             uint32_t* pixels = static_cast<uint32_t*>(scene->pixels);
             if (shading == Shading::Wireframe) {

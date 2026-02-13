@@ -94,7 +94,7 @@ public:
 
   class GeometryShader {
   public:
-    void operator()(Polygon<Vertex> &poly, int32_t width, int32_t height, const Scene &/*scene*/) const {
+    void operator()(Polygon<Vertex> &poly, int32_t width, int32_t height) const {
       for (auto &point : poly.points) {
         Projection<Vertex>::texturedView(width, height, point, false);
       }
