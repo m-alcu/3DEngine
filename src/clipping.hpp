@@ -47,11 +47,7 @@ Polygon<Vertex> ClipCullPolygon(const Polygon<Vertex>& t) {
 
         ClipAgainstPlane(bufA, bufB, plane);
         if (bufB.empty()) {
-            if (t.material) {
-                return Polygon<Vertex>(std::move(bufB), t.rotatedFaceNormal, *t.material);
-            } else {
-                return Polygon<Vertex>(std::move(bufB), t.rotatedFaceNormal);
-            }
+            return Polygon<Vertex>(std::move(bufB), t.rotatedFaceNormal, *t.material);
         }
         std::swap(bufA, bufB);
     }
@@ -61,11 +57,7 @@ Polygon<Vertex> ClipCullPolygon(const Polygon<Vertex>& t) {
         return t;
     }
 
-    if (t.material) {
-        return Polygon<Vertex>(std::move(bufA), t.rotatedFaceNormal, *t.material);
-    } else {
-        return Polygon<Vertex>(std::move(bufA), t.rotatedFaceNormal);
-    }
+    return Polygon<Vertex>(std::move(bufA), t.rotatedFaceNormal, *t.material);
 }
 
 template<typename Vertex>
