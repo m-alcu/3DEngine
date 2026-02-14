@@ -116,7 +116,7 @@ if(BUILD_TESTS)
         src/slib.cpp
         src/smath.cpp
         src/ecs/PrefabFactory.cpp
-        src/vendor/stb/stb_image.cpp
+        src/vendor/nothings/stb_image.cpp
     )
     target_include_directories(test_ecs PRIVATE ${CMAKE_SOURCE_DIR}/src)
     target_link_libraries(test_ecs PRIVATE GTest::gtest_main rapidobj::rapidobj)

@@ -4,7 +4,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "vendor/stb/stb_image.h"
+#include "vendor/nothings/stb_image.h"
 
 enum class TextureFilter {
     NEIGHBOUR,

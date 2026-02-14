@@ -2,7 +2,7 @@
 #include "../constants.hpp"
 #include "../smath.hpp"
 #include "../camera.hpp"
-#include "../vendor/stb/stb_image.h"
+#include "../vendor/nothings/stb_image.h"
 #include <cmath>
 #include <algorithm>
 #include <cstdio>

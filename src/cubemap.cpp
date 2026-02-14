@@ -1,5 +1,5 @@
 #include "cubemap.hpp"
-#include "vendor/stb/stb_image.h"
+#include "vendor/nothings/stb_image.h"
 #include <iostream>
 
 Texture CubeMap::loadFaceTexture(const std::string& filename) {
