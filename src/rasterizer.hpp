@@ -14,7 +14,7 @@
 #include "smath.hpp"
 #include "polygon.hpp"
 #include "clipping.hpp"
-#include "slope.hpp"
+#include "rasterizer_slope.hpp"
 #include "rasterizer_walker.hpp"
 #include "projection.hpp"
 #include "rasterizer_utils.hpp"

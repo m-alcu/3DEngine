@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <tuple>
 #include <vector>
-#include "slope.hpp"
+#include "rasterizer_slope.hpp"
 
 template<class V>
 class EdgeWalker {
