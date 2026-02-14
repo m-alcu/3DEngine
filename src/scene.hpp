@@ -115,20 +115,16 @@ public:
 
   // Process keyboard input for camera movement (Descent-style 6DOF)
   void processKeyboardInput(const std::map<int, bool>& keys) {
-    bool up = keys.count(SDLK_UP) && keys.at(SDLK_UP);
-    up = up || (keys.count(SDLK_KP_8) && keys.at(SDLK_KP_8));
-    bool down = keys.count(SDLK_DOWN) && keys.at(SDLK_DOWN);
-    down = down || (keys.count(SDLK_KP_2) && keys.at(SDLK_KP_2));
-    bool left = keys.count(SDLK_LEFT) && keys.at(SDLK_LEFT);
-    left = left || (keys.count(SDLK_KP_4) && keys.at(SDLK_KP_4));
-    bool right = keys.count(SDLK_RIGHT) && keys.at(SDLK_RIGHT);
-    right = right || (keys.count(SDLK_KP_6) && keys.at(SDLK_KP_6));
-    bool rleft = keys.count(SDLK_Q) && keys.at(SDLK_Q);
-    rleft = rleft || (keys.count(SDLK_KP_7) && keys.at(SDLK_KP_7));
-    bool rright = keys.count(SDLK_E) && keys.at(SDLK_E);
-    rright = rright || (keys.count(SDLK_KP_9) && keys.at(SDLK_KP_9));
-    bool fwd = keys.count(SDLK_A) && keys.at(SDLK_A);
-    bool back = keys.count(SDLK_Z) && keys.at(SDLK_Z);
+    auto pressed = [&](int key) { auto it = keys.find(key); return it != keys.end() && it->second; };
+
+    bool up    = pressed(SDLK_UP)    || pressed(SDLK_KP_8);
+    bool down  = pressed(SDLK_DOWN)  || pressed(SDLK_KP_2);
+    bool left  = pressed(SDLK_LEFT)  || pressed(SDLK_KP_4);
+    bool right = pressed(SDLK_RIGHT) || pressed(SDLK_KP_6);
+    bool rleft = pressed(SDLK_Q)     || pressed(SDLK_KP_7);
+    bool rright= pressed(SDLK_E)     || pressed(SDLK_KP_9);
+    bool fwd   = pressed(SDLK_A);
+    bool back  = pressed(SDLK_Z);
 
     // Calculate input deltas
     float yawInput = camera.sensitivity * (left - right);
