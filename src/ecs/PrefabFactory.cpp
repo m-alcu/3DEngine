@@ -95,7 +95,7 @@ namespace PrefabFactory {
         mesh.numFaces = static_cast<int>(mesh.faceData.size());
         MeshSystem::updateFaceNormals(mesh);
         MeshSystem::updateVertexNormals(mesh);
-        MeshSystem::updateMinMaxCoords(mesh);
+        MeshSystem::updateRadius(mesh);
     }
 
     void buildPlane(MeshComponent& mesh, MaterialComponent& material, float size) {
@@ -130,7 +130,7 @@ namespace PrefabFactory {
         mesh.numFaces = static_cast<int>(mesh.faceData.size());
         MeshSystem::updateFaceNormals(mesh);
         MeshSystem::updateVertexNormals(mesh);
-        MeshSystem::updateMinMaxCoords(mesh);
+        MeshSystem::updateRadius(mesh);
     }
 
     void buildTorus(MeshComponent& mesh, MaterialComponent& material,
@@ -210,7 +210,7 @@ namespace PrefabFactory {
         mesh.numFaces = static_cast<int>(faces.size());
         MeshSystem::updateFaceNormals(mesh);
         MeshSystem::updateVertexNormals(mesh);
-        MeshSystem::updateMinMaxCoords(mesh);
+        MeshSystem::updateRadius(mesh);
     }
 
     void buildWorld(MeshComponent& mesh, MaterialComponent& material,
@@ -291,7 +291,7 @@ namespace PrefabFactory {
         mesh.numFaces = static_cast<int>(faces.size());
         MeshSystem::updateFaceNormals(mesh);
         setVertexNormalsToPosition(mesh);
-        MeshSystem::updateMinMaxCoords(mesh);
+        MeshSystem::updateRadius(mesh);
     }
 
     void buildAmiga(MeshComponent& mesh, MaterialComponent& material,
@@ -368,7 +368,7 @@ namespace PrefabFactory {
         mesh.numFaces = static_cast<int>(faces.size());
         MeshSystem::updateFaceNormals(mesh);
         setVertexNormalsToPosition(mesh);
-        MeshSystem::updateMinMaxCoords(mesh);
+        MeshSystem::updateRadius(mesh);
     }
 
     void buildTetrakis(MeshComponent& mesh, MaterialComponent& material) {
@@ -447,7 +447,7 @@ namespace PrefabFactory {
         mesh.numFaces = static_cast<int>(faces.size());
         MeshSystem::updateFaceNormals(mesh);
         MeshSystem::updateVertexNormals(mesh);
-        MeshSystem::updateMinMaxCoords(mesh);
+        MeshSystem::updateRadius(mesh);
     }
 
     void buildIcosahedron(MeshComponent& mesh, MaterialComponent& material) {
@@ -520,7 +520,7 @@ namespace PrefabFactory {
         mesh.numFaces = static_cast<int>(faces.size());
         MeshSystem::updateFaceNormals(mesh);
         MeshSystem::updateVertexNormals(mesh);
-        MeshSystem::updateMinMaxCoords(mesh);
+        MeshSystem::updateRadius(mesh);
     }
 
     void buildTest(MeshComponent& mesh, MaterialComponent& material) {
@@ -592,7 +592,7 @@ namespace PrefabFactory {
         mesh.numFaces = static_cast<int>(faces.size());
         MeshSystem::updateFaceNormals(mesh);
         MeshSystem::updateVertexNormals(mesh);
-        MeshSystem::updateMinMaxCoords(mesh);
+        MeshSystem::updateRadius(mesh);
     }
 
     bool buildObj(const std::string& filename, MeshComponent& mesh,
@@ -779,8 +779,8 @@ namespace PrefabFactory {
         if (!hasLoadedNormals) {
             MeshSystem::updateVertexNormals(mesh);
         }
-        MeshSystem::updateMinMaxCoords(mesh);
-        TransformSystem::scaleToRadius(transform, MeshSystem::getBoundingRadius(mesh), 400.0f);
+        MeshSystem::updateRadius(mesh);
+        TransformSystem::scaleToRadius(transform, mesh.radius, 400.0f);
 
         return hasLoadedNormals;
     }
@@ -907,7 +907,7 @@ namespace PrefabFactory {
 
         MeshSystem::updateFaceNormals(mesh);
         MeshSystem::updateVertexNormals(mesh);
-        MeshSystem::updateMinMaxCoords(mesh);
+        MeshSystem::updateRadius(mesh);
     }
 
 } // namespace PrefabFactory

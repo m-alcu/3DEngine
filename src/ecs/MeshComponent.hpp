@@ -27,7 +27,6 @@ struct MeshComponent {
     std::vector<FaceData> faceData;
     int numVertices = 0;
     int numFaces = 0;
-    slib::vec3 minCoord{};
-    slib::vec3 maxCoord{};
+    float radius = 0.0f;
     bool boundsDirty = true;
 };

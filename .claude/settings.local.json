@@ -17,7 +17,8 @@
       "Bash(git -C \"c:\\\\proy\\\\render\\\\3DEngine\" submodule deinit -f submodules/rapidobj)",
       "Bash(git -C:*)",
       "Bash(grep:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(ctest:*)"
     ]
   }
 }

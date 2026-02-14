@@ -89,9 +89,7 @@ TEST(TransformSystemTest, IncAngles) {
 TEST(TransformSystemTest, GetWorldCenterAtOrigin) {
     TransformComponent t;
     TransformSystem::updateTransform(t);
-    slib::vec3 minC{-1, -1, -1};
-    slib::vec3 maxC{1, 1, 1};
-    slib::vec3 center = TransformSystem::getWorldCenter(t, minC, maxC);
+    slib::vec3 center = TransformSystem::getWorldCenter(t);
     EXPECT_TRUE(nearEqual(center.x, 0.0f));
     EXPECT_TRUE(nearEqual(center.y, 0.0f));
     EXPECT_TRUE(nearEqual(center.z, 0.0f));
@@ -101,9 +99,7 @@ TEST(TransformSystemTest, GetWorldCenterTranslated) {
     TransformComponent t;
     t.position.x = 100.0f;
     TransformSystem::updateTransform(t);
-    slib::vec3 minC{-1, -1, -1};
-    slib::vec3 maxC{1, 1, 1};
-    slib::vec3 center = TransformSystem::getWorldCenter(t, minC, maxC);
+    slib::vec3 center = TransformSystem::getWorldCenter(t);
     EXPECT_TRUE(nearEqual(center.x, 100.0f));
     EXPECT_TRUE(nearEqual(center.y, 0.0f));
     EXPECT_TRUE(nearEqual(center.z, 0.0f));

@@ -3,7 +3,6 @@
 #include "ComponentStore.hpp"
 #include "../slib.hpp"
 #include "../smath.hpp"
-#include <algorithm>
 #include <cmath>
 
 namespace TransformSystem {
@@ -30,36 +29,9 @@ namespace TransformSystem {
         t.position.zAngle += zAngle;
     }
 
-    inline slib::vec3 getWorldCenter(const TransformComponent& t,
-                                      const slib::vec3& minCoord,
-                                      const slib::vec3& maxCoord) {
-        slib::vec3 localCenter{(minCoord.x + maxCoord.x) * 0.5f,
-                               (minCoord.y + maxCoord.y) * 0.5f,
-                               (minCoord.z + maxCoord.z) * 0.5f};
-        slib::vec4 world = t.modelMatrix * slib::vec4(localCenter, 1.0f);
+    inline slib::vec3 getWorldCenter(const TransformComponent& t) {
+        slib::vec4 world = t.modelMatrix * slib::vec4(0.0f, 0.0f, 0.0f, 1.0f);
         return {world.x, world.y, world.z};
-    }
-
-    inline void updateWorldBounds(const TransformComponent& t,
-                                   const slib::vec3& minCoord,
-                                   const slib::vec3& maxCoord,
-                                   slib::vec3& worldBoundMin,
-                                   slib::vec3& worldBoundMax) {
-        slib::vec3 corners[8] = {
-            {minCoord.x, minCoord.y, minCoord.z}, {minCoord.x, minCoord.y, maxCoord.z},
-            {minCoord.x, maxCoord.y, minCoord.z}, {minCoord.x, maxCoord.y, maxCoord.z},
-            {maxCoord.x, minCoord.y, minCoord.z}, {maxCoord.x, minCoord.y, maxCoord.z},
-            {maxCoord.x, maxCoord.y, minCoord.z}, {maxCoord.x, maxCoord.y, maxCoord.z}};
-
-        for (const auto& corner : corners) {
-            slib::vec4 world = t.modelMatrix * slib::vec4(corner, 1.0f);
-            worldBoundMin.x = std::min(worldBoundMin.x, world.x);
-            worldBoundMin.y = std::min(worldBoundMin.y, world.y);
-            worldBoundMin.z = std::min(worldBoundMin.z, world.z);
-            worldBoundMax.x = std::max(worldBoundMax.x, world.x);
-            worldBoundMax.y = std::max(worldBoundMax.y, world.y);
-            worldBoundMax.z = std::max(worldBoundMax.z, world.z);
-        }
     }
 
     inline void scaleToRadius(TransformComponent& t, float boundingRadius, float targetRadius) {

@@ -65,7 +65,7 @@ public:
       auto* mesh = registry.meshes().get(entity);
       if (transform && mesh) {
         TransformSystem::updateTransform(*transform);
-        camera.orbitTarget = TransformSystem::getWorldCenter(*transform, mesh->minCoord, mesh->maxCoord);
+        camera.orbitTarget = TransformSystem::getWorldCenter(*transform);
       }
     }
     MeshSystem::updateAllBoundsIfDirty(registry.meshes());
@@ -82,34 +82,30 @@ public:
     ShadowSystem::ensureShadowMaps(registry.shadows(), pcfRadius);
     MeshSystem::updateAllBoundsIfDirty(registry.meshes());
 
-    // --- World bounds (still needs mesh minCoord/maxCoord) ---
-    worldBoundMin = slib::vec3::boundMin();
-    worldBoundMax = slib::vec3::boundMax();
-    bool hasGeometry = !entities.empty();
-    for (Entity entity : entities) {
-      if (registry.lights().has(entity)) {
-        continue;
+    // --- Scene center & radius from entity positions + mesh radius ---
+    slib::vec3 sum{};
+    int count = 0;
+    for (auto& [entity, t] : registry.transforms()) {
+      if (!registry.lights().has(entity)) {
+        sum += slib::vec3{t.position.x, t.position.y, t.position.z};
+        count++;
       }
-      auto* transform = registry.transforms().get(entity);
-      auto* mesh = registry.meshes().get(entity);
-      if (!transform || !mesh) {
-        continue;
-      }
-      TransformSystem::updateWorldBounds(*transform, mesh->minCoord, mesh->maxCoord,
-                                         worldBoundMin, worldBoundMax);
     }
-
-    // Calculate scene center and radius
-    if (hasGeometry) {
-      sceneCenter = {(worldBoundMin.x + worldBoundMax.x) * 0.5f,
-                     (worldBoundMin.y + worldBoundMax.y) * 0.5f,
-                     (worldBoundMin.z + worldBoundMax.z) * 0.5f};
-      slib::vec3 diag{worldBoundMax.x - worldBoundMin.x,
-                      worldBoundMax.y - worldBoundMin.y,
-                      worldBoundMax.z - worldBoundMin.z};
-      float diagLen2 = smath::dot(diag, diag);
-      sceneRadius = 0.5f * std::sqrt(diagLen2);
-      sceneRadius = std::max(sceneRadius, 1.0f);
+    if (count > 0) {
+      sceneCenter = sum * (1.0f / count);
+      float maxDist = 0.0f;
+      for (auto& [entity, t] : registry.transforms()) {
+        if (!registry.lights().has(entity)) {
+          slib::vec3 d{t.position.x - sceneCenter.x,
+                       t.position.y - sceneCenter.y,
+                       t.position.z - sceneCenter.z};
+          float dist = std::sqrt(smath::dot(d, d));
+          auto* mesh = registry.meshes().get(entity);
+          float r = mesh ? mesh->radius * t.position.zoom : 0.0f;
+          if (dist + r > maxDist) maxDist = dist + r;
+        }
+      }
+      sceneRadius = std::max(maxDist, 1.0f);
     } else {
       sceneCenter = {0.0f, 0.0f, -400.0f};
       sceneRadius = 125.0f;
@@ -184,11 +180,10 @@ public:
 
   slib::vec3 getWorldCenter(Entity entity) const {
     auto* transform = registry.transforms().get(entity);
-    auto* mesh = registry.meshes().get(entity);
-    if (!transform || !mesh) {
+    if (!transform) {
       return {0.0f, 0.0f, 0.0f};
     }
-    return TransformSystem::getWorldCenter(*transform, mesh->minCoord, mesh->maxCoord);
+    return TransformSystem::getWorldCenter(*transform);
   }
 
   void drawBackground() const {
@@ -260,9 +255,6 @@ public:
   Stats stats;                       // Rendering statistics  
   bool depthSortEnabled = true;      // Enable/disable face depth sorting
 
-  // World bounds calculated in update()
-  slib::vec3 worldBoundMin{};
-  slib::vec3 worldBoundMax{};
   slib::vec3 sceneCenter{};
   float sceneRadius = 0.0f;
 
@@ -309,7 +301,7 @@ public:
       auto* transform = registry.transforms().get(entity);
       auto* mesh = registry.meshes().get(entity);
       if (transform && mesh) {
-        camera.orbitTarget = TransformSystem::getWorldCenter(*transform, mesh->minCoord, mesh->maxCoord);
+        camera.orbitTarget = TransformSystem::getWorldCenter(*transform);
         camera.setOrbitFromCurrent();
       }
     }
