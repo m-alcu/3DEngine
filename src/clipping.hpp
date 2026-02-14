@@ -63,28 +63,28 @@ Polygon<Vertex> ClipCullPolygon(const Polygon<Vertex>& t) {
 template<typename Vertex>
 void ClipAgainstPlane(const std::vector<Vertex>& poly, std::vector<Vertex>& output, ClipPlane plane) {
     output.clear();
-    if (poly.empty()) return;
+    const size_t n = poly.size();
+    if (n == 0) return;
 
-    Vertex prev = poly.back();
-    bool prevInside = IsInside(prev, plane);
+    size_t prevIdx = n - 1;
+    bool prevInside = IsInside(poly[prevIdx], plane);
 
-    for (const auto& curr : poly) {
-        bool currInside = IsInside(curr, plane);
+    for (size_t i = 0; i < n; ++i) {
+        bool currInside = IsInside(poly[i], plane);
 
         if (currInside != prevInside) {
-            // from inside to outside, we need to clip the edge always this way
             if (prevInside) {
-                float alpha = ComputeAlpha(prev, curr, plane);
-                output.push_back(prev + (curr - prev) * alpha);
+                float alpha = ComputeAlpha(poly[prevIdx], poly[i], plane);
+                output.push_back(poly[prevIdx] + (poly[i] - poly[prevIdx]) * alpha);
             }
             else {
-                float alpha = ComputeAlpha(curr, prev, plane);
-                output.push_back(curr + (prev - curr) * alpha);
+                float alpha = ComputeAlpha(poly[i], poly[prevIdx], plane);
+                output.push_back(poly[i] + (poly[prevIdx] - poly[i]) * alpha);
             }
         }
         if (currInside)
-            output.push_back(curr);
-        prev = curr;
+            output.push_back(poly[i]);
+        prevIdx = i;
         prevInside = currInside;
     }
 }
