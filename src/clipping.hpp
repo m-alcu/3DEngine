@@ -19,32 +19,32 @@ https://en.wikipedia.org/wiki/Sutherland%E2%80%93Hodgman_algorithm
 
 template<typename Vertex>
 Polygon<Vertex> ClipCullPolygon(const Polygon<Vertex>& t) {
-    // Early exit: check if all vertices are inside all clip planes
-    // This avoids expensive clipping for polygons entirely within the view frustum
-    bool allInside = true;
+    // Double-buffered clipping with per-plane all-inside skip
+    std::vector<Vertex> bufA;
+    std::vector<Vertex> bufB;
+    bool copied = false;
+
     for (ClipPlane plane : {ClipPlane::Left, ClipPlane::Right, ClipPlane::Bottom,
-                            ClipPlane::Top, ClipPlane::Near, ClipPlane::Far}) {
-        for (const auto& v : t.points) {
+        ClipPlane::Top, ClipPlane::Near, ClipPlane::Far}) {
+
+        // Check if all vertices are inside this plane
+        const std::vector<Vertex>& input = copied ? bufA : t.points;
+        bool allInside = true;
+        for (const auto& v : input) {
             if (!IsInside(v, plane)) {
                 allInside = false;
                 break;
             }
         }
-        if (!allInside) break;
-    }
+        if (allInside) continue;
 
-    // If completely inside, return original polygon unchanged
-    if (allInside) {
-        return t;
-    }
+        // Need to clip — lazy-copy on first plane that needs it
+        if (!copied) {
+            bufA = t.points;
+            bufB.reserve(bufA.size() + 6);
+            copied = true;
+        }
 
-    // Otherwise, perform clipping with double-buffered vectors
-    std::vector<Vertex> bufA = t.points;
-    std::vector<Vertex> bufB;
-    bufB.reserve(bufA.size() + 6);
-
-    for (ClipPlane plane : {ClipPlane::Left, ClipPlane::Right, ClipPlane::Bottom,
-        ClipPlane::Top, ClipPlane::Near, ClipPlane::Far}) {
         ClipAgainstPlane(bufA, bufB, plane);
         if (bufB.empty()) {
             if (t.material) {
@@ -54,6 +54,11 @@ Polygon<Vertex> ClipCullPolygon(const Polygon<Vertex>& t) {
             }
         }
         std::swap(bufA, bufB);
+    }
+
+    // No plane needed clipping — return original unchanged
+    if (!copied) {
+        return t;
     }
 
     if (t.material) {
