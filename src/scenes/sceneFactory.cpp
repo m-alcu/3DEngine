@@ -56,7 +56,7 @@ void SceneFactory::buildCombinedNames() {
 
 const std::vector<std::string>& SceneFactory::allSceneNames() {
   if (!scanned_)
-    scanYamlScenes("resources/scenes");
+    scanYamlScenes(SCENES_PATH);
   return combinedNames_;
 }
 
@@ -66,7 +66,7 @@ int SceneFactory::sceneCount() {
 
 std::unique_ptr<Scene> SceneFactory::createSceneByIndex(int index, Screen scr) {
   if (!scanned_)
-    scanYamlScenes("resources/scenes");
+    scanYamlScenes(SCENES_PATH);
 
   if (index >= 0 && index < static_cast<int>(yamlPaths_.size()))
     return createSceneFromYaml(yamlPaths_[index], scr);
