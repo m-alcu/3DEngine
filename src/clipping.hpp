@@ -38,34 +38,35 @@ Polygon<Vertex> ClipCullPolygon(const Polygon<Vertex>& t) {
         return t;
     }
 
-    // Otherwise, perform clipping
-    std::vector<Vertex> polygon = t.points;
+    // Otherwise, perform clipping with double-buffered vectors
+    std::vector<Vertex> bufA = t.points;
+    std::vector<Vertex> bufB;
+    bufB.reserve(bufA.size() + 6);
 
     for (ClipPlane plane : {ClipPlane::Left, ClipPlane::Right, ClipPlane::Bottom,
         ClipPlane::Top, ClipPlane::Near, ClipPlane::Far}) {
-        polygon = ClipAgainstPlane(polygon, plane);
-        if (polygon.empty()) {
-            // Return empty polygon with appropriate constructor based on material presence
+        ClipAgainstPlane(bufA, bufB, plane);
+        if (bufB.empty()) {
             if (t.material) {
-                return Polygon<Vertex>(std::move(polygon), t.rotatedFaceNormal, *t.material);
+                return Polygon<Vertex>(std::move(bufB), t.rotatedFaceNormal, *t.material);
             } else {
-                return Polygon<Vertex>(std::move(polygon), t.rotatedFaceNormal);
+                return Polygon<Vertex>(std::move(bufB), t.rotatedFaceNormal);
             }
         }
+        std::swap(bufA, bufB);
     }
 
-    // Return clipped polygon with appropriate constructor based on material presence
     if (t.material) {
-        return Polygon<Vertex>(std::move(polygon), t.rotatedFaceNormal, *t.material);
+        return Polygon<Vertex>(std::move(bufA), t.rotatedFaceNormal, *t.material);
     } else {
-        return Polygon<Vertex>(std::move(polygon), t.rotatedFaceNormal);
+        return Polygon<Vertex>(std::move(bufA), t.rotatedFaceNormal);
     }
 }
 
 template<typename Vertex>
-std::vector<Vertex> ClipAgainstPlane(const std::vector<Vertex>& poly, ClipPlane plane) {
-    std::vector<Vertex> output;
-    if (poly.empty()) return output;
+void ClipAgainstPlane(const std::vector<Vertex>& poly, std::vector<Vertex>& output, ClipPlane plane) {
+    output.clear();
+    if (poly.empty()) return;
 
     Vertex prev = poly.back();
     bool prevInside = IsInside(prev, plane);
@@ -89,8 +90,6 @@ std::vector<Vertex> ClipAgainstPlane(const std::vector<Vertex>& poly, ClipPlane 
         prev = curr;
         prevInside = currInside;
     }
-
-    return output;
 }
 
 template<typename Vertex>
