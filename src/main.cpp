@@ -15,6 +15,7 @@
 
 #include "input_handler.hpp"
 #include "renderer.hpp"
+#include "scene_ui.hpp"
 #include "scenes/scene_factory.hpp"
 #include "vendor/imgui/imgui_impl_sdlrenderer3.h"
 #include <stdio.h>
@@ -156,7 +157,7 @@ int main(int, char **) {
       ImGui::SliderFloat("pitch/yaw/roll sens", &scene->camera.sensitivity,
                          0.0f, 10.0f);
 
-      scene->drawSolidControls();
+      SceneUI::drawSolidControls(*scene);
 
       int currentBackground = static_cast<int>(scene->backgroundType);
 
@@ -181,12 +182,12 @@ int main(int, char **) {
         }
       }
 
-      scene->drawSceneControls();
+      SceneUI::drawSceneControls(*scene);
 
       ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
                   1000.0f / io.Framerate, io.Framerate);
-      scene->drawCameraInfo();
-      scene->drawStats();
+      SceneUI::drawCameraInfo(*scene);
+      SceneUI::drawStats(*scene);
 
       ImGui::End();
     }
