@@ -13,9 +13,9 @@
 // For a multi-platform app consider using e.g. SDL+DirectX on Windows and
 // SDL+OpenGL on Linux/OSX.
 
-#include "InputHandler.hpp"
+#include "input_handler.hpp"
 #include "renderer.hpp"
-#include "scenes/sceneFactory.hpp"
+#include "scenes/scene_factory.hpp"
 #include "vendor/imgui/imgui_impl_sdlrenderer3.h"
 #include <stdio.h>
 #include <algorithm>

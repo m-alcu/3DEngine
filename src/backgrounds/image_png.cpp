@@ -1,5 +1,5 @@
 #include <iostream>
-#include "imagepng.hpp"
+#include "image_png.hpp"
 #include "../vendor/nothings/stb_image.h"
 
 void Imagepng::draw(uint32_t *pixels, uint16_t high_in, uint16_t width_in) {

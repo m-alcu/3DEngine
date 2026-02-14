@@ -1,4 +1,4 @@
-#include "PrefabFactory.hpp"
+#include "prefab_factory.hpp"
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -10,9 +10,9 @@
 #include "../constants.hpp"
 #include "../material.hpp"
 #include "../smath.hpp"
-#include "MaterialSystem.hpp"
-#include "MeshSystem.hpp"
-#include "TransformSystem.hpp"
+#include "material_system.hpp"
+#include "mesh_system.hpp"
+#include "transform_system.hpp"
 #include <rapidobj/rapidobj.hpp>
 
 namespace {

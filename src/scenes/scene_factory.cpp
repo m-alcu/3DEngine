@@ -1,5 +1,5 @@
-#include "sceneFactory.hpp"
-#include "sceneLoader.hpp"
+#include "scene_factory.hpp"
+#include "scene_loader.hpp"
 
 #include <algorithm>
 #include <filesystem>

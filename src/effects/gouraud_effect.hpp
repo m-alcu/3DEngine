@@ -4,14 +4,14 @@
 #include "../projection.hpp"
 #include "../slib.hpp"
 #include "../scene.hpp"
-#include <cmath>
-#include "../ecs/MeshComponent.hpp"
-#include "../ecs/TransformComponent.hpp"
+#include <algorithm>
+#include "../ecs/mesh_component.hpp"
+#include "../ecs/transform_component.hpp"
 
 class ShadowMap;
 
 // solid color attribute not interpolated
-class BlinnPhongEffect {
+class GouraudEffect {
 public:
   // the vertex type that will be input into the pipeline
   class Vertex {
@@ -42,23 +42,23 @@ public:
       p_x += v.p_x;
       p_z += v.p_z;
       normal += v.normal;
-      world += v.world;
       ndc += v.ndc;
+      world += v.world;
       return *this;
     }
 
     Vertex &vraster(const Vertex &v) {
       p_x += v.p_x;
       p_z += v.p_z;
-      normal += v.normal;
       world += v.world;
+      normal += v.normal;
       return *this;
     }
 
     Vertex &hraster(const Vertex &v) {
       p_z += v.p_z;
-      normal += v.normal;
       world += v.world;
+      normal += v.normal;
       return *this;
     }
 
@@ -89,6 +89,7 @@ public:
   class GeometryShader {
   public:
     void operator()(Polygon<Vertex> &poly, int32_t width, int32_t height) const {
+
       for (auto &point : poly.points) {
         Projection<Vertex>::view(width, height, point, false);
       }
@@ -100,29 +101,19 @@ public:
     uint32_t operator()(const Vertex &vRaster, const Scene &scene,
                         const Polygon<Vertex> &poly) const {
 
-      const auto &Ka = poly.material->Ka; // vec3
-      const auto &Kd = poly.material->Kd; // vec3
-      const auto &Ks = poly.material->Ks; // vec3
-      slib::vec3 N = smath::normalize(vRaster.normal); // Normal at the fragment
-      slib::vec3 color = Ka;
+      slib::vec3 diffuseColor{0.0f, 0.0f, 0.0f};
       for (const auto &[entity_, lightComp] : scene.lights()) {
         const Light &light = lightComp.light;
-        slib::vec3 L = light.getDirection(vRaster.world);
-        float diff = std::max(0.0f, smath::dot(N, L));
-        slib::vec3 halfwayVector =
-            smath::normalize(L - scene.camera.forward);
-        float specAngle = std::max(0.0f, smath::dot(N, halfwayVector));
-        float spec = std::pow(specAngle, poly.material->Ns);
         float attenuation = light.getAttenuation(vRaster.world);
+        const slib::vec3 &luxDirection = light.getDirection(vRaster.world);
+        float diff = std::max(0.0f, smath::dot(vRaster.normal, luxDirection));           
         const auto* shadowComp = scene.shadows().get(entity_);
         float shadow = scene.shadowsEnabled && shadowComp && shadowComp->shadowMap
           ? shadowComp->shadowMap->sampleShadow(vRaster.world, diff)
           : 1.0f;
-        float factor = light.intensity * attenuation * shadow;
-        slib::vec3 lightColor = light.color * factor;
-        color += (Kd * diff + Ks * spec) * lightColor;
+        diffuseColor += light.color * (diff * light.intensity * attenuation * shadow);
       }
-      return Color(color).toBgra();
+      return Color(poly.material->Ka + poly.material->Kd * diffuseColor).toBgra();
     }
   };
 

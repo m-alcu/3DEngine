@@ -1,10 +1,10 @@
 #pragma once
 #include "../slib.hpp"
 #include "../smath.hpp"
-#include "../ecs/ShadowComponent.hpp"
-#include "../ecs/MeshComponent.hpp"
-#include "../ecs/TransformComponent.hpp"
-#include "../ShadowMap.hpp"
+#include "../ecs/shadow_component.hpp"
+#include "../ecs/mesh_component.hpp"
+#include "../ecs/transform_component.hpp"
+#include "../shadow_map.hpp"
 #include "../polygon.hpp"
 #include "../projection.hpp"
 

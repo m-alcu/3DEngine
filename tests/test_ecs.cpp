@@ -1,17 +1,17 @@
 #include <gtest/gtest.h>
 #include <filesystem>
-#include "../src/ecs/Entity.hpp"
-#include "../src/ecs/ComponentStore.hpp"
-#include "../src/ecs/Registry.hpp"
-#include "../src/ecs/TransformComponent.hpp"
-#include "../src/ecs/TransformSystem.hpp"
-#include "../src/ecs/LightComponent.hpp"
-#include "../src/ecs/LightSystem.hpp"
-#include "../src/ecs/ShadowSystem.hpp"
-#include "../src/ecs/RotationComponent.hpp"
-#include "../src/ecs/RotationSystem.hpp"
-#include "../src/ecs/RenderComponent.hpp"
-#include "../src/ecs/PrefabFactory.hpp"
+#include "../src/ecs/entity.hpp"
+#include "../src/ecs/component_store.hpp"
+#include "../src/ecs/registry.hpp"
+#include "../src/ecs/transform_component.hpp"
+#include "../src/ecs/transform_system.hpp"
+#include "../src/ecs/light_component.hpp"
+#include "../src/ecs/light_system.hpp"
+#include "../src/ecs/shadow_system.hpp"
+#include "../src/ecs/rotation_component.hpp"
+#include "../src/ecs/rotation_system.hpp"
+#include "../src/ecs/render_component.hpp"
+#include "../src/ecs/prefab_factory.hpp"
 
 // ============================================================================
 // Entity Tests

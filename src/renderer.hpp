@@ -1,22 +1,22 @@
 #pragma once
 
-#include "effects/blinnPhongEffect.hpp"
-#include "effects/flatEffect.hpp"
-#include "effects/gouraudEffect.hpp"
-#include "effects/phongEffect.hpp"
-#include "effects/shadowEffect.hpp"
-#include "effects/texturedBlinnPhongEffect.hpp"
-#include "effects/texturedFlatEffect.hpp"
-#include "effects/texturedGouraudEffect.hpp"
-#include "effects/texturedPhongEffect.hpp"
-#include "effects/environmentMapEffect.hpp"
-#include "axisRenderer.hpp"
+#include "effects/blinn_phong_effect.hpp"
+#include "effects/flat_effect.hpp"
+#include "effects/gouraud_effect.hpp"
+#include "effects/phong_effect.hpp"
+#include "effects/shadow_effect.hpp"
+#include "effects/textured_blinn_phong_effect.hpp"
+#include "effects/textured_flat_effect.hpp"
+#include "effects/textured_gouraud_effect.hpp"
+#include "effects/textured_phong_effect.hpp"
+#include "effects/environment_map_effect.hpp"
+#include "axis_renderer.hpp"
 #include "bresenham.hpp"
 #include "rasterizer.hpp"
 #include "rasterizer_shadow.hpp"
 #include <cstdint>
 #include "fonts.hpp"
-#include "ecs/ShadowSystem.hpp"
+#include "ecs/shadow_system.hpp"
 
 class Renderer {
 

@@ -1,6 +1,6 @@
 #pragma once
-#include "Registry.hpp"
-#include "TransformSystem.hpp"
+#include "registry.hpp"
+#include "transform_system.hpp"
 
 namespace RotationSystem {
 

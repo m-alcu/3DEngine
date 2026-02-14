@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <cmath>
-#include "../src/ecs/TransformComponent.hpp"
-#include "../src/ecs/TransformSystem.hpp"
+#include "../src/ecs/transform_component.hpp"
+#include "../src/ecs/transform_system.hpp"
 
 constexpr float EPSILON = 1e-4f;
 

@@ -115,7 +115,7 @@ if(BUILD_TESTS)
         tests/test_ecs.cpp
         src/slib.cpp
         src/smath.cpp
-        src/ecs/PrefabFactory.cpp
+        src/ecs/prefab_factory.cpp
         src/vendor/nothings/stb_image.cpp
     )
     target_include_directories(test_ecs PRIVATE ${CMAKE_SOURCE_DIR}/src)

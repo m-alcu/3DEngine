@@ -4,52 +4,64 @@
 #include "../projection.hpp"
 #include "../slib.hpp"
 #include "../scene.hpp"
-#include "../ecs/MeshComponent.hpp"
-#include "../ecs/TransformComponent.hpp"
+#include <algorithm>
+#include "../ecs/mesh_component.hpp"
+#include "../ecs/transform_component.hpp"
 
 class ShadowMap;
 
 // solid color attribute not interpolated
-class FlatEffect {
+class TexturedGouraudEffect {
 public:
   // the vertex type that will be input into the pipeline
   class Vertex {
   public:
     Vertex() {}
 
-    Vertex(int32_t px, int32_t py, float pz, slib::vec4 vp, slib::vec3 _world, bool _broken)
-        : p_x(px), p_y(py), p_z(pz), ndc(vp), world(_world), broken(_broken) {}
+    Vertex(int32_t px, int32_t py, float pz, slib::vec4 vp, slib::zvec2 _tex,
+           slib::vec3 _world, slib::vec3 _normal, bool _broken)
+        : p_x(px), p_y(py), p_z(pz), ndc(vp), tex(_tex), world(_world),
+          normal(_normal), broken(_broken) {}
 
     Vertex operator+(const Vertex &v) const {
-      return Vertex(p_x + v.p_x, p_y, p_z + v.p_z, ndc + v.ndc, world + v.world, true);
+      return Vertex(p_x + v.p_x, p_y, p_z + v.p_z, ndc + v.ndc, tex + v.tex, 
+                    world + v.world, normal + v.normal, true);
     }
 
     Vertex operator-(const Vertex &v) const {
-      return Vertex(p_x - v.p_x, p_y, p_z - v.p_z, ndc - v.ndc, world - v.world, true);
+      return Vertex(p_x - v.p_x, p_y, p_z - v.p_z, ndc - v.ndc, tex - v.tex, 
+                    world - v.world, normal - v.normal, true);
     }
 
     Vertex operator*(const float &rhs) const {
-      return Vertex(p_x * rhs, p_y, p_z * rhs, ndc * rhs, world * rhs, true);
+      return Vertex(p_x * rhs, p_y, p_z * rhs, ndc * rhs, tex * rhs,
+                    world * rhs, normal * rhs, true);
     }
 
     Vertex &operator+=(const Vertex &v) {
       p_x += v.p_x;
       p_z += v.p_z;
       ndc += v.ndc;
+      tex += v.tex;
       world += v.world;
+      normal += v.normal;
       return *this;
     }
 
     Vertex &vraster(const Vertex &v) {
       p_x += v.p_x;
       p_z += v.p_z;
+      tex += v.tex;
       world += v.world;
+      normal += v.normal;
       return *this;
     }
 
     Vertex &hraster(const Vertex &v) {
       p_z += v.p_z;
+      tex += v.tex;
       world += v.world;
+      normal += v.normal;
       return *this;
     }
 
@@ -58,7 +70,10 @@ public:
     int32_t p_y;
     float p_z;
     slib::vec3 world;
+    slib::vec3 normal;
     slib::vec4 ndc;
+    slib::zvec2 tex; // Texture coordinates
+    slib::zvec2 texOverW;
     bool broken = false;
   };
 
@@ -70,7 +85,9 @@ public:
       Vertex vertex;
       vertex.world = transform.modelMatrix * slib::vec4(vData.vertex, 1);
       vertex.ndc = slib::vec4(vertex.world, 1) * scene->spaceMatrix;
-      Projection<Vertex>::view(scene->screen.width, scene->screen.height, vertex, true);
+      vertex.tex = slib::zvec2(vData.texCoord.x, vData.texCoord.y, 1);
+      vertex.normal = transform.normalMatrix * slib::vec4(vData.normal, 0);
+      Projection<Vertex>::texturedView(scene->screen.width, scene->screen.height, vertex, true);
       return vertex;
     }
   };
@@ -78,9 +95,8 @@ public:
   class GeometryShader {
   public:
     void operator()(Polygon<Vertex> &poly, int32_t width, int32_t height) const {
-
       for (auto &point : poly.points) {
-        Projection<Vertex>::view(width, height, point, false);
+        Projection<Vertex>::texturedView(width, height, point, false);
       }
     }
   };
@@ -89,30 +105,26 @@ public:
   public:
     uint32_t operator()(const Vertex &vRaster, const Scene &scene,
                         const Polygon<Vertex> &poly) const {
+      float w = 1.0f / vRaster.tex.w;
+      float r, g, b;
+      poly.material->map_Kd.sample(vRaster.tex.x * w, vRaster.tex.y * w, r, g, b);
+      slib::vec3 texColor{r, g, b};
 
-      if (poly.material->illum == 1) {
-        // Emissive material - use emissive color
-        slib::vec3 emissiveColor = poly.material->Ke;
-        return Color(emissiveColor).toBgra();
-      }
-
-                          
-      slib::vec3 diffuseColor{0.0f, 0.0f, 0.0f};
+      slib::vec3 color{0.0f, 0.0f, 0.0f};
       for (const auto &[entity_, lightComp] : scene.lights()) {
         const Light &light = lightComp.light;
-        float diff =
-          std::max(0.0f, smath::dot(poly.rotatedFaceNormal, light.getDirection(poly.points[0].world)));
-        float attenuation = light.getAttenuation(poly.points[0].world);
+        slib::vec3 luxDirection = light.getDirection(vRaster.world);
+        float diff = std::max(0.0f, smath::dot(vRaster.normal, luxDirection));
+        float attenuation = light.getAttenuation(vRaster.world);
         const auto* shadowComp = scene.shadows().get(entity_);
         float shadow = scene.shadowsEnabled && shadowComp && shadowComp->shadowMap
           ? shadowComp->shadowMap->sampleShadow(vRaster.world, diff)
           : 1.0f;
         float factor = light.intensity * attenuation * shadow;
         slib::vec3 lightColor = light.color * factor;
-        diffuseColor += lightColor * diff;
+        color += texColor * lightColor * diff;
       }
-
-      return Color(poly.material->Ka + poly.material->Kd * diffuseColor).toBgra();
+      return Color(color).toBgra();
     }
   };
 

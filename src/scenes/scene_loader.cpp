@@ -1,15 +1,15 @@
-#include "sceneLoader.hpp"
+#include "scene_loader.hpp"
 #include <yaml-cpp/yaml.h>
 #include <filesystem>
 #include <stdexcept>
 #include <unordered_map>
 
 #include "../backgrounds/skybox.hpp"
-#include "../backgrounds/backgroundFactory.hpp"
-#include "../ecs/MaterialSystem.hpp"
-#include "../ecs/MeshSystem.hpp"
-#include "../ecs/PrefabFactory.hpp"
-#include "../ecs/NameComponent.hpp"
+#include "../backgrounds/background_factory.hpp"
+#include "../ecs/material_system.hpp"
+#include "../ecs/mesh_system.hpp"
+#include "../ecs/prefab_factory.hpp"
+#include "../ecs/name_component.hpp"
 
 // ---------------------------------------------------------------------------
 // Enum parsers

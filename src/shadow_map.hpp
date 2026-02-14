@@ -1,7 +1,7 @@
 #pragma once
 #include <algorithm>
 #include <cmath>
-#include "ZBuffer.hpp"
+#include "z_buffer.hpp"
 #include "constants.hpp"
 #include "light.hpp"
 #include "scaler.hpp"

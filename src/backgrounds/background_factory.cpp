@@ -1,4 +1,4 @@
-#include "backgroundFactory.hpp"
+#include "background_factory.hpp"
 
 std::unique_ptr<Background> BackgroundFactory::createBackground(BackgroundType type) {
     switch (type) {

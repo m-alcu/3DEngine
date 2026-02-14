@@ -1,5 +1,5 @@
 #pragma once
-#include "Registry.hpp"
+#include "registry.hpp"
 
 namespace LightSystem {
 

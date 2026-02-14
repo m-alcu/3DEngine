@@ -3,10 +3,10 @@
 #include <memory>
 #include "background.hpp"
 #include "desert.hpp"
-#include "imagepng.hpp"
+#include "image_png.hpp"
 #include "twister.hpp"
 #include "skybox.hpp"
-#include "hdrPanorama.hpp"
+#include "hdr_panorama.hpp"
 
 enum class BackgroundType {
     DESERT,

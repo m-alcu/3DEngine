@@ -3,7 +3,7 @@
 #include <memory>
 #include <string>
 #include "../scene.hpp"
-#include "../ecs/TransformComponent.hpp"
+#include "../ecs/transform_component.hpp"
 
 namespace YAML { class Node; }
 

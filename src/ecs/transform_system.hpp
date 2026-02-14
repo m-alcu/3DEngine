@@ -1,6 +1,6 @@
 #pragma once
-#include "TransformComponent.hpp"
-#include "ComponentStore.hpp"
+#include "transform_component.hpp"
+#include "component_store.hpp"
 #include "../slib.hpp"
 #include "../smath.hpp"
 #include <cmath>

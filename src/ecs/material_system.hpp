@@ -1,7 +1,7 @@
 #pragma once
 #include <cmath>
 #include <string>
-#include "MaterialComponent.hpp"
+#include "material_component.hpp"
 #include "../slib.hpp"
 
 enum class MaterialType {

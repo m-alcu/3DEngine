@@ -5,8 +5,8 @@
 #include "../slib.hpp"
 #include "../scene.hpp"
 #include <cmath>
-#include "../ecs/MeshComponent.hpp"
-#include "../ecs/TransformComponent.hpp"
+#include "../ecs/mesh_component.hpp"
+#include "../ecs/transform_component.hpp"
 
 class ShadowMap;
 

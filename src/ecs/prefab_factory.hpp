@@ -1,8 +1,8 @@
 #pragma once
 #include <string>
-#include "MeshComponent.hpp"
-#include "MaterialComponent.hpp"
-#include "TransformComponent.hpp"
+#include "mesh_component.hpp"
+#include "material_component.hpp"
+#include "transform_component.hpp"
 
 namespace PrefabFactory {
 

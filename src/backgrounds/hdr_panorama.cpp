@@ -1,4 +1,4 @@
-#include "hdrPanorama.hpp"
+#include "hdr_panorama.hpp"
 #include "../constants.hpp"
 #include "../smath.hpp"
 #include "../camera.hpp"

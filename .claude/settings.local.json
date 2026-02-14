@@ -25,7 +25,9 @@
       "WebFetch(domain:cdn.jsdelivr.net)",
       "WebFetch(domain:en.wikipedia.org)",
       "WebFetch(domain:ipfs.io)",
-      "WebFetch(domain:dotneteer.github.io)"
+      "WebFetch(domain:dotneteer.github.io)",
+      "Bash(git mv:*)",
+      "Bash(xargs:*)"
     ]
   }
 }

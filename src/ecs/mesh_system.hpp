@@ -1,6 +1,6 @@
 #pragma once
-#include "MeshComponent.hpp"
-#include "ComponentStore.hpp"
+#include "mesh_component.hpp"
+#include "component_store.hpp"
 #include "../smath.hpp"
 
 namespace MeshSystem {

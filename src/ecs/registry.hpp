@@ -1,14 +1,14 @@
 #pragma once
-#include "Entity.hpp"
-#include "ComponentStore.hpp"
-#include "TransformComponent.hpp"
-#include "LightComponent.hpp"
-#include "MeshComponent.hpp"
-#include "MaterialComponent.hpp"
-#include "ShadowComponent.hpp"
-#include "NameComponent.hpp"
-#include "RotationComponent.hpp"
-#include "RenderComponent.hpp"
+#include "entity.hpp"
+#include "component_store.hpp"
+#include "transform_component.hpp"
+#include "light_component.hpp"
+#include "mesh_component.hpp"
+#include "material_component.hpp"
+#include "shadow_component.hpp"
+#include "name_component.hpp"
+#include "rotation_component.hpp"
+#include "render_component.hpp"
 
 class Registry {
     EntityGenerator generator_;

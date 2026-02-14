@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <cmath>
-#include "ZBuffer.hpp"
+#include "z_buffer.hpp"
 
 inline void drawBresenhamLine(int x0, int y0, float z0, int x1, int y1, float z1,
                               uint32_t* pixels, uint32_t color,

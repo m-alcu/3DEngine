@@ -1,6 +1,6 @@
 #pragma once
-#include "ShadowComponent.hpp"
-#include "ComponentStore.hpp"
+#include "shadow_component.hpp"
+#include "component_store.hpp"
 #include "../constants.hpp"
 #include "../slib.hpp"
 
