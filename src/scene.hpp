@@ -113,60 +113,6 @@ public:
     }
   }
 
-  // Process keyboard input for camera movement (Descent-style 6DOF)
-  void processKeyboardInput(const std::map<int, bool>& keys) {
-    auto pressed = [&](int key) { auto it = keys.find(key); return it != keys.end() && it->second; };
-
-    bool up    = pressed(SDLK_UP)    || pressed(SDLK_KP_8);
-    bool down  = pressed(SDLK_DOWN)  || pressed(SDLK_KP_2);
-    bool left  = pressed(SDLK_LEFT)  || pressed(SDLK_KP_4);
-    bool right = pressed(SDLK_RIGHT) || pressed(SDLK_KP_6);
-    bool rleft = pressed(SDLK_Q)     || pressed(SDLK_KP_7);
-    bool rright= pressed(SDLK_E)     || pressed(SDLK_KP_9);
-    bool fwd   = pressed(SDLK_A);
-    bool back  = pressed(SDLK_Z);
-
-    // Calculate input deltas
-    float yawInput = camera.sensitivity * (left - right);
-    float pitchInput = camera.sensitivity * (up - down);
-    float rollInput = camera.sensitivity * (rleft - rright);
-    float moveInput = (fwd - back) * camera.speed;
-
-    if (!orbiting) { // No free-fly when orbiting
-      // Apply hysteresis to rotation momentum
-      rotationMomentum.x =
-          rotationMomentum.x * (1.0f - camera.eagerness) +
-          pitchInput * camera.eagerness;
-      rotationMomentum.y =
-          rotationMomentum.y * (1.0f - camera.eagerness) +
-          yawInput * camera.eagerness;
-      rotationMomentum.z =
-          rotationMomentum.z * (1.0f - camera.eagerness) +
-          rollInput * camera.eagerness;
-
-      camera.pitch -= rotationMomentum.x;
-      camera.yaw -= rotationMomentum.y;
-      camera.roll += rotationMomentum.z;
-      camera.pos += movementMomentum;
-
-      float pitch = camera.pitch;
-      float yaw = camera.yaw;
-      float cosPitch = std::cos(pitch);
-      float sinPitch = std::sin(pitch);
-      float cosYaw = std::cos(yaw);
-      float sinYaw = std::sin(yaw);
-      slib::vec3 zaxis = {sinYaw * cosPitch, -sinPitch, -cosPitch * cosYaw};
-      camera.forward = zaxis;
-
-      // Apply hysteresis to movement momentum
-      movementMomentum =
-          movementMomentum * (1.0f - camera.eagerness) +
-          camera.forward * moveInput * camera.eagerness;
-    } else {
-      camera.forward = smath::normalize(camera.orbitTarget - camera.pos);
-    }
-  }
-
   Entity createEntity() {
     Entity entity = registry.createEntity();
     entities.push_back(entity);
@@ -202,13 +148,6 @@ public:
   std::shared_ptr<ZBuffer> zBuffer; // Use shared_ptr for zBuffer to manage its
                                     // lifetime automatically.
   uint32_t *pixels = nullptr;           // Pointer to the pixel data.
-
-  slib::vec3 rotationMomentum{0.f, 0.f,
-                              0.f}; // Rotation momentum vector (nonzero
-                                    // indicates view is still rotating)
-  slib::vec3 movementMomentum{0.f, 0.f,
-                              0.f}; // Movement momentum vector (nonzero
-                                    // indicates camera is still moving)
 
   Camera camera; // Camera object to manage camera properties.
   std::vector<Entity> entities;

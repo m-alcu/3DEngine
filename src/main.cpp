@@ -133,7 +133,7 @@ int main(int, char **) {
     closedWindow = inputHandler.processEvents(scene);
 
     // Process keyboard input for camera movement (Descent-style 6DOF)
-    scene->processKeyboardInput(keys);
+    inputHandler.processKeyboardInput(scene);
 
     // [If using SDL_MAIN_USE_CALLBACKS: all code below would likely be your
     // SDL_AppIterate() function]

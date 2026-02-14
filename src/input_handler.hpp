@@ -26,6 +26,55 @@ public:
   InputHandler(SDL_Window* win, std::map<int, bool>& keyMap)
       : window(win), keys(keyMap) {}
 
+  // Process keyboard input for camera movement (Descent-style 6DOF)
+  void processKeyboardInput(std::unique_ptr<Scene>& scene) {
+    auto pressed = [&](int key) { auto it = keys.find(key); return it != keys.end() && it->second; };
+
+    bool up    = pressed(SDLK_UP)    || pressed(SDLK_KP_8);
+    bool down  = pressed(SDLK_DOWN)  || pressed(SDLK_KP_2);
+    bool left  = pressed(SDLK_LEFT)  || pressed(SDLK_KP_4);
+    bool right = pressed(SDLK_RIGHT) || pressed(SDLK_KP_6);
+    bool rleft = pressed(SDLK_Q)     || pressed(SDLK_KP_7);
+    bool rright= pressed(SDLK_E)     || pressed(SDLK_KP_9);
+    bool fwd   = pressed(SDLK_A);
+    bool back  = pressed(SDLK_Z);
+
+    float yawInput = scene->camera.sensitivity * (left - right);
+    float pitchInput = scene->camera.sensitivity * (up - down);
+    float rollInput = scene->camera.sensitivity * (rleft - rright);
+    float moveInput = (fwd - back) * scene->camera.speed;
+
+    if (!scene->orbiting) {
+      rotationMomentum.x =
+          rotationMomentum.x * (1.0f - scene->camera.eagerness) +
+          pitchInput * scene->camera.eagerness;
+      rotationMomentum.y =
+          rotationMomentum.y * (1.0f - scene->camera.eagerness) +
+          yawInput * scene->camera.eagerness;
+      rotationMomentum.z =
+          rotationMomentum.z * (1.0f - scene->camera.eagerness) +
+          rollInput * scene->camera.eagerness;
+
+      scene->camera.pitch -= rotationMomentum.x;
+      scene->camera.yaw -= rotationMomentum.y;
+      scene->camera.roll += rotationMomentum.z;
+      scene->camera.pos += movementMomentum;
+
+      float cosPitch = std::cos(scene->camera.pitch);
+      float sinPitch = std::sin(scene->camera.pitch);
+      float cosYaw = std::cos(scene->camera.yaw);
+      float sinYaw = std::sin(scene->camera.yaw);
+      slib::vec3 zaxis = {sinYaw * cosPitch, -sinPitch, -cosPitch * cosYaw};
+      scene->camera.forward = zaxis;
+
+      movementMomentum =
+          movementMomentum * (1.0f - scene->camera.eagerness) +
+          scene->camera.forward * moveInput * scene->camera.eagerness;
+    } else {
+      scene->camera.forward = smath::normalize(scene->camera.orbitTarget - scene->camera.pos);
+    }
+  }
+
   // Process all pending SDL events
   // Returns true if window close was requested
   bool processEvents(std::unique_ptr<Scene>& scene) {
@@ -69,6 +118,8 @@ private:
   std::map<int, bool>& keys;
   float lastMouseX = 0;
   float lastMouseY = 0;
+  slib::vec3 rotationMomentum{};
+  slib::vec3 movementMomentum{};
 
   void handleMouseButtonDown(const SDL_Event& ev,
                              std::unique_ptr<Scene>& scene) {
