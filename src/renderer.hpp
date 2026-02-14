@@ -41,7 +41,7 @@ public:
       int ty = scene.screen.height - 18;
       Font8x8::drawText(scene.pixels, scene.screen.width, scene.screen.height,
                         scene.screen.width, tx, ty, scene.name.c_str(),
-                        0xFFFFFFFFu, 0xFF000000u, true);
+                        0xFFFFFFFFu, 0xFF000000u, true, scene.font);
     }
 
     for (Entity entity : scene.renderableEntities()) {

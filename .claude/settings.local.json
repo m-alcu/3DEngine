@@ -18,7 +18,14 @@
       "Bash(git -C:*)",
       "Bash(grep:*)",
       "Bash(timeout:*)",
-      "Bash(ctest:*)"
+      "Bash(ctest:*)",
+      "WebFetch(domain:malcolmmclean.github.io)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:cdn.jsdelivr.net)",
+      "WebFetch(domain:en.wikipedia.org)",
+      "WebFetch(domain:ipfs.io)",
+      "WebFetch(domain:dotneteer.github.io)"
     ]
   }
 }

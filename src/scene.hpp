@@ -17,6 +17,7 @@
 #include "backgrounds/backgroundFactory.hpp"
 #include "cubemap.hpp"
 #include "camera.hpp"
+#include "fonts.hpp"
 #include "light.hpp"
 #include "ecs/Registry.hpp"
 #include "ecs/NameComponent.hpp"
@@ -254,6 +255,7 @@ public:
   bool showAxes = false;             // Show/hide axis helper
   Stats stats;                       // Rendering statistics  
   bool depthSortEnabled = true;      // Enable/disable face depth sorting
+  Font8x8::FontType font = Font8x8::FontType::ZXSpectrum;
 
   slib::vec3 sceneCenter{};
   float sceneRadius = 0.0f;
@@ -398,6 +400,12 @@ public:
     int currentPcfRadius = pcfRadius;
     if (ImGui::Combo("PCF Radius", &currentPcfRadius, pcfLabels, IM_ARRAYSIZE(pcfLabels))) {
       pcfRadius = currentPcfRadius;
+    }
+
+    static const char* fontLabels[] = {"Default", "IBM CGA", "ZX Spectrum", "Amstrad CPC", "Commodore 64", "Atari 8-bit"};
+    int currentFont = static_cast<int>(font);
+    if (ImGui::Combo("Font", &currentFont, fontLabels, IM_ARRAYSIZE(fontLabels))) {
+      font = static_cast<Font8x8::FontType>(currentFont);
     }
   }
 
