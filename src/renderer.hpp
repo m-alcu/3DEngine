@@ -13,7 +13,7 @@
 #include "axisRenderer.hpp"
 #include "bresenham.hpp"
 #include "rasterizer.hpp"
-#include "shadow_rasterizer.hpp"
+#include "rasterizer_shadow.hpp"
 #include <cstdint>
 #include "fonts.hpp"
 #include "ecs/ShadowSystem.hpp"
