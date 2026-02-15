@@ -72,10 +72,10 @@ private:
             slib::vec3 normal = TransformSystem::rotateNormal(*transformComponent, faceDataEntry.faceNormal);
             vertex p1 = projectedPoints[faceDataEntry.face.vertexIndices[0]];
 
-            // For cubemap, always render all faces (no backface culling based on single direction)
-            // The face selection determines which cube face we're rendering to
-            Polygon<vertex> poly(collectPolyVerts(projectedPoints, faceDataEntry), normal);
-            clipAndDraw(poly);
+            if (lightSource->light.isVisibleFromLight(p1.world, normal)) {
+                Polygon<vertex> poly(collectPolyVerts(projectedPoints, faceDataEntry), normal);
+                clipAndDraw(poly);
+            }
         }
     }
 
