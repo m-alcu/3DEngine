@@ -134,6 +134,14 @@ inline void drawSceneControls(Scene& scene) {
       scene.pcfRadius = currentPcfRadius;
     }
 
+    ImGui::Separator();
+    ImGui::Text("Shadow Bias Configuration");
+    ImGui::SliderFloat("Min Bias Default", &scene.minBiasDefault, 0.001f, 0.1f, "%.4f");
+    ImGui::SliderFloat("Max Bias Default", &scene.maxBiasDefault, 0.001f, 0.2f, "%.4f");
+    ImGui::SliderFloat("Shadow Bias Min", &scene.shadowBiasMin, 0.001f, 0.1f, "%.4f");
+    ImGui::SliderFloat("Shadow Bias Max", &scene.shadowBiasMax, 0.01f, 0.5f, "%.4f");
+
+    ImGui::Separator();
     static const char* fontLabels[] = {"Default", "IBM CGA", "ZX Spectrum", "Amstrad CPC", "Commodore 64", "Atari 8-bit"};
     int currentFont = static_cast<int>(scene.font);
     if (ImGui::Combo("Font", &currentFont, fontLabels, IM_ARRAYSIZE(fontLabels))) {

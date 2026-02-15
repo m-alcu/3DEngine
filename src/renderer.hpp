@@ -105,7 +105,11 @@ public:
       ShadowSystem::buildLightMatrices(*shadowComponent,
                                        lightComponent->light,
                                        scene.sceneCenter,
-                                       scene.sceneRadius);
+                                       scene.sceneRadius,
+                                       scene.minBiasDefault,
+                                       scene.maxBiasDefault,
+                                       scene.shadowBiasMin,
+                                       scene.shadowBiasMax);
       for (Entity entity : scene.renderableEntities()) {
         auto* transform = scene.registry.transforms().get(entity);
         auto* mesh = scene.registry.meshes().get(entity);

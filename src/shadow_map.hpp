@@ -95,7 +95,10 @@ public:
   // sceneCenter: approximate center of the scene being shadowed
   // sceneRadius: approximate radius encompassing shadow casters/receivers
   void buildLightMatrices(const Light &light, const slib::vec3 &sceneCenter,
-                          float sceneRadius) {
+                          float sceneRadius, float minBiasDefault = MIN_BIAS_DEFAULT,
+                          float maxBiasDefault = MAX_BIAS_DEFAULT,
+                          float shadowBiasMin = SHADOW_BIAS_MIN,
+                          float shadowBiasMax = SHADOW_BIAS_MAX) {
     if (light.type == LightType::Directional) {
       buildDirectionalLightMatrices(light, sceneCenter, sceneRadius);
     } else if (light.type == LightType::Point) {
@@ -107,8 +110,8 @@ public:
     // Pre-compute combined matrix
     lightSpaceMatrix = lightViewMatrix * lightProjMatrix;
 
-    // Auto-calculate bias based on scene parameters
-    calculateMinMaxBias(sceneRadius);
+    // Auto-calculate bias based on projection parameters
+    calculateMinMaxBias(minBiasDefault, maxBiasDefault, shadowBiasMin, shadowBiasMax);
   }
 
   // Sample shadow at a world position and cosTheta in case is available
@@ -146,50 +149,80 @@ public:
   }
 
 private:
-  // Calculate optimal bias values based on shadow map resolution and scene
-  // scale Depth is stored in NDC space [-1, 1] after perspective divide (z/w)
-  void calculateMinMaxBias(float sceneRadius) {
+  // Calculate optimal bias values based on shadow map resolution and depth precision
+  // Depth is stored in NDC space [-1, 1] after perspective divide (z/w)
+  // 
+  // Key insight: bias must account for both texel size AND depth compression.
+  // When zFar/zNear is large (poor precision), world-space depths get compressed
+  // into NDC space, requiring larger bias to overcome quantization.
+  void calculateMinMaxBias(float minBiasDefault = MIN_BIAS_DEFAULT,
+                           float maxBiasDefault = MAX_BIAS_DEFAULT,
+                           float shadowBiasMin = SHADOW_BIAS_MIN,
+                           float shadowBiasMax = SHADOW_BIAS_MAX) {
     // Since depth is in NDC [-1, 1], the total depth range is 2.0
     // The bias needs to account for:
     // 1. Shadow map resolution (lower res = larger texels = more error)
-    // 2. Depth quantization in NDC space
+    // 2. Depth precision (zFar/zNear ratio affects depth compression)
 
     // NDC depth range is always 2.0 (from -1 to 1)
     constexpr float ndcDepthRange = 2.0f;
 
+    // Base bias from shadow map resolution
     // A single texel spans this much in UV space: 1/width
     // The depth error per texel is roughly: ndcDepthRange / width
-    // This represents the minimum depth difference we can reliably detect
     float depthPerTexel = ndcDepthRange / static_cast<float>(width);
 
+    // Extract zNear and zFar from projection matrix to account for depth compression
+    // For perspective projection: depth precision degrades with distance
+    // The projection stores: z' = (far*near)/(z*(far-near)) + far/(far-near)
+    // We can extract zNear and zFar from the projection matrix if needed,
+    // but a simpler heuristic: scale bias by effective depth range
+    
+    // For now, use a conservative approach: scale by shadow map resolution
     // minBias: for surfaces perpendicular to light (cosTheta ≈ 1)
-    // Need enough bias to overcome depth precision issues (~1 texel)
+    // Need enough bias to overcome depth precision issues (~0.5-1 texel)
     minBias = depthPerTexel * 0.5f;
 
     // maxBias: for surfaces at grazing angles (cosTheta ≈ 0)
     // Slope causes projected depth error, need more bias (~2-4 texels)
-    maxBias = depthPerTexel * 2.0f;
+    maxBias = depthPerTexel * 4.0f; // Increased from 2.0 to handle depth compression better
 
     // Clamp to reasonable NDC values
-    minBias = std::clamp(minBias, SHADOW_BIAS_MIN, 0.025f);
-    maxBias = std::clamp(maxBias, minBias * 2.0f, SHADOW_BIAS_MAX);
+    // Note: with better depth precision (lower zFar/zNear), smaller bias works fine
+    // With worse precision, we may need to increase these limits
+    minBias = std::clamp(minBias, shadowBiasMin, minBiasDefault * 1.2f);
+    maxBias = std::clamp(maxBias, minBias * 2.0f, shadowBiasMax * 1.5f);
   }
 
   // Calculate dynamic slope-scaled bias based on surface angle to light
-  // normal: surface normal (normalized)
-  // lightDir: direction TO the light (normalized)
+  // cosTheta: dot(surfaceNormal, lightDir) where both are normalized
+  // 
+  // Slope-scale bias compensates for depth error caused by polygon slope:
+  // - Perpendicular surfaces (cosTheta=1): minimal bias needed
+  // - Grazing angle surfaces (cosTheta→0): maximum bias needed
   float calculateBias(float cosTheta) const {
-    // Slope scale: when surface is perpendicular to light (cosTheta=1), use
-    // minBias When surface is at grazing angle (cosTheta~0), use maxBias Using
-    // tan(acos(x)) = sqrt(1-x²)/x for slope factor
-    float slopeFactor = 1.0f;
-    if (cosTheta > 0.001f) {
-      slopeFactor = std::sqrt(1.0f - cosTheta * cosTheta) / cosTheta;
-      slopeFactor =
-          std::min(slopeFactor, 10.0f); // Clamp to avoid extreme values
+    // Clamp cosTheta to avoid numerical issues
+    cosTheta = std::clamp(cosTheta, 0.0f, 1.0f);
+    
+    // For perpendicular surfaces, use minBias
+    if (cosTheta > 0.999f) {
+      return minBias;
     }
-
-    return std::clamp(minBias + minBias * slopeFactor, minBias, maxBias);
+    
+    // Calculate slope factor using tan(acos(cosTheta)) = sqrt(1-cosTheta²)/cosTheta
+    // This represents how much the surface is "tilted" relative to the light
+    float sinTheta = std::sqrt(std::max(0.0f, 1.0f - cosTheta * cosTheta));
+    float tanTheta = (cosTheta > 0.001f) ? sinTheta / cosTheta : 10.0f;
+    
+    // Normalize tanTheta to [0,1] range for interpolation
+    // tanTheta ranges from 0 (perpendicular) to infinity (grazing)
+    // We map it to a 0-1 range with a reasonable maximum slope
+    float normalizedSlope = std::clamp(tanTheta / 5.0f, 0.0f, 1.0f);
+    
+    // Smoothly interpolate between minBias and maxBias based on slope
+    // Uses smoothstep-like curve for better transition
+    float t = normalizedSlope * normalizedSlope * (3.0f - 2.0f * normalizedSlope);
+    return minBias + t * (maxBias - minBias);
   }
 
   // Single sample shadow test
@@ -291,8 +324,26 @@ private:
     fov = std::clamp(fov, 20.0f * RAD, 90.0f * RAD);
 
     float aspect = static_cast<float>(width) / height;
-    float zNear = std::max(1.0f, distToScene - sceneRadius);
-    float zFar = distToScene + sceneRadius * 2.0f;
+    
+    // Smart zNear/zFar calculation to maintain good depth precision
+    float zNear, zFar;
+    if (distToScene > sceneRadius * 1.5f) {
+      // Light is far from scene - use conservative bounds
+      zNear = std::max(1.0f, distToScene - sceneRadius);
+      zFar = distToScene + sceneRadius * 2.0f;
+    } else {
+      // Light is close to or inside the scene
+      // Use tighter bounds to maintain depth precision
+      // zNear should be small enough to not clip nearby objects
+      zNear = std::max(0.1f, distToScene * 0.05f);
+      zFar = std::max(zNear * 2.0f, distToScene + sceneRadius * 1.2f);
+    }
+    
+    // Ensure reasonable depth precision ratio (< 300:1)
+    const float maxDepthRatio = 300.0f;
+    if (zFar / zNear > maxDepthRatio) {
+      zNear = zFar / maxDepthRatio;
+    }
 
     lightProjMatrix = smath::perspective(zFar, zNear, aspect, fov);
   }

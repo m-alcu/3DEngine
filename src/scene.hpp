@@ -165,6 +165,12 @@ public:
   int pcfRadius = SHADOW_PCF_RADIUS;
   Font8x8::FontType font = Font8x8::FontType::ZXSpectrum;
 
+  // Shadow bias configuration
+  float minBiasDefault = MIN_BIAS_DEFAULT;
+  float maxBiasDefault = MAX_BIAS_DEFAULT;
+  float shadowBiasMin = SHADOW_BIAS_MIN;
+  float shadowBiasMax = SHADOW_BIAS_MAX;
+
   // --- Background ---
 
   BackgroundType backgroundType = BackgroundType::DESERT;
