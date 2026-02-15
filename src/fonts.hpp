@@ -7,7 +7,7 @@
 
 namespace Font8x8 {
 
-enum class FontType { Default, CGA, ZXSpectrum, AmstradCPC, C64, Atari };
+enum class FontType { Default, CGA, ZXSpectrum, AmstradCPC, C64, Atari, Retro };
 
 // Default font
 inline constexpr uint8_t glyphs_default[96][8] = {
@@ -610,88 +610,10 @@ inline constexpr uint8_t glyphs_atari[96][8] = {
   /* 0x7F DEL */ {0x00,0x10,0x38,0x6C,0xC6,0xC6,0xFE,0x00},
 };
 
-inline const uint8_t (*getFont(FontType type))[8] {
-    switch (type) {
-        case FontType::CGA:        return glyphs_cga;
-        case FontType::ZXSpectrum: return glyphs_zx;
-        case FontType::AmstradCPC: return glyphs_amstrad;
-        case FontType::C64:        return glyphs_c64;
-        case FontType::Atari:      return glyphs_atari;
-        default:                   return glyphs_default;
-    }
-}
-
-inline void putPixel(uint32_t* fb, int fb_w, int fb_h, int stride_px,
-                     int x, int y, uint32_t color) {
-  if (static_cast<unsigned>(x) >= static_cast<unsigned>(fb_w) ||
-      static_cast<unsigned>(y) >= static_cast<unsigned>(fb_h)) return;
-  fb[y * stride_px + x] = color;
-}
-
-inline void drawGlyph(uint32_t* fb, int fb_w, int fb_h, int stride_px,
-                      int x, int y, char c,
-                      uint32_t fg, uint32_t outline_color,
-                      bool outline,
-                      FontType font = FontType::Default) {
-  auto uc = static_cast<unsigned char>(c);
-  if (uc < 0x20 || uc > 0x7F) uc = '?';
-  const uint8_t* rows = getFont(font)[uc - 0x20];
-
-  // CGA and ZX Spectrum fonts use MSB-first (bit 7 = leftmost), default uses LSB-first (bit 0 = leftmost)
-  const bool msb = (font != FontType::Default);
-
-  if (outline) {
-    for (int oy = 0; oy <= 1; ++oy) {
-      for (int ox = 0; ox <= 1; ++ox) {
-        if (ox == 0 && oy == 0) continue;
-        for (int r = 0; r < 8; ++r) {
-          uint8_t bits = rows[r];
-          for (int col = 0; col < 8; ++col) {
-            bool set = msb ? (bits & static_cast<uint8_t>(0x80u >> col))
-                           : (bits & static_cast<uint8_t>(1u << col));
-            if (set) {
-              putPixel(fb, fb_w, fb_h, stride_px, x + col + ox, y + r + oy, outline_color);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  for (int r = 0; r < 8; ++r) {
-    uint8_t bits = rows[r];
-    for (int col = 0; col < 8; ++col) {
-      bool set = msb ? (bits & static_cast<uint8_t>(0x80u >> col))
-                     : (bits & static_cast<uint8_t>(1u << col));
-      if (set) {
-        putPixel(fb, fb_w, fb_h, stride_px, x + col, y + r, fg);
-      }
-    }
-  }
-}
-
-inline int drawText(uint32_t* fb, int fb_w, int fb_h, int stride_px,
-                    int x, int y, const char* text,
-                    uint32_t fg, uint32_t outline_color,
-                    bool outline,
-                    FontType font = FontType::Default) {
-  int cx = x, cy = y;
-  for (const char* p = text; p && *p; ++p) {
-    if (*p == '\n') { cx = x; cy += 8; continue; }
-    drawGlyph(fb, fb_w, fb_h, stride_px, cx, cy, *p, fg, outline_color, outline, font);
-    cx += 8;
-  }
-  return cx;
-}
-
-} // namespace Font8x8
-
 // 8x6 retro bitmap font (ASCII 0x20..0x7F)
 // Each glyph is 8 rows, 1 byte per row, but only 6 pixels wide.
 // Bit 0 is leftmost pixel, bits 0-5 used, bits 6-7 unused.
 // Compact retro style inspired by early LCD/LED displays
-namespace Font8x6 {
-
 inline constexpr uint8_t glyphs_retro[96][8] = {
   /* 0x20 ' ' */ {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},
   /* 0x21 '!' */ {0x08,0x08,0x08,0x08,0x00,0x08,0x00,0x00},
@@ -700,7 +622,7 @@ inline constexpr uint8_t glyphs_retro[96][8] = {
   /* 0x24 '$' */ {0x08,0x1E,0x02,0x1C,0x20,0x1E,0x08,0x00},
   /* 0x25 '%' */ {0x06,0x26,0x10,0x08,0x04,0x32,0x30,0x00},
   /* 0x26 '&' */ {0x0C,0x12,0x0C,0x1A,0x24,0x24,0x1A,0x00},
-  /* 0x27 ''' */ {0x08,0x08,0x04,0x00,0x00,0x00,0x00,0x00},
+  /* 0x27 '\'' */ {0x08,0x08,0x04,0x00,0x00,0x00,0x00,0x00},
   /* 0x28 '(' */ {0x10,0x08,0x04,0x04,0x04,0x08,0x10,0x00},
   /* 0x29 ')' */ {0x04,0x08,0x10,0x10,0x10,0x08,0x04,0x00},
   /* 0x2A '*' */ {0x00,0x14,0x08,0x3E,0x08,0x14,0x00,0x00},
@@ -753,7 +675,7 @@ inline constexpr uint8_t glyphs_retro[96][8] = {
   /* 0x59 'Y' */ {0x22,0x22,0x14,0x08,0x08,0x08,0x08,0x00},
   /* 0x5A 'Z' */ {0x3E,0x20,0x10,0x08,0x04,0x02,0x3E,0x00},
   /* 0x5B '[' */ {0x1C,0x04,0x04,0x04,0x04,0x04,0x1C,0x00},
-  /* 0x5C '\' */ {0x02,0x04,0x04,0x08,0x10,0x10,0x20,0x00},
+  /* 0x5C '\\' */ {0x02,0x04,0x04,0x08,0x10,0x10,0x20,0x00},
   /* 0x5D ']' */ {0x1C,0x10,0x10,0x10,0x10,0x10,0x1C,0x00},
   /* 0x5E '^' */ {0x08,0x14,0x22,0x00,0x00,0x00,0x00,0x00},
   /* 0x5F '_' */ {0x00,0x00,0x00,0x00,0x00,0x00,0x3E,0x00},
@@ -791,6 +713,22 @@ inline constexpr uint8_t glyphs_retro[96][8] = {
   /* 0x7F DEL */ {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},
 };
 
+inline const uint8_t (*getFont(FontType type))[8] {
+    switch (type) {
+        case FontType::CGA:        return glyphs_cga;
+        case FontType::ZXSpectrum: return glyphs_zx;
+        case FontType::AmstradCPC: return glyphs_amstrad;
+        case FontType::C64:        return glyphs_c64;
+        case FontType::Atari:      return glyphs_atari;
+        case FontType::Retro:      return glyphs_retro;
+        default:                   return glyphs_default;
+    }
+}
+
+inline int getGlyphWidth(FontType type) {
+    return (type == FontType::Retro) ? 6 : 8;
+}
+
 inline void putPixel(uint32_t* fb, int fb_w, int fb_h, int stride_px,
                      int x, int y, uint32_t color) {
   if (static_cast<unsigned>(x) >= static_cast<unsigned>(fb_w) ||
@@ -801,20 +739,25 @@ inline void putPixel(uint32_t* fb, int fb_w, int fb_h, int stride_px,
 inline void drawGlyph(uint32_t* fb, int fb_w, int fb_h, int stride_px,
                       int x, int y, char c,
                       uint32_t fg, uint32_t outline_color,
-                      bool outline) {
+                      bool outline,
+                      FontType font = FontType::Default) {
   auto uc = static_cast<unsigned char>(c);
   if (uc < 0x20 || uc > 0x7F) uc = '?';
-  const uint8_t* rows = glyphs_retro[uc - 0x20];
+  const uint8_t* rows = getFont(font)[uc - 0x20];
+  const int width = getGlyphWidth(font);
 
-  // LSB-first: bit 0 is leftmost pixel
+  // CGA and ZX Spectrum fonts use MSB-first (bit 7 = leftmost), default and retro use LSB-first (bit 0 = leftmost)
+  const bool msb = (font != FontType::Default && font != FontType::Retro);
+
   if (outline) {
     for (int oy = 0; oy <= 1; ++oy) {
       for (int ox = 0; ox <= 1; ++ox) {
         if (ox == 0 && oy == 0) continue;
         for (int r = 0; r < 8; ++r) {
           uint8_t bits = rows[r];
-          for (int col = 0; col < 6; ++col) {  // Only 6 pixels wide
-            bool set = (bits & static_cast<uint8_t>(1u << col));
+          for (int col = 0; col < width; ++col) {
+            bool set = msb ? (bits & static_cast<uint8_t>(0x80u >> col))
+                           : (bits & static_cast<uint8_t>(1u << col));
             if (set) {
               putPixel(fb, fb_w, fb_h, stride_px, x + col + ox, y + r + oy, outline_color);
             }
@@ -826,8 +769,9 @@ inline void drawGlyph(uint32_t* fb, int fb_w, int fb_h, int stride_px,
 
   for (int r = 0; r < 8; ++r) {
     uint8_t bits = rows[r];
-    for (int col = 0; col < 6; ++col) {  // Only 6 pixels wide
-      bool set = (bits & static_cast<uint8_t>(1u << col));
+    for (int col = 0; col < width; ++col) {
+      bool set = msb ? (bits & static_cast<uint8_t>(0x80u >> col))
+                     : (bits & static_cast<uint8_t>(1u << col));
       if (set) {
         putPixel(fb, fb_w, fb_h, stride_px, x + col, y + r, fg);
       }
@@ -837,15 +781,17 @@ inline void drawGlyph(uint32_t* fb, int fb_w, int fb_h, int stride_px,
 
 inline int drawText(uint32_t* fb, int fb_w, int fb_h, int stride_px,
                     int x, int y, const char* text,
-                    uint32_t fg, uint32_t outline_color = 0xff000000,
-                    bool outline = false) {
+                    uint32_t fg, uint32_t outline_color,
+                    bool outline,
+                    FontType font = FontType::Default) {
+  const int advance = getGlyphWidth(font);
   int cx = x, cy = y;
   for (const char* p = text; p && *p; ++p) {
     if (*p == '\n') { cx = x; cy += 8; continue; }
-    drawGlyph(fb, fb_w, fb_h, stride_px, cx, cy, *p, fg, outline_color, outline);
-    cx += 6;  // Advance by 6 pixels for next character
+    drawGlyph(fb, fb_w, fb_h, stride_px, cx, cy, *p, fg, outline_color, outline, font);
+    cx += advance;
   }
   return cx;
 }
 
-} // namespace Font8x6
+} // namespace Font8x8

@@ -142,7 +142,7 @@ inline void drawSceneControls(Scene& scene) {
     ImGui::SliderFloat("Max Shadow Bias", &scene.shadowBiasMax, 0.01f, 0.5f, "%.4f");
 
     ImGui::Separator();
-    static const char* fontLabels[] = {"Default", "IBM CGA", "ZX Spectrum", "Amstrad CPC", "Commodore 64", "Atari 8-bit"};
+    static const char* fontLabels[] = {"Default", "IBM CGA", "ZX Spectrum", "Amstrad CPC", "Commodore 64", "Atari 8-bit", "Retro"};
     int currentFont = static_cast<int>(scene.font);
     if (ImGui::Combo("Font", &currentFont, fontLabels, IM_ARRAYSIZE(fontLabels))) {
       scene.font = static_cast<Font8x8::FontType>(currentFont);
