@@ -641,8 +641,8 @@ inline void drawGlyph(uint32_t* fb, int fb_w, int fb_h, int stride_px,
   const bool msb = (font != FontType::Default);
 
   if (outline) {
-    for (int oy = -1; oy <= 1; ++oy) {
-      for (int ox = -1; ox <= 1; ++ox) {
+    for (int oy = 0; oy <= 1; ++oy) {
+      for (int ox = 0; ox <= 1; ++ox) {
         if (ox == 0 && oy == 0) continue;
         for (int r = 0; r < 8; ++r) {
           uint8_t bits = rows[r];
