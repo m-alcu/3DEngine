@@ -118,8 +118,6 @@ public:
     GeometryShader gs;
     PixelShader ps;
 
-    CubemapShadowEffect() : vs(currentFace), ps(currentFace) {}
-
     void setFace(CubeShadowFace face) {
         currentFace = face;
         vs.face = face;
