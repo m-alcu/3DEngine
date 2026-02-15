@@ -44,7 +44,7 @@ scene:
         intensity: 4.0
       orbit:
         center: [0.0, 0.0, -400.0]
-        radius: 266.0
+        radius: 400.0
         plane_normal: [1.0, 0.0, 0.0]
         omega: 1.0471975
         initial_phase: 0.0
