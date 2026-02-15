@@ -64,7 +64,7 @@ namespace smath
 
     slib::mat4 perspective(const float zFar, const float zNear, const float aspect, const float fov)
     {
-        const float yScale = 1 / tanf(fov);
+        const float yScale = 1 / tanf(fov / 2.0f);
         const float xScale = yScale / aspect;
         const float nearmfar = zNear - zFar;
 

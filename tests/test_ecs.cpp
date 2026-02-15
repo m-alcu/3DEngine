@@ -417,6 +417,7 @@ TEST(LightSystemTest, SyncPositionsMultipleLights) {
 
 TEST(ShadowSystemTest, EnsureShadowMaps) {
     ComponentStore<ShadowComponent> store;
+    ComponentStore<LightComponent> lights;
     ShadowComponent sc1, sc2;
     store.add(1, sc1);
     store.add(2, sc2);
@@ -425,7 +426,7 @@ TEST(ShadowSystemTest, EnsureShadowMaps) {
     EXPECT_EQ(store.get(1)->shadowMap, nullptr);
     EXPECT_EQ(store.get(2)->shadowMap, nullptr);
 
-    ShadowSystem::ensureShadowMaps(store, 0);
+    ShadowSystem::ensureShadowMaps(store, lights, 0);
 
     // Both should now have shadow maps
     EXPECT_NE(store.get(1)->shadowMap, nullptr);
@@ -434,16 +435,17 @@ TEST(ShadowSystemTest, EnsureShadowMaps) {
 
 TEST(ShadowSystemTest, EnsureShadowMapsIdempotent) {
     ComponentStore<ShadowComponent> store;
+    ComponentStore<LightComponent> lights;
     ShadowComponent sc;
     store.add(1, sc);
 
-    ShadowSystem::ensureShadowMaps(store, 0);
+    ShadowSystem::ensureShadowMaps(store, lights, 0);
 
     auto* firstMap = store.get(1)->shadowMap.get();
     ASSERT_NE(firstMap, nullptr);
 
     // Calling again should not create a new map
-    ShadowSystem::ensureShadowMaps(store, 0);
+    ShadowSystem::ensureShadowMaps(store, lights, 0);
     EXPECT_EQ(store.get(1)->shadowMap.get(), firstMap);
 }
 

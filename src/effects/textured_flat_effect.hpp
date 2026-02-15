@@ -115,7 +115,7 @@ public:
         float diff = std::max(0.0f, smath::dot(poly.rotatedFaceNormal, luxDirection));
         const auto* shadowComp = scene.shadows().get(entity_);
         float shadow = scene.shadowsEnabled && shadowComp && shadowComp->shadowMap
-          ? shadowComp->shadowMap->sampleShadow(vRaster.world, diff)
+          ? shadowComp->shadowMap->sampleShadow(vRaster.world, diff, light.position)
           : 1.0f;  
         float factor = light.intensity * attenuation * shadow;
         slib::vec3 lightColor = light.color * factor;

@@ -72,7 +72,7 @@ public:
     RotationSystem::updateAll(registry);
     TransformSystem::updateAllTransforms(registry.transforms());
     LightSystem::syncPositions(registry);
-    ShadowSystem::ensureShadowMaps(registry.shadows(), pcfRadius);
+    ShadowSystem::ensureShadowMaps(registry.shadows(), registry.lights(), pcfRadius, useCubemapShadows);
     MeshSystem::updateAllBoundsIfDirty(registry.meshes());
 
     updateSceneBounds();
@@ -163,6 +163,7 @@ public:
   bool showAxes = false;
   bool depthSortEnabled = true;
   int pcfRadius = SHADOW_PCF_RADIUS;
+  bool useCubemapShadows = true; // Enable omnidirectional cubemap shadows for point lights
   Font8x8::FontType font = Font8x8::FontType::ZXSpectrum;
 
   // Shadow bias configuration

@@ -109,7 +109,7 @@ public:
         float diff = std::max(0.0f, smath::dot(vRaster.normal, luxDirection));           
         const auto* shadowComp = scene.shadows().get(entity_);
         float shadow = scene.shadowsEnabled && shadowComp && shadowComp->shadowMap
-          ? shadowComp->shadowMap->sampleShadow(vRaster.world, diff)
+          ? shadowComp->shadowMap->sampleShadow(vRaster.world, diff, light.position)
           : 1.0f;
         diffuseColor += light.color * (diff * light.intensity * attenuation * shadow);
       }

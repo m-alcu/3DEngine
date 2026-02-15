@@ -127,6 +127,7 @@ inline void drawSceneControls(Scene& scene) {
     ImGui::Checkbox("Face Depth Sorting", &scene.depthSortEnabled);
     ImGui::Checkbox("Shadows Enabled", &scene.shadowsEnabled);
     ImGui::Checkbox("Show Shadow Map Overlay", &scene.showShadowMapOverlay);
+    ImGui::Checkbox("Use Cubemap Shadows (Point Lights)", &scene.useCubemapShadows);
 
     static const char* pcfLabels[] = {"Off (0)", "3x3 (1)", "5x5 (2)"};
     int currentPcfRadius = scene.pcfRadius;
@@ -136,10 +137,10 @@ inline void drawSceneControls(Scene& scene) {
 
     ImGui::Separator();
     ImGui::Text("Shadow Bias Configuration");
-    ImGui::SliderFloat("Min Bias", &scene.minBiasDefault, 0.001f, 0.1f, "%.4f");
-    ImGui::SliderFloat("Max Bias", &scene.maxBiasDefault, 0.001f, 0.2f, "%.4f");
-    ImGui::SliderFloat("Min Shadow Bias", &scene.shadowBiasMin, 0.001f, 0.1f, "%.4f");
-    ImGui::SliderFloat("Max Shadow Bias", &scene.shadowBiasMax, 0.01f, 0.5f, "%.4f");
+    ImGui::SliderFloat("Min Bias", &scene.minBiasDefault, 0.001f, 1.0f, "%.4f");
+    ImGui::SliderFloat("Max Bias", &scene.maxBiasDefault, 0.001f, 1.0f, "%.4f");
+    ImGui::SliderFloat("Min Shadow Bias", &scene.shadowBiasMin, 0.001f, 1.0f, "%.4f");
+    ImGui::SliderFloat("Max Shadow Bias", &scene.shadowBiasMax, 0.01f, 1.0f, "%.4f");
 
     ImGui::Separator();
     static const char* fontLabels[] = {"Default", "IBM CGA", "ZX Spectrum", "Amstrad CPC", "Commodore 64", "Atari 8-bit", "Retro"};

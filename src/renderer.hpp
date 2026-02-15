@@ -5,6 +5,7 @@
 #include "effects/gouraud_effect.hpp"
 #include "effects/phong_effect.hpp"
 #include "effects/shadow_effect.hpp"
+#include "effects/cubemap_shadow_effect.hpp"
 #include "effects/textured_blinn_phong_effect.hpp"
 #include "effects/textured_flat_effect.hpp"
 #include "effects/textured_gouraud_effect.hpp"
@@ -14,7 +15,9 @@
 #include "bresenham.hpp"
 #include "rasterizer.hpp"
 #include "rasterizer_shadow.hpp"
+#include "rasterizer_cubemap_shadow.hpp"
 #include <cstdint>
+#include <cstdio>
 #include "fonts.hpp"
 #include "ecs/shadow_system.hpp"
 
@@ -110,17 +113,45 @@ public:
                                        scene.maxBiasDefault,
                                        scene.shadowBiasMin,
                                        scene.shadowBiasMax);
-      for (Entity entity : scene.renderableEntities()) {
-        auto* transform = scene.registry.transforms().get(entity);
-        auto* mesh = scene.registry.meshes().get(entity);
-        auto* render = scene.registry.renders().get(entity);
-        if (!transform || !mesh || !render) {
-          continue;
+
+      // Check if this is a point light with cubemap shadows
+      bool useCubemap = shadowComponent->shadowMap->useCubemap && 
+                       shadowComponent->shadowMap->cubeShadowMap &&
+                       lightComponent->light.type == LightType::Point;
+
+      if (useCubemap) {
+        // Render to all 6 cubemap faces
+        for (int faceIdx = 0; faceIdx < 6; ++faceIdx) {
+          CubeShadowFace face = static_cast<CubeShadowFace>(faceIdx);
+          
+          for (Entity entity : scene.renderableEntities()) {
+            auto* transform = scene.registry.transforms().get(entity);
+            auto* mesh = scene.registry.meshes().get(entity);
+            auto* render = scene.registry.renders().get(entity);
+            if (!transform || !mesh || !render) {
+              continue;
+            }
+            cubemapShadowRasterizer.drawRenderable(*transform,
+                                                   *mesh,
+                                                   lightComponent,
+                                                   shadowComponent,
+                                                   face);
+          }
         }
-        shadowRasterizer.drawRenderable(*transform,
-                                        *mesh,
-                                        lightComponent,
-                                        shadowComponent);
+      } else {
+        // Regular 2D shadow map rendering
+        for (Entity entity : scene.renderableEntities()) {
+          auto* transform = scene.registry.transforms().get(entity);
+          auto* mesh = scene.registry.meshes().get(entity);
+          auto* render = scene.registry.renders().get(entity);
+          if (!transform || !mesh || !render) {
+            continue;
+          }
+    shadowRasterizer.drawRenderable(*transform,
+                                          *mesh,
+                                          lightComponent,
+                                          shadowComponent);
+        }
       }
     }
   }
@@ -211,4 +242,5 @@ public:
   Rasterizer<TexturedBlinnPhongEffect> texturedBlinnPhongRasterizer;
   Rasterizer<EnvironmentMapEffect> environmentMapRasterizer;
   ShadowRasterizer<ShadowEffect> shadowRasterizer;
+  CubemapShadowRasterizer<CubemapShadowEffect> cubemapShadowRasterizer;
 };

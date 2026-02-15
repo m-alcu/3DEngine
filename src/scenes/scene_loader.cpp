@@ -289,6 +289,8 @@ std::unique_ptr<Scene> SceneLoader::loadFromFile(const std::string& yamlPath,
     // Scene-level properties
     if (sceneNode["shadows_enabled"])
         scene->shadowsEnabled = sceneNode["shadows_enabled"].as<bool>();
+    if (sceneNode["use_cubemap_shadows"])
+        scene->useCubemapShadows = sceneNode["use_cubemap_shadows"].as<bool>();
     if (sceneNode["pcf_radius"])
         scene->pcfRadius = sceneNode["pcf_radius"].as<int>();
     if (sceneNode["depth_sort_enabled"])

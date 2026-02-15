@@ -2,6 +2,7 @@ scene:
   name: "Shadow Point Test"
 
   shadows_enabled: true
+  use_cubemap_shadows: true
   pcf_radius: 1
   depth_sort_enabled: true
   background: desert
@@ -22,12 +23,11 @@ scene:
       shading: flat
       rotation_enabled: false
 
-    - type: plane
-      name: "Front Plane"
-      size: 50.0
-      position: [0.0, 0.0, -300.0]
+    - type: cube
+      name: "Shadow Caster Cube"
+      position: [0.0, 50.0, -300.0]
       angles: [0.0, 0.0, 0.0]
-      zoom: 1.0
+      zoom: 0.5
       shading: flat
       rotation_enabled: true
 

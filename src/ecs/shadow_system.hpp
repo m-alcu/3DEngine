@@ -3,14 +3,28 @@
 #include "component_store.hpp"
 #include "../constants.hpp"
 #include "../slib.hpp"
+#include <cstdio>
 
 namespace ShadowSystem {
 
     inline void ensureShadowMaps(ComponentStore<ShadowComponent>& shadows,
-                                 int pcfRadius) {
+                                 ComponentStore<LightComponent>& lights,
+                                 int pcfRadius,
+                                 bool useCubemapForPointLights = false) {
         for (auto& [entity, shadow] : shadows) {
-            if (!shadow.shadowMap) {
-                shadow.shadowMap = std::make_shared<ShadowMap>(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
+            // Check if this is a point light
+            bool isPointLight = false;
+            auto* lightComp = lights.get(entity);
+            if (lightComp && lightComp->light.type == LightType::Point) {
+                isPointLight = true;
+            }
+            
+            // Determine if cubemap should be enabled for this light
+            bool enableCubemap = isPointLight && useCubemapForPointLights;
+            
+            // Create or recreate shadow map if needed
+            if (!shadow.shadowMap || shadow.shadowMap->useCubemap != enableCubemap) {
+                shadow.shadowMap = std::make_shared<ShadowMap>(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE, enableCubemap);
             }
             shadow.shadowMap->pcfRadius = pcfRadius;
         }

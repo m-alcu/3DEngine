@@ -1,6 +1,8 @@
 #pragma once
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
+#include <memory>
 #include "z_buffer.hpp"
 #include "constants.hpp"
 #include "light.hpp"
@@ -9,6 +11,7 @@
 #include "slib.hpp"
 #include "smath.hpp"
 #include "color.hpp"
+#include "cube_shadow_map.hpp"
 
 class ShadowMap {
 public:
@@ -28,15 +31,26 @@ public:
   // PCF kernel size (0 = no filtering, 1 = 3x3, 2 = 5x5, etc.)
   int pcfRadius = SHADOW_PCF_RADIUS;
 
+  // Cubemap shadow support for point lights
+  bool useCubemap = false;
+  std::unique_ptr<CubeShadowMap> cubeShadowMap;
 
-  ShadowMap(int w = 512, int h = 512)
+  ShadowMap(int w = 512, int h = 512, bool enableCubemap = false)
       : width(w), height(h), zbuffer(w, h), lightViewMatrix(smath::identity()),
         lightProjMatrix(smath::identity()),
-        lightSpaceMatrix(smath::identity()) {
+        lightSpaceMatrix(smath::identity()), useCubemap(enableCubemap) {
     zbuffer.Clear();
+    if (useCubemap) {
+      cubeShadowMap = std::make_unique<CubeShadowMap>(std::min(w, h));
+    }
   }
 
-  void clear() { zbuffer.Clear(); }
+  void clear() { 
+    zbuffer.Clear();
+    if (cubeShadowMap) {
+      cubeShadowMap->clear();
+    }
+  }
 
   // Draw shadow map as overlay on screen (without border)
   void drawOverlay(uint32_t* pixels, int screenW, int screenH,
@@ -77,6 +91,9 @@ public:
     width = w;
     height = h;
     zbuffer.Resize(w, h);
+    if (cubeShadowMap) {
+      cubeShadowMap->resize(std::min(w, h));
+    }
     clear();
   }
 
@@ -102,13 +119,22 @@ public:
     if (light.type == LightType::Directional) {
       buildDirectionalLightMatrices(light, sceneCenter, sceneRadius);
     } else if (light.type == LightType::Point) {
-      buildPointLightMatrices(light, sceneCenter, sceneRadius);
+      if (useCubemap && cubeShadowMap) {
+        // Calculate appropriate zNear/zFar for cubemap
+        float zNear = std::max(0.1f, sceneRadius * 0.01f);
+        float zFar = std::max(light.radius * 2.0f, sceneRadius * 3.0f);
+        cubeShadowMap->buildCubemapMatrices(light.position, zNear, zFar);
+      } else {
+        buildPointLightMatrices(light, sceneCenter, sceneRadius);
+      }
     } else if (light.type == LightType::Spot) {
       buildSpotLightMatrices(light, sceneRadius);
     }
 
-    // Pre-compute combined matrix
-    lightSpaceMatrix = lightViewMatrix * lightProjMatrix;
+    // Pre-compute combined matrix (for non-cubemap)
+    if (!useCubemap || light.type != LightType::Point) {
+      lightSpaceMatrix = lightViewMatrix * lightProjMatrix;
+    }
 
     // Auto-calculate bias based on projection parameters
     calculateMinMaxBias(minBiasDefault, maxBiasDefault, shadowBiasMin, shadowBiasMax);
@@ -116,8 +142,16 @@ public:
 
   // Sample shadow at a world position and cosTheta in case is available
   // Returns: 1.0 = fully lit, 0.0 = fully shadowed
-  float sampleShadow(const slib::vec3 &worldPos, float cosTheta) const {
+  // lightPos: position of the light (needed for cubemap sampling)
+  float sampleShadow(const slib::vec3 &worldPos, float cosTheta, 
+                    const slib::vec3 &lightPos = {0, 0, 0}) const {
     float dynamicBias = calculateBias(cosTheta);
+    
+    // Use cubemap sampling for point lights when enabled
+    if (useCubemap && cubeShadowMap) {
+      return cubeShadowMap->sampleShadow(worldPos, lightPos, cosTheta, pcfRadius);
+    }
+    
     // Transform world position to light clip space
     slib::vec4 lightSpacePos = slib::vec4(worldPos, 1.0f) * lightSpaceMatrix;
 
