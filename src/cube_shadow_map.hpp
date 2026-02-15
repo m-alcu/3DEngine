@@ -162,8 +162,8 @@ public:
         int sx = static_cast<int>((ndcX * 0.5f + 0.5f) * faceSize + 0.5f);
         int sy = static_cast<int>((-ndcY * 0.5f + 0.5f) * faceSize + 0.5f);
 
-        // Use w_clip as current depth: w_clip = -z_view (view-axis distance)
-        // This matches what ndcToLinearDepth() produces during the shadow render pass
+        // Convert current depth to linear space: w_clip = -z_view
+        // ndcToLinearDepth produces the same value (linearDepth/zFar = w_clip/zFar)
         float currentDepth = lightSpacePos.w / zFar;
 
         // Beyond light range or behind light = lit
@@ -172,9 +172,6 @@ public:
         }
 
         // Slope-scaled bias in normalized linear depth space
-        // At distance d, each shadow map texel covers ~2*d/faceSize world units
-        // (90° FOV → tan(45°)=1, so half-width at distance d = d, full width = 2d)
-        // Normalized by zFar: texelDepth ≈ 2 * currentDepth / faceSize
         float texelDepth = 2.0f * currentDepth / faceSize;
         cosTheta = std::clamp(cosTheta, 0.0f, 1.0f);
         float slopeFactor = (cosTheta > 0.01f)
@@ -190,18 +187,19 @@ public:
     }
 
 private:
-    float sampleShadowSingle(CubeShadowFace face, int sx, int sy, 
+    float sampleShadowSingle(CubeShadowFace face, int sx, int sy,
                             float currentDepth, float bias) const {
         // Out of bounds = lit
         if (sx < 0 || sx >= faceSize || sy < 0 || sy >= faceSize) {
             return 1.0f;
         }
 
-        float storedDepth = getDepth(face, sy * faceSize + sx);
+        // Stored as NDC p_z, convert to linear at read time
+        float storedDepth = ndcToLinearDepth(getDepth(face, sy * faceSize + sx));
         return (currentDepth - bias < storedDepth) ? 1.0f : 0.0f;
     }
 
-    float sampleShadowPCF(CubeShadowFace face, int sx, int sy, 
+    float sampleShadowPCF(CubeShadowFace face, int sx, int sy,
                          float currentDepth, float bias, int pcfRadius) const {
         int shadow = 0;
         int samples = 0;
@@ -214,7 +212,8 @@ private:
                 int dsx = sx + dx;
                 if (dsx < 0 || dsx >= faceSize) continue;
 
-                float storedDepth = getDepth(face, dsy * faceSize + dsx);
+                // Stored as NDC p_z, convert to linear at read time
+                float storedDepth = ndcToLinearDepth(getDepth(face, dsy * faceSize + dsx));
                 shadow += (currentDepth - bias < storedDepth) ? 1 : 0;
                 samples++;
             }

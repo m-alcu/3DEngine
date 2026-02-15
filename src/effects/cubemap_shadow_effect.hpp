@@ -109,9 +109,7 @@ public:
         PixelShader(CubeShadowFace f = CubeShadowFace::POSITIVE_X) : face(f) {}
 
         void operator()(int x, float p_z, CubeShadowMap& cubeShadowMap) const {
-            // Convert NDC z to normalized linear depth for uniform precision
-            float linearDepth = cubeShadowMap.ndcToLinearDepth(p_z);
-            cubeShadowMap.testAndSetDepth(face, x, linearDepth);
+            cubeShadowMap.testAndSetDepth(face, x, p_z);
         }
     };
 
