@@ -139,6 +139,10 @@ inline void drawSceneControls(Scene& scene) {
     if (ImGui::Combo("Font", &currentFont, fontLabels, IM_ARRAYSIZE(fontLabels))) {
       scene.font = static_cast<Font8x8::FontType>(currentFont);
     }
+
+    ImGui::Separator();
+    ImGui::Text("Scene Center: (%.2f, %.2f, %.2f)", scene.sceneCenter.x, scene.sceneCenter.y, scene.sceneCenter.z);
+    ImGui::Text("Scene Radius: %.2f", scene.sceneRadius);
 }
 
 inline void drawCameraInfo(const Scene& scene) {
