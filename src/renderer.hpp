@@ -147,7 +147,7 @@ public:
           if (!transform || !mesh || !render) {
             continue;
           }
-    shadowRasterizer.drawRenderable(*transform,
+          shadowRasterizer.drawRenderable(*transform,
                                           *mesh,
                                           lightComponent,
                                           shadowComponent);
