@@ -169,7 +169,7 @@ public:
 
     if (shadowMapPtr->isCubemap()) {
       // Draw 6 cubemap faces in a row
-      int faceOverlaySize = 100;
+      int faceOverlaySize = SHADOW_MAP_OVERVIEW_SIZE / 2;
       static const char* faceLabels[] = {"+X", "-X", "+Y", "-Y", "+Z", "-Z"};
       int startY = scene.screen.height - faceOverlaySize - margin;
 
