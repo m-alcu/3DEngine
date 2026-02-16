@@ -23,10 +23,7 @@ public:
   slib::mat4 lightProjMatrix;
 
   // Shadow bias parameters
-  float minBias = MIN_BIAS_DEFAULT;
-  float maxBias = MAX_BIAS_DEFAULT;
   float maxSlopeBias = CUBE_SHADOW_MAX_SLOPE_BIAS;
-
   // PCF kernel size (0 = no filtering, 1 = 3x3, 2 = 5x5, etc.)
   int pcfRadius = SHADOW_PCF_RADIUS;
 
