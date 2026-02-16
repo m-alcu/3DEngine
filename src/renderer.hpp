@@ -93,7 +93,11 @@ public:
     }
 
     if (scene.showShadowMapOverlay) {
-      drawShadowMapOverlay(scene);
+      if (scene.useCubemapShadows) {
+        drawCubemapShadowMapOverlay(scene);
+      } else {
+        drawShadowMapOverlay(scene);
+      }
     }
   }
 
@@ -230,6 +234,82 @@ public:
     shadowMapPtr->drawOverlay(scene.pixels, scene.screen.width, scene.screen.height,
                               startX, startY, overlaySize);
 
+  }
+
+  // Draw the 6 cubemap shadow faces as small overlays in a row
+  void drawCubemapShadowMapOverlay(Scene &scene, int faceOverlaySize = 100,
+                                    int margin = 10) {
+    if (!scene.shadowsEnabled)
+      return;
+
+    // Find a cubemap shadow map to display
+    CubeShadowMap* cubeShadowPtr = nullptr;
+    if (scene.selectedEntityIndex >= 0 &&
+        scene.selectedEntityIndex < static_cast<int>(scene.entities.size())) {
+      Entity selectedEntity = scene.entities[scene.selectedEntityIndex];
+      auto* shadowComponent = scene.registry.shadows().get(selectedEntity);
+      if (shadowComponent && shadowComponent->shadowMap &&
+          shadowComponent->shadowMap->cubeShadowMap) {
+        cubeShadowPtr = shadowComponent->shadowMap->cubeShadowMap.get();
+      }
+    }
+
+    if (!cubeShadowPtr) {
+      for (const auto& [entity, shadowComponent] : scene.registry.shadows()) {
+        if (shadowComponent.shadowMap && shadowComponent.shadowMap->cubeShadowMap) {
+          cubeShadowPtr = shadowComponent.shadowMap->cubeShadowMap.get();
+          break;
+        }
+      }
+    }
+
+    if (!cubeShadowPtr)
+      return;
+
+    static const char* faceLabels[] = {"+X", "-X", "+Y", "-Y", "+Z", "-Z"};
+    int startY = scene.screen.height - faceOverlaySize - margin;
+
+    for (int faceIdx = 0; faceIdx < 6; ++faceIdx) {
+      auto& zb = cubeShadowPtr->faces[faceIdx];
+      if (!zb) continue;
+
+      int faceSize = cubeShadowPtr->faceSize;
+      int startX = margin + faceIdx * (faceOverlaySize + 2);
+
+      // Find min/max depth for normalization
+      float minDepth = 1.0f;
+      float maxDepth = -1.0f;
+      for (int i = 0; i < faceSize * faceSize; ++i) {
+        float d = zb->Get(i);
+        minDepth = std::min(minDepth, d);
+        maxDepth = std::max(maxDepth, d);
+      }
+      float depthRange = std::max(maxDepth - minDepth, 0.0001f);
+
+      blitScaled(scene.pixels, scene.screen.width, scene.screen.height,
+                 startX, startY, faceOverlaySize, faceOverlaySize,
+                 faceSize, faceSize,
+                 [&](int srcX, int srcY) -> uint32_t {
+                   float depth = zb->Get(srcY * faceSize + srcX);
+                   uint8_t gray = (depth < 1.0f)
+                       ? static_cast<uint8_t>(std::clamp((maxDepth - depth) / depthRange * 255.0f, 0.0f, 255.0f))
+                       : 0;
+                   return Color(gray, gray, gray).toBgra();
+                 });
+
+      // Border
+      int endX = startX + faceOverlaySize - 1;
+      int endY = startY + faceOverlaySize - 1;
+      drawBresenhamLine(startX, startY, endX, startY, scene.pixels, WHITE_COLOR, scene.screen.width, scene.screen.height);
+      drawBresenhamLine(startX, endY, endX, endY, scene.pixels, WHITE_COLOR, scene.screen.width, scene.screen.height);
+      drawBresenhamLine(startX, startY, startX, endY, scene.pixels, WHITE_COLOR, scene.screen.width, scene.screen.height);
+      drawBresenhamLine(endX, startY, endX, endY, scene.pixels, WHITE_COLOR, scene.screen.width, scene.screen.height);
+
+      // Face label
+      Font8x8::drawText(scene.pixels, scene.screen.width, scene.screen.height,
+                        scene.screen.width, startX + 2, startY + 2,
+                        faceLabels[faceIdx], WHITE_COLOR, BLACK_COLOR, true, scene.font);
+    }
   }
 
   Rasterizer<FlatEffect> flatRasterizer;

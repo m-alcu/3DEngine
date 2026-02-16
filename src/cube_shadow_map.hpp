@@ -29,6 +29,7 @@ public:
     std::array<slib::mat4, 6> lightSpaceMatrices; // Combined view*proj for each face
     float zNear = 0.1f;
     float zFar = 100.0f;
+    float maxSlopeBias = 10.0f;
 
     CubeShadowMap(int size = 512)
         : faceSize(size), 
@@ -109,10 +110,6 @@ public:
 
         // Define 6 views (right, left, up, down, front, back)
         // Each face looks outward from the light position
-        struct FaceView {
-            slib::vec3 target;
-            slib::vec3 up;
-        };
 
         // +X (Right)
         lightViewMatrices[0] = smath::lookAt(lightPos, lightPos + slib::vec3{1, 0, 0}, {0, -1, 0});
@@ -175,8 +172,8 @@ public:
         float texelDepth = 2.0f * currentDepth / faceSize;
         cosTheta = std::clamp(cosTheta, 0.0f, 1.0f);
         float slopeFactor = (cosTheta > 0.01f)
-            ? std::min(1.0f / cosTheta, 10.0f)
-            : 10.0f;
+            ? std::min(1.0f / cosTheta, maxSlopeBias)
+            : maxSlopeBias;
         float bias = texelDepth * slopeFactor;
 
         if (pcfRadius < 1) {

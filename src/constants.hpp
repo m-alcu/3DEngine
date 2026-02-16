@@ -13,6 +13,7 @@ constexpr float EFFECTIVE_LIGHT_RADIUS_FACTOR = 0.60f;
 
 constexpr float MIN_BIAS_DEFAULT = 0.025f;
 constexpr float MAX_BIAS_DEFAULT = 0.05f;
+constexpr float CUBE_SHADOW_MAX_SLOPE_BIAS = 10.0f;
 
 constexpr float CAMERA_DEFAULT_ZNEAR = 10.0f;
 constexpr float CAMERA_DEFAULT_ZFAR = 10000.0f;

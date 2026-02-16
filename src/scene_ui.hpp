@@ -141,6 +141,7 @@ inline void drawSceneControls(Scene& scene) {
     ImGui::SliderFloat("Max Bias", &scene.maxBiasDefault, 0.001f, 1.0f, "%.4f");
     ImGui::SliderFloat("Min Shadow Bias", &scene.shadowBiasMin, 0.001f, 1.0f, "%.4f");
     ImGui::SliderFloat("Max Shadow Bias", &scene.shadowBiasMax, 0.01f, 1.0f, "%.4f");
+    ImGui::SliderFloat("Cube Max Slope Bias", &scene.cubeShadowMaxSlopeBias, 1.0f, 50.0f, "%.1f");
 
     ImGui::Separator();
     static const char* fontLabels[] = {"Default", "IBM CGA", "ZX Spectrum", "Amstrad CPC", "Commodore 64", "Atari 8-bit", "Retro"};

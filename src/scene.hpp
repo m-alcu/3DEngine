@@ -72,7 +72,7 @@ public:
     RotationSystem::updateAll(registry);
     TransformSystem::updateAllTransforms(registry.transforms());
     LightSystem::syncPositions(registry);
-    ShadowSystem::ensureShadowMaps(registry.shadows(), registry.lights(), pcfRadius, useCubemapShadows);
+    ShadowSystem::ensureShadowMaps(registry.shadows(), registry.lights(), pcfRadius, useCubemapShadows, cubeShadowMaxSlopeBias);
     MeshSystem::updateAllBoundsIfDirty(registry.meshes());
 
     updateSceneBounds();
@@ -171,6 +171,7 @@ public:
   float maxBiasDefault = MAX_BIAS_DEFAULT;
   float shadowBiasMin = SHADOW_BIAS_MIN;
   float shadowBiasMax = SHADOW_BIAS_MAX;
+  float cubeShadowMaxSlopeBias = CUBE_SHADOW_MAX_SLOPE_BIAS;
 
   // --- Background ---
 

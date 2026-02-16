@@ -32,6 +32,7 @@ public:
   int pcfRadius = SHADOW_PCF_RADIUS;
 
   // Cubemap shadow support for point lights
+  float cubeShadowMaxSlopeBias = 10.0f;
   bool useCubemap = false;
   std::unique_ptr<CubeShadowMap> cubeShadowMap;
 
