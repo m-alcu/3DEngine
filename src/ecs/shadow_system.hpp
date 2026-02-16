@@ -46,15 +46,9 @@ namespace ShadowSystem {
     inline void buildLightMatrices(ShadowComponent& shadow,
                                    const Light& light,
                                    const slib::vec3& sceneCenter,
-                                   float sceneRadius,
-                                   float minBiasDefault = MIN_BIAS_DEFAULT,
-                                   float maxBiasDefault = MAX_BIAS_DEFAULT,
-                                   float shadowBiasMin = SHADOW_BIAS_MIN,
-                                   float shadowBiasMax = SHADOW_BIAS_MAX) {
+                                   float sceneRadius) {
         if (shadow.shadowMap) {
-            shadow.shadowMap->buildLightMatrices(light, sceneCenter, sceneRadius,
-                                                minBiasDefault, maxBiasDefault,
-                                                shadowBiasMin, shadowBiasMax);
+            shadow.shadowMap->buildLightMatrices(light, sceneCenter, sceneRadius);
         }
     }
 

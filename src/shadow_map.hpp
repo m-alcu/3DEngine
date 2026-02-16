@@ -113,10 +113,7 @@ public:
   // sceneCenter: approximate center of the scene being shadowed
   // sceneRadius: approximate radius encompassing shadow casters/receivers
   void buildLightMatrices(const Light &light, const slib::vec3 &sceneCenter,
-                          float sceneRadius, float minBiasDefault = MIN_BIAS_DEFAULT,
-                          float maxBiasDefault = MAX_BIAS_DEFAULT,
-                          float shadowBiasMin = SHADOW_BIAS_MIN,
-                          float shadowBiasMax = SHADOW_BIAS_MAX) {
+                          float sceneRadius) {
     if (light.type == LightType::Directional) {
       buildDirectionalLightMatrices(light, sceneCenter, sceneRadius);
     } else if (light.type == LightType::Point) {

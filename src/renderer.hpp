@@ -112,11 +112,7 @@ public:
       ShadowSystem::buildLightMatrices(*shadowComponent,
                                        lightComponent->light,
                                        scene.sceneCenter,
-                                       scene.sceneRadius,
-                                       scene.minBiasDefault,
-                                       scene.maxBiasDefault,
-                                       scene.shadowBiasMin,
-                                       scene.shadowBiasMax);
+                                       scene.sceneRadius);
 
       // Check if this is a point light with cubemap shadows
       bool useCubemap = shadowComponent->shadowMap->useCubemap && 
