@@ -25,13 +25,16 @@ class ShadowRasterizer {
         void drawRenderable(TransformComponent& transform,
                             MeshComponent& mesh,
                             LightComponent* lightSrc,
-                            ShadowComponent* shadowSrc) {
+                            ShadowComponent* shadowSrc,
+                            int faceIdx = 0) {
             transformComponent = &transform;
             meshComponent = &mesh;
             lightSource = lightSrc;
             shadowComponent = shadowSrc;
-            screenWidth = shadowComponent->shadowMap->width;
-            screenHeight = shadowComponent->shadowMap->height;
+            screenWidth = shadowComponent->shadowMap->getFaceWidth();
+            screenHeight = shadowComponent->shadowMap->getFaceHeight();
+
+            effect.setFace(faceIdx);
 
             processVertices();
             drawShadowFaces();
@@ -76,7 +79,7 @@ class ShadowRasterizer {
                 drawPolygon(clippedPoly);
             }
         }
-        
+
         void drawPolygon(Polygon<vertex>& polygon) {
             effect.gs(polygon, screenWidth, screenHeight);
             rasterizeFilledPolygon(polygon);

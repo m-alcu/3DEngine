@@ -11,27 +11,21 @@ namespace ShadowSystem {
                                  ComponentStore<LightComponent>& lights,
                                  int pcfRadius,
                                  bool useCubemapForPointLights = false,
-                                 float cubeShadowMaxSlopeBias = 10.0f) {
+                                 float maxSlopeBias = CUBE_SHADOW_MAX_SLOPE_BIAS) {
         for (auto& [entity, shadow] : shadows) {
-            // Check if this is a point light
             bool isPointLight = false;
             auto* lightComp = lights.get(entity);
             if (lightComp && lightComp->light.type == LightType::Point) {
                 isPointLight = true;
             }
-            
-            // Determine if cubemap should be enabled for this light
-            bool enableCubemap = isPointLight && useCubemapForPointLights;
-            
-            // Create or recreate shadow map if needed
-            if (!shadow.shadowMap || shadow.shadowMap->useCubemap != enableCubemap) {
-                shadow.shadowMap = std::make_shared<ShadowMap>(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE, enableCubemap);
+
+            int numFaces = (isPointLight && useCubemapForPointLights) ? 6 : 1;
+
+            if (!shadow.shadowMap || shadow.shadowMap->numFaces != numFaces) {
+                shadow.shadowMap = std::make_shared<ShadowMap>(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE, numFaces);
             }
             shadow.shadowMap->pcfRadius = pcfRadius;
-            shadow.shadowMap->cubeShadowMaxSlopeBias = cubeShadowMaxSlopeBias;
-            if (shadow.shadowMap->cubeShadowMap) {
-                shadow.shadowMap->cubeShadowMap->maxSlopeBias = cubeShadowMaxSlopeBias;
-            }
+            shadow.shadowMap->maxSlopeBias = maxSlopeBias;
         }
     }
 

@@ -11,9 +11,9 @@
 class Scene;
 
 // Minimal effect for shadow pass - only tracks position/depth, no shading
+// Supports both single-face (directional/spot) and multi-face (cubemap) shadows
 class ShadowEffect {
 public:
-    // Tag to identify this as a shadow effect
     static constexpr bool is_shadow_effect = true;
 
     class Vertex {
@@ -45,14 +45,12 @@ public:
             return *this;
         }
 
-        // Vertical raster step (moving down scanlines)
         Vertex& vraster(const Vertex& v) {
             p_x += v.p_x;
             p_z += v.p_z;
             return *this;
         }
 
-        // Horizontal raster step (moving across scanline)
         Vertex& hraster(const Vertex& v) {
             p_z += v.p_z;
             return *this;
@@ -69,17 +67,17 @@ public:
 
     class VertexShader {
     public:
+        int faceIdx = 0;
+
         Vertex operator()(const VertexData& vData,
                           const TransformComponent& transform,
                           const ShadowComponent* shadowSource) const {
             Vertex vertex;
-            // Transform to world space
             vertex.world = transform.modelMatrix * slib::vec4(vData.vertex, 1);
 
-            // Transform to light clip space
             const auto& shadowMap = shadowSource->shadowMap;
-            vertex.ndc = slib::vec4(vertex.world, 1) * shadowMap->lightSpaceMatrix;
-            Projection<Vertex>::view(shadowMap->width, shadowMap->height, vertex, true);
+            vertex.ndc = slib::vec4(vertex.world, 1) * shadowMap->getLightSpaceMatrix(faceIdx);
+            Projection<Vertex>::view(shadowMap->getFaceWidth(), shadowMap->getFaceHeight(), vertex, true);
 
             return vertex;
         }
@@ -88,7 +86,6 @@ public:
     class GeometryShader {
     public:
         void operator()(Polygon<Vertex>& poly, int32_t width, int32_t height) const {
-            // Project clipped vertices to shadow map space
             for (auto& point : poly.points) {
                 Projection<Vertex>::view(width, height, point, false);
             }
@@ -97,10 +94,17 @@ public:
 
     class PixelShader {
     public:
+        int faceIdx = 0;
+
         void operator()(int x, float p_z, ShadowMap& shadowMap) const {
-            shadowMap.testAndSetDepth(x, p_z);
+            shadowMap.testAndSetDepth(faceIdx, x, p_z);
         }
     };
+
+    void setFace(int face) {
+        vs.faceIdx = face;
+        ps.faceIdx = face;
+    }
 
 public:
     VertexShader vs;

@@ -25,11 +25,11 @@ namespace smath
 
     slib::vec3 normalize(slib::vec3 vec)
     {
-        const float len2 = vec.x * vec.x + vec.y * vec.y + vec.z * vec.z;
-        if (len2 < 1e-6f) {
+        const float len = distance(vec);
+        if (len < 1e-6f) {
             return {0.0f, 0.0f, 0.0f};  // Return zero vector for zero-length input
         }
-        return vec / std::sqrt(len2);
+        return vec / len;
     }
 
     float dot(const slib::vec3& v1, const slib::vec3& v2)
