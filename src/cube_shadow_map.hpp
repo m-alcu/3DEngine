@@ -154,22 +154,24 @@ public:
         float oneOverW = 1.0f / lightSpacePos.w;
         float ndcX = lightSpacePos.x * oneOverW;
         float ndcY = lightSpacePos.y * oneOverW;
+        float ndcZ = lightSpacePos.z * oneOverW;
 
         // Map from NDC [-1,1] to texture coords [0, faceSize]
         int sx = static_cast<int>((ndcX * 0.5f + 0.5f) * faceSize + 0.5f);
         int sy = static_cast<int>((-ndcY * 0.5f + 0.5f) * faceSize + 0.5f);
 
-        // Convert current depth to linear space: w_clip = -z_view
-        // ndcToLinearDepth produces the same value (linearDepth/zFar = w_clip/zFar)
-        float currentDepth = lightSpacePos.w / zFar;
+        // Compare directly in NDC space (same space as stored p_z)
+        float currentDepth = ndcZ;
 
         // Beyond light range or behind light = lit
+        // NDC z ranges from -1 (near) to +1 (far)
         if (currentDepth > 1.0f || lightSpacePos.w < 0.0f) {
             return 1.0f;
         }
 
-        // Slope-scaled bias in normalized linear depth space
-        float texelDepth = 2.0f * currentDepth / faceSize;
+        // Slope-scaled bias in NDC space
+        // NDC depth range is 2.0 (-1 to +1), texel size in NDC = 2.0 / faceSize
+        float texelDepth = 2.0f / faceSize;
         cosTheta = std::clamp(cosTheta, 0.0f, 1.0f);
         float slopeFactor = (cosTheta > 0.01f)
             ? std::min(1.0f / cosTheta, maxSlopeBias)
@@ -191,8 +193,7 @@ private:
             return 1.0f;
         }
 
-        // Stored as NDC p_z, convert to linear at read time
-        float storedDepth = ndcToLinearDepth(getDepth(face, sy * faceSize + sx));
+        float storedDepth = getDepth(face, sy * faceSize + sx);
         return (currentDepth - bias < storedDepth) ? 1.0f : 0.0f;
     }
 
@@ -209,8 +210,7 @@ private:
                 int dsx = sx + dx;
                 if (dsx < 0 || dsx >= faceSize) continue;
 
-                // Stored as NDC p_z, convert to linear at read time
-                float storedDepth = ndcToLinearDepth(getDepth(face, dsy * faceSize + dsx));
+                float storedDepth = getDepth(face, dsy * faceSize + dsx);
                 shadow += (currentDepth - bias < storedDepth) ? 1 : 0;
                 samples++;
             }
