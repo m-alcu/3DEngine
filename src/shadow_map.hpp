@@ -136,9 +136,6 @@ public:
     if (!useCubemap || light.type != LightType::Point) {
       lightSpaceMatrix = lightViewMatrix * lightProjMatrix;
     }
-
-    // Auto-calculate bias based on projection parameters
-    calculateMinMaxBias(minBiasDefault, maxBiasDefault, shadowBiasMin, shadowBiasMax);
   }
 
   // Sample shadow at a world position and cosTheta in case is available
@@ -146,7 +143,6 @@ public:
   // lightPos: position of the light (needed for cubemap sampling)
   float sampleShadow(const slib::vec3 &worldPos, float cosTheta, 
                     const slib::vec3 &lightPos = {0, 0, 0}) const {
-    float dynamicBias = calculateBias(cosTheta);
     
     // Use cubemap sampling for point lights when enabled
     if (useCubemap && cubeShadowMap) {
@@ -176,10 +172,19 @@ public:
       return 1.0f;
     }
 
+    // Slope-scaled bias in NDC space
+    // NDC depth range is 2.0 (-1 to +1), texel size in NDC = 2.0 / faceSize
+    float texelDepth = 2.0f / width;
+    cosTheta = std::clamp(cosTheta, 0.0f, 1.0f);
+    float slopeFactor = (cosTheta > 0.01f)
+        ? std::min(1.0f / cosTheta, 10.0f)
+        : 10.0f;
+    float bias = texelDepth * slopeFactor;
+
     if (pcfRadius < 1) {
-      return sampleShadowSingle(sx, sy, currentDepth, dynamicBias);
+      return sampleShadowSingle(sx, sy, currentDepth, bias);
     } else {
-      return sampleShadowPCF(sx, sy, currentDepth, dynamicBias);
+      return sampleShadowPCF(sx, sy, currentDepth, bias);
     }
   }
 
@@ -227,37 +232,6 @@ private:
     // With worse precision, we may need to increase these limits
     minBias = std::clamp(minBias, shadowBiasMin, minBiasDefault * 1.2f);
     maxBias = std::clamp(maxBias, minBias * 2.0f, shadowBiasMax * 1.5f);
-  }
-
-  // Calculate dynamic slope-scaled bias based on surface angle to light
-  // cosTheta: dot(surfaceNormal, lightDir) where both are normalized
-  // 
-  // Slope-scale bias compensates for depth error caused by polygon slope:
-  // - Perpendicular surfaces (cosTheta=1): minimal bias needed
-  // - Grazing angle surfaces (cosTheta→0): maximum bias needed
-  float calculateBias(float cosTheta) const {
-    // Clamp cosTheta to avoid numerical issues
-    cosTheta = std::clamp(cosTheta, 0.0f, 1.0f);
-    
-    // For perpendicular surfaces, use minBias
-    if (cosTheta > 0.999f) {
-      return minBias;
-    }
-    
-    // Calculate slope factor using tan(acos(cosTheta)) = sqrt(1-cosTheta²)/cosTheta
-    // This represents how much the surface is "tilted" relative to the light
-    float sinTheta = std::sqrt(std::max(0.0f, 1.0f - cosTheta * cosTheta));
-    float tanTheta = (cosTheta > 0.001f) ? sinTheta / cosTheta : 10.0f;
-    
-    // Normalize tanTheta to [0,1] range for interpolation
-    // tanTheta ranges from 0 (perpendicular) to infinity (grazing)
-    // We map it to a 0-1 range with a reasonable maximum slope
-    float normalizedSlope = std::clamp(tanTheta / 5.0f, 0.0f, 1.0f);
-    
-    // Smoothly interpolate between minBias and maxBias based on slope
-    // Uses smoothstep-like curve for better transition
-    float t = normalizedSlope * normalizedSlope * (3.0f - 2.0f * normalizedSlope);
-    return minBias + t * (maxBias - minBias);
   }
 
   // Single sample shadow test
