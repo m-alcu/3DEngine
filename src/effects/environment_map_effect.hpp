@@ -16,9 +16,9 @@ public:
     Vertex() {}
 
     Vertex(int32_t px, int32_t py, float pz, slib::vec3 n, slib::vec4 vp,
-           slib::vec3 _world, bool _broken)
+           slib::vec3 _world, bool _dirty)
         : p_x(px), p_y(py), p_z(pz), normal(n), ndc(vp), world(_world),
-          broken(_broken) {}
+          dirty(_dirty) {}
 
     Vertex operator+(const Vertex &v) const {
       return Vertex(p_x + v.p_x, p_y, p_z + v.p_z, normal + v.normal,
@@ -66,7 +66,7 @@ public:
     slib::vec3 world;
     slib::vec3 normal;
     slib::vec4 ndc;
-    bool broken = false;
+    bool dirty = false;
   };
 
   class VertexShader {

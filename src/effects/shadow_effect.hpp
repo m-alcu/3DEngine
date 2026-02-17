@@ -20,8 +20,8 @@ public:
     public:
         Vertex() {}
 
-        Vertex(int32_t px, int32_t py, float pz, slib::vec4 vp, slib::vec3 _world, bool _broken)
-            : p_x(px), p_y(py), p_z(pz), ndc(vp), world(_world), broken(_broken) {}
+        Vertex(int32_t px, int32_t py, float pz, slib::vec4 vp, slib::vec3 _world, bool _dirty)
+            : p_x(px), p_y(py), p_z(pz), ndc(vp), world(_world), dirty(_dirty) {}
 
         Vertex operator+(const Vertex& v) const {
             return Vertex(p_x + v.p_x, p_y, p_z + v.p_z, ndc + v.ndc, world + v.world, true);
@@ -62,7 +62,7 @@ public:
         float p_z = 0.0f;
         slib::vec3 world{};
         slib::vec4 ndc{};
-        bool broken = false;
+        bool dirty = false;
     };
 
     class VertexShader {

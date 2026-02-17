@@ -15,16 +15,16 @@ public:
            return false;
        }
 
-       if (p.broken || init) {
+       if (p.dirty || init) {
+           constexpr float FP = 65536.0f;
            float oneOverW = 1.0f / p.ndc.w;
-           float sx = (p.ndc.x * oneOverW * 0.5f + 0.5f) * width + 0.5f;
-           float sy = (-p.ndc.y * oneOverW * 0.5f + 0.5f) * height + 0.5f;
+           float halfW_FP = width  * (0.5f * FP);
+           float halfH_FP = height * (0.5f * FP);
+           float cxFP = (width  * 0.5f + 0.5f) * FP;
+           float cyFP = (height * 0.5f + 0.5f) * FP;
 
-           // Keep subpixel precision: 16.16 fixed-point
-           constexpr float FP = 65536.0f; // 1<<16
-           p.p_x = static_cast<int32_t>(sx * FP);
-           p.p_y = static_cast<int32_t>(sy * FP);
-
+           p.p_x = static_cast<int32_t>(p.ndc.x * oneOverW * halfW_FP + cxFP);
+           p.p_y = static_cast<int32_t>(-p.ndc.y * oneOverW * halfH_FP + cyFP);
            p.p_z = p.ndc.z * oneOverW;
        }
        return true;
@@ -35,15 +35,16 @@ public:
            return false;
        }
 
-       if (p.broken || init) {
+       if (p.dirty || init) {
+            constexpr float FP = 65536.0f;
             float oneOverW = 1.0f / p.ndc.w;
-            float sx = (p.ndc.x * oneOverW * 0.5f + 0.5f) * width + 0.5f;
-            float sy = (-p.ndc.y * oneOverW * 0.5f + 0.5f) * height + 0.5f;
+            float halfW_FP = width  * (0.5f * FP);
+            float halfH_FP = height * (0.5f * FP);
+            float cxFP = (width  * 0.5f + 0.5f) * FP;
+            float cyFP = (height * 0.5f + 0.5f) * FP;
 
-            // Keep subpixel precision: 16.16 fixed-point
-            constexpr float FP = 65536.0f; // 1<<16
-            p.p_x = static_cast<int32_t>(sx * FP);
-            p.p_y = static_cast<int32_t>(sy * FP);
+            p.p_x = static_cast<int32_t>(p.ndc.x * oneOverW * halfW_FP + cxFP);
+            p.p_y = static_cast<int32_t>(-p.ndc.y * oneOverW * halfH_FP + cyFP);
 
             p.p_z = p.ndc.z * oneOverW;
 

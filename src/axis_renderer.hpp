@@ -62,7 +62,7 @@ private:
     int32_t p_x = 0;
     int32_t p_y = 0;
     float p_z = 0.0f;
-    bool broken = false;
+    bool dirty = false;
   };
 
   static void drawAxisLine(Scene &scene, const slib::vec3 &start,

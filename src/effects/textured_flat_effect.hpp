@@ -18,9 +18,9 @@ public:
     Vertex() {}
 
     Vertex(int32_t px, int32_t py, float pz, slib::vec4 vp, slib::zvec2 _tex,
-           slib::vec3 _world, bool _broken)
+           slib::vec3 _world, bool _dirty)
         : p_x(px), p_y(py), p_z(pz), ndc(vp), tex(_tex), world(_world),
-          broken(_broken) {}
+          dirty(_dirty) {}
 
     Vertex operator+(const Vertex &v) const {
       return Vertex(p_x + v.p_x, p_y, p_z + v.p_z, ndc + v.ndc, tex + v.tex,
@@ -43,7 +43,6 @@ public:
       ndc += v.ndc;
       tex += v.tex;
       world += v.world;
-      broken = true;
       return *this;
     }
 
@@ -70,7 +69,7 @@ public:
     slib::vec4 ndc;
     slib::zvec2 tex;      // Texture coordinates
     slib::zvec2 texOverW; // tex divided by w for interpolation
-    bool broken = false;
+    bool dirty = false;
   };
 
   class VertexShader {

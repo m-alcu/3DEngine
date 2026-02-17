@@ -16,7 +16,7 @@ struct PickVertex {
   int32_t p_x = 0;
   int32_t p_y = 0;
   float p_z = 0;
-  bool broken = false;
+  bool dirty = false;
 };
 
 } // namespace
