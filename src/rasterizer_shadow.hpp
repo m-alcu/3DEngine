@@ -76,6 +76,7 @@ class ShadowRasterizer {
         inline void clipAndDraw(Polygon<vertex>& poly) {
             auto clippedPoly = ClipCullPolygon(poly);
             if (!clippedPoly.points.empty()) {
+                shadowComponent->shadowMap->clearFaceIfDirty(effect.ps.faceIdx);
                 drawPolygon(clippedPoly);
             }
         }

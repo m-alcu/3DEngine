@@ -177,9 +177,10 @@ public:
         int startX = margin + faceIdx * (faceOverlaySize + 2);
         shadowMapPtr->drawFaceOverlay(faceIdx, scene.pixels, scene.screen.width,
                                        scene.screen.height, startX, startY, faceOverlaySize);
+        uint32_t labelColor = shadowMapPtr->faceDirty[faceIdx] ? RED_COLOR : WHITE_COLOR;
         Font8x8::drawText(scene.pixels, scene.screen.width, scene.screen.height,
                           scene.screen.width, startX + 2, startY + 2,
-                          faceLabels[faceIdx], WHITE_COLOR, BLACK_COLOR, true, scene.font);
+                          faceLabels[faceIdx], labelColor, BLACK_COLOR, true, scene.font);
       }
     } else {
       // Single face overlay

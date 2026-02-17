@@ -19,6 +19,7 @@ public:
   int faceWidth;
   int faceHeight;
   std::vector<std::unique_ptr<ZBuffer>> faces;
+  std::vector<bool> faceDirty;
   std::vector<slib::mat4> lightSpaceMatrices;
   slib::mat4 lightProjMatrix;
 
@@ -38,13 +39,19 @@ public:
     for (int i = 0; i < numFaces; ++i) {
       faces.push_back(std::make_unique<ZBuffer>(w, h));
     }
+    faceDirty.resize(numFaces, false);
     lightSpaceMatrices.resize(numFaces, smath::identity());
     clear();
   }
 
   void clear() {
-    for (auto& face : faces) {
-      face->Clear();
+    std::fill(faceDirty.begin(), faceDirty.end(), true);
+  }
+
+  void clearFaceIfDirty(int faceIdx) {
+    if (faceDirty[faceIdx]) {
+      faces[faceIdx]->Clear();
+      faceDirty[faceIdx] = false;
     }
   }
 
@@ -149,8 +156,10 @@ public:
                     const slib::vec3 &lightPos = {0, 0, 0}) const {
     if (numFaces == 6) {
       int faceIdx = selectFace(worldPos - lightPos);
+      if (faceDirty[faceIdx]) return 1.0f;
       return sampleFace(faceIdx, worldPos, cosTheta);
     }
+    if (faceDirty[0]) return 1.0f;
     return sampleFace(0, worldPos, cosTheta);
   }
 
