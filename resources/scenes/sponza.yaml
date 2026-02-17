@@ -7,8 +7,8 @@ scene:
   background: desert
 
   camera:
-    position: [0.0, 50.0, -500.0]
-    forward: [1.0, 0.0, 0.0]
+    position: [-229.03, 31.20, -528.14]
+    forward: [0.97, 0.03, 0.24]
 
   solids:
     - type: obj_loader
@@ -16,7 +16,7 @@ scene:
       name: "Sponza"
       position: [0.0, 0.0, -500.0]
       angles: [0.0, 0.0, 0.0]
-      shading: textured_phong
+      shading: textured_flat
 
     - type: icosahedron
       name: "Light Icosahedron"
@@ -29,7 +29,7 @@ scene:
         color: [1.0, 1.0, 1.0]
         intensity: 2.0
       orbit:
-        center: [0.0, 200.0, -500.0]
+        center: [0.0, 50.0, -500.0]
         radius: 40.0
         plane_normal: [0.0, 1.0, 1.0]
         omega: 1.0471975
