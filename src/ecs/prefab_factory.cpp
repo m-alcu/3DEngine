@@ -13,7 +13,7 @@
 #include "material_system.hpp"
 #include "mesh_system.hpp"
 #include "transform_system.hpp"
-#include <rapidobj/rapidobj.hpp>
+#include "../vendor/tinyobjloader/tiny_obj_loader.h"
 
 namespace {
 
@@ -600,23 +600,25 @@ namespace PrefabFactory {
         std::filesystem::path filePath(filename);
         std::filesystem::path basePath = filePath.parent_path();
 
-        rapidobj::Result result = rapidobj::ParseFile(filename);
-        if (result.error) {
-            std::cerr << "Failed to parse OBJ file: " << result.error.code.message() << "\n";
+        tinyobj::ObjReaderConfig config;
+        config.triangulate = true;
+        config.mtl_search_path = basePath.string();
+
+        tinyobj::ObjReader reader;
+        if (!reader.ParseFromFile(filename, config)) {
+            std::cerr << "Failed to parse OBJ file: " << reader.Error() << "\n";
             return false;
         }
-
-        rapidobj::Triangulate(result);
-        if (result.error) {
-            std::cerr << "Failed to triangulate: " << result.error.code.message() << "\n";
-            return false;
+        if (!reader.Warning().empty()) {
+            std::cerr << "OBJ warning: " << reader.Warning() << "\n";
         }
 
-        const auto& attrib = result.attributes;
-        const auto& shapes = result.shapes;
-        const auto& mats = result.materials;
+        const auto& attrib = reader.GetAttrib();
+        const auto& shapes = reader.GetShapes();
+        const auto& mats = reader.GetMaterials();
 
         bool hasLoadedNormals = !attrib.normals.empty();
+        bool hasTexCoords = !attrib.texcoords.empty();
 
         MaterialProperties properties = MaterialSystem::getMaterialProperties(MaterialType::Metal);
         std::string defaultTexturePath = "checker-map_tho.png";
@@ -690,7 +692,7 @@ namespace PrefabFactory {
 
                 for (int v = 0; v < faceVertCount; ++v) {
                     const auto& idx = m.indices[indexOffset + v];
-                    int posIdx = idx.position_index;
+                    int posIdx = idx.vertex_index;
                     int texIdx = idx.texcoord_index;
                     int normIdx = idx.normal_index;
 
@@ -704,9 +706,9 @@ namespace PrefabFactory {
                         VertexData vd;
 
                         if (posIdx >= 0) {
-                            vd.vertex.x = attrib.positions[3 * posIdx + 0];
-                            vd.vertex.y = attrib.positions[3 * posIdx + 1];
-                            vd.vertex.z = attrib.positions[3 * posIdx + 2];
+                            vd.vertex.x = attrib.vertices[3 * posIdx + 0];
+                            vd.vertex.y = attrib.vertices[3 * posIdx + 1];
+                            vd.vertex.z = attrib.vertices[3 * posIdx + 2];
                         }
 
                         if (texIdx >= 0) {
@@ -737,7 +739,7 @@ namespace PrefabFactory {
             }
         }
 
-        if (attrib.texcoords.empty() && !finalVertices.empty()) {
+        if (!hasTexCoords && !finalVertices.empty()) {
             float x_min = finalVertices[0].vertex.x;
             float y_min = finalVertices[0].vertex.y;
             float x_max = finalVertices[0].vertex.x;
@@ -762,7 +764,7 @@ namespace PrefabFactory {
         }
 
         std::cout << "Loaded OBJ: " << filename << "\n";
-        std::cout << "  Positions: " << attrib.positions.size() / 3 << "\n";
+        std::cout << "  Positions: " << attrib.vertices.size() / 3 << "\n";
         std::cout << "  Texture coords: " << attrib.texcoords.size() / 2 << "\n";
         std::cout << "  Normals: " << attrib.normals.size() / 3
                   << (hasLoadedNormals ? " (using file normals)" : " (will calculate)") << "\n";

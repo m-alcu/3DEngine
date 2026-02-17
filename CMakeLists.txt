@@ -15,15 +15,6 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(SDL3)
 
-# rapidobj
-FetchContent_Declare(
-    rapidobj
-    GIT_REPOSITORY https://github.com/guybrush77/rapidobj.git
-    GIT_TAG v1.1
-    GIT_SHALLOW FALSE
-)
-FetchContent_MakeAvailable(rapidobj)
-
 # YAML parsing library
 FetchContent_Declare(
     yaml-cpp
@@ -35,7 +26,7 @@ set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
 set(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(yaml-cpp)
 
-set(SRC_DIRS src src/vendor/imgui src/vendor/stb src/objects src/effects src/backgrounds src/scenes src/ecs)
+set(SRC_DIRS src src/vendor/imgui src/vendor/nothings src/vendor/tinyobjloader src/objects src/effects src/backgrounds src/scenes src/ecs)
 
 set(SRC_FILES "")
 foreach(dir ${SRC_DIRS})
@@ -65,7 +56,7 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     $<TARGET_FILE_DIR:${PROJECT_NAME}>/resources
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3 rapidobj::rapidobj yaml-cpp::yaml-cpp)
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3 yaml-cpp::yaml-cpp)
 
 target_compile_options(${PROJECT_NAME} PRIVATE
     $<$<CONFIG:Release>:-O3>
@@ -117,9 +108,10 @@ if(BUILD_TESTS)
         src/smath.cpp
         src/ecs/prefab_factory.cpp
         src/vendor/nothings/stb_image.cpp
+        src/vendor/tinyobjloader/tiny_obj_loader.cpp
     )
     target_include_directories(test_ecs PRIVATE ${CMAKE_SOURCE_DIR}/src)
-    target_link_libraries(test_ecs PRIVATE GTest::gtest_main rapidobj::rapidobj)
+    target_link_libraries(test_ecs PRIVATE GTest::gtest_main)
     set_target_properties(test_ecs PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED on)
 
     include(GoogleTest)
