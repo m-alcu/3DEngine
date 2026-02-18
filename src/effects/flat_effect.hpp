@@ -6,7 +6,7 @@
 #include "../scene.hpp"
 #include "../ecs/mesh_component.hpp"
 #include "../ecs/transform_component.hpp"
-#include "vertex_types.hpp"
+#include "vertex_shaders.hpp"
 
 class ShadowMap;
 
@@ -14,19 +14,7 @@ class ShadowMap;
 class FlatEffect {
 public:
   using Vertex = vertex::Flat;
-
-  class VertexShader {
-  public:
-    Vertex operator()(const VertexData &vData,
-                      const TransformComponent &transform,
-                      const Scene *scene) const {
-      Vertex vertex;
-      vertex.world = transform.modelMatrix * slib::vec4(vData.vertex, 1);
-      vertex.ndc = slib::vec4(vertex.world, 1) * scene->spaceMatrix;
-      Projection<Vertex>::view(scene->screen.width, scene->screen.height, vertex, true);
-      return vertex;
-    }
-  };
+  using VertexShader = vertex::FlatVertexShader;
 
   class GeometryShader {
   public:

@@ -7,7 +7,7 @@
 #include <cmath>
 #include "../ecs/mesh_component.hpp"
 #include "../ecs/transform_component.hpp"
-#include "vertex_types.hpp"
+#include "vertex_shaders.hpp"
 
 class ShadowMap;
 
@@ -15,20 +15,7 @@ class ShadowMap;
 class BlinnPhongEffect {
 public:
   using Vertex = vertex::Lit;
-
-  class VertexShader {
-  public:
-    Vertex operator()(const VertexData &vData,
-                      const TransformComponent &transform,
-                      const Scene *scene) const {
-      Vertex vertex;
-      vertex.world = transform.modelMatrix * slib::vec4(vData.vertex, 1);
-      vertex.ndc = slib::vec4(vertex.world, 1) * scene->spaceMatrix;
-      vertex.normal = transform.normalMatrix * slib::vec4(vData.normal, 0);
-      Projection<Vertex>::view(scene->screen.width, scene->screen.height, vertex, true);
-      return vertex;
-    }
-  };
+  using VertexShader = vertex::LitVertexShader;
 
   class GeometryShader {
   public:

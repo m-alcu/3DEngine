@@ -7,7 +7,7 @@
 #include <cmath>
 #include "../ecs/mesh_component.hpp"
 #include "../ecs/transform_component.hpp"
-#include "vertex_types.hpp"
+#include "vertex_shaders.hpp"
 
 class ShadowMap;
 
@@ -15,21 +15,7 @@ class ShadowMap;
 class TexturedPhongEffect {
 public:
   using Vertex = vertex::TexturedLit;
-
-  class VertexShader {
-  public:
-    Vertex operator()(const VertexData &vData,
-                      const TransformComponent &transform,
-                      const Scene *scene) const {
-      Vertex vertex;
-      vertex.world = transform.modelMatrix * slib::vec4(vData.vertex, 1);
-      vertex.ndc = slib::vec4(vertex.world, 1) * scene->spaceMatrix;
-      vertex.tex = slib::zvec2(vData.texCoord.x, vData.texCoord.y, 1);
-      vertex.normal = transform.normalMatrix * slib::vec4(vData.normal, 0);
-      Projection<Vertex>::texturedView(scene->screen.width, scene->screen.height, vertex, true);
-      return vertex;
-    }
-  };
+  using VertexShader = vertex::TexturedLitVertexShader;
 
   class GeometryShader {
   public:
