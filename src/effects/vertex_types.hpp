@@ -228,4 +228,51 @@ public:
     bool dirty = false;
 };
 
+class Shadow {
+public:
+    Shadow() {}
+
+    Shadow(int32_t px, int32_t py, float pz, slib::vec4 vp, slib::vec3 _world, bool _dirty)
+        : p_x(px), p_y(py), p_z(pz), ndc(vp), world(_world), dirty(_dirty) {}
+
+    Shadow operator+(const Shadow &v) const {
+        return Shadow(p_x + v.p_x, p_y, p_z + v.p_z, ndc + v.ndc, world + v.world, true);
+    }
+
+    Shadow operator-(const Shadow &v) const {
+        return Shadow(p_x - v.p_x, p_y, p_z - v.p_z, ndc - v.ndc, world - v.world, true);
+    }
+
+    Shadow operator*(const float &rhs) const {
+        return Shadow(static_cast<int32_t>(p_x * rhs), p_y, p_z * rhs, ndc * rhs, world * rhs, true);
+    }
+
+    Shadow &operator+=(const Shadow &v) {
+        p_x += v.p_x;
+        p_z += v.p_z;
+        ndc += v.ndc;
+        world += v.world;
+        return *this;
+    }
+
+    Shadow &vraster(const Shadow &v) {
+        p_x += v.p_x;
+        p_z += v.p_z;
+        return *this;
+    }
+
+    Shadow &hraster(const Shadow &v) {
+        p_z += v.p_z;
+        return *this;
+    }
+
+public:
+    int32_t p_x = 0;
+    int32_t p_y = 0;
+    float p_z = 0.0f;
+    slib::vec3 world{};
+    slib::vec4 ndc{};
+    bool dirty = false;
+};
+
 } // namespace vertex
