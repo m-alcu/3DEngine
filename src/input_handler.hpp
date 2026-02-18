@@ -32,7 +32,9 @@ public:
     float rollInput = scene->camera.sensitivity * (rleft - rright);
     float moveInput = (fwd - back) * scene->camera.speed;
 
-    if (!scene->orbiting) {
+    if (scene->orbiting) {
+      scene->camera.forward = smath::normalize(scene->camera.orbitTarget - scene->camera.pos);
+    } else {
       rotationMomentum.x =
           rotationMomentum.x * (1.0f - scene->camera.eagerness) +
           pitchInput * scene->camera.eagerness;
@@ -42,6 +44,9 @@ public:
       rotationMomentum.z =
           rotationMomentum.z * (1.0f - scene->camera.eagerness) +
           rollInput * scene->camera.eagerness;
+      movementMomentum =
+          movementMomentum * (1.0f - scene->camera.eagerness) +
+          scene->camera.forward * moveInput * scene->camera.eagerness;
 
       scene->camera.pitch -= rotationMomentum.x;
       scene->camera.yaw -= rotationMomentum.y;
@@ -55,11 +60,6 @@ public:
       slib::vec3 zaxis = {sinYaw * cosPitch, -sinPitch, -cosPitch * cosYaw};
       scene->camera.forward = zaxis;
 
-      movementMomentum =
-          movementMomentum * (1.0f - scene->camera.eagerness) +
-          scene->camera.forward * moveInput * scene->camera.eagerness;
-    } else {
-      scene->camera.forward = smath::normalize(scene->camera.orbitTarget - scene->camera.pos);
     }
   }
 
@@ -103,7 +103,7 @@ public:
 
 private:
   using PickVertex = vertex::Flat;
-  
+
   SDL_Window* window;
   std::map<int, bool>& keys;
   float lastMouseX = 0;
