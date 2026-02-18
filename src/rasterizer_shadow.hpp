@@ -26,16 +26,14 @@ class ShadowRasterizer {
                             MeshComponent& mesh,
                             LightComponent* lightSrc,
                             ShadowComponent* shadowSrc,
-                            int faceIdx = 0) {
+                            int faceIndex = 0) {
             transformComponent = &transform;
             meshComponent = &mesh;
             lightSource = lightSrc;
             shadowComponent = shadowSrc;
             screenWidth = shadowComponent->shadowMap->getFaceWidth();
             screenHeight = shadowComponent->shadowMap->getFaceHeight();
-
-            effect.setFace(faceIdx);
-
+            faceIdx = faceIndex;
             processVertices();
             drawShadowFaces();
         }
@@ -50,6 +48,7 @@ class ShadowRasterizer {
         int32_t screenHeight = 0;
         Effect effect;
         Projection<vertex> projection;
+        int faceIdx = 0;
 
         void processVertices() {
             projectedPoints.resize(meshComponent->numVertices);
@@ -57,7 +56,7 @@ class ShadowRasterizer {
 
             #pragma omp parallel for if(n > 1000)
             for (int i = 0; i < n; ++i) {
-                projectedPoints[i] = effect.vs(meshComponent->vertexData[i], *transformComponent, shadowComponent);
+                projectedPoints[i] = effect.vs(meshComponent->vertexData[i], *transformComponent, shadowComponent, faceIdx);
             }
         }
 
@@ -76,7 +75,7 @@ class ShadowRasterizer {
         inline void clipAndDraw(Polygon<vertex>& poly) {
             auto clippedPoly = ClipCullPolygon(poly);
             if (!clippedPoly.points.empty()) {
-                shadowComponent->shadowMap->clearFaceIfDirty(effect.ps.faceIdx);
+                shadowComponent->shadowMap->clearFaceIfDirty(faceIdx);
                 drawPolygon(clippedPoly);
             }
         }
@@ -93,7 +92,7 @@ class ShadowRasterizer {
                 float p_z = left.get().p_z;
                 float p_z_step = (right.get().p_z - p_z) * invDx;
                 for (int x = xStart; x < xEnd; ++x) {
-                    effect.ps(x, p_z, *shadowComponent->shadowMap);
+                    effect.ps(x, p_z, *shadowComponent->shadowMap, faceIdx);
                     p_z += p_z_step;
                 }
             });

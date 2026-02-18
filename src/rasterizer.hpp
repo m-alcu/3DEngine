@@ -18,6 +18,8 @@
 #include "rasterizer_walker.hpp"
 #include "projection.hpp"
 #include "rasterizer_utils.hpp"
+#include "effects/geometry_shaders.hpp"
+
 
 template<class Effect>
 class Rasterizer {

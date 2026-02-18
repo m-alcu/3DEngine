@@ -8,6 +8,7 @@
 #include "../ecs/mesh_component.hpp"
 #include "../ecs/transform_component.hpp"
 #include "vertex_shaders.hpp"
+#include "geometry_shaders.hpp"
 
 // solid color attribute not interpolated
 class BlinnPhongEffect {

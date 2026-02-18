@@ -9,6 +9,8 @@
 #include "../ecs/mesh_component.hpp"
 #include "../ecs/transform_component.hpp"
 #include "vertex_shaders.hpp"
+#include "geometry_shaders.hpp"
+
 
 class EnvironmentMapEffect {
 public:
