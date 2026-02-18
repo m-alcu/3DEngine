@@ -21,7 +21,7 @@ scene:
       shading: flat
       rotation_enabled: false
       light:
-        type: point
+        type: directional
         color: [1.0, 1.0, 1.0]
         intensity: 1.0
       orbit:
