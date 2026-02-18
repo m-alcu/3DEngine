@@ -9,22 +9,12 @@
 #include "../ecs/transform_component.hpp"
 #include "vertex_shaders.hpp"
 
-class ShadowMap;
-
 // solid color attribute not interpolated
 class TexturedPhongEffect {
 public:
   using Vertex = vertex::TexturedLit;
   using VertexShader = vertex::TexturedLitVertexShader;
-
-  class GeometryShader {
-  public:
-    void operator()(Polygon<Vertex> &poly, int32_t width, int32_t height) const {
-      for (auto &point : poly.points) {
-        Projection<Vertex>::texturedView(width, height, point, false);
-      }
-    }
-  };
+  using GeometryShader = vertex::TexturedViewGeometryShader<Vertex>;
 
   class PixelShader {
   public:

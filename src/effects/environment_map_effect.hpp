@@ -14,15 +14,7 @@ class EnvironmentMapEffect {
 public:
   using Vertex = vertex::Lit;
   using VertexShader = vertex::LitVertexShader;
-
-  class GeometryShader {
-  public:
-    void operator()(Polygon<Vertex> &poly, int32_t width, int32_t height) const {
-      for (auto &point : poly.points) {
-        Projection<Vertex>::view(width, height, point, false);
-      }
-    }
-  };
+  using GeometryShader = vertex::ViewGeometryShader<Vertex>;
 
   class PixelShader {
   public:
