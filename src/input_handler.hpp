@@ -7,19 +7,7 @@
 #include <SDL3/SDL.h>
 #include <map>
 #include <memory>
-
-namespace {
-
-// Minimal vertex struct for projection/picking
-struct PickVertex {
-  slib::vec4 ndc;
-  int32_t p_x = 0;
-  int32_t p_y = 0;
-  float p_z = 0;
-  bool dirty = false;
-};
-
-} // namespace
+#include "effects/vertex_shaders.hpp"
 
 class InputHandler {
 public:
@@ -114,6 +102,8 @@ public:
   }
 
 private:
+  using PickVertex = vertex::Flat;
+  
   SDL_Window* window;
   std::map<int, bool>& keys;
   float lastMouseX = 0;

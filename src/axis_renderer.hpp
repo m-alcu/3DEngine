@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include "effects/vertex_shaders.hpp"
 
 class AxisRenderer {
 public:
@@ -57,14 +58,8 @@ public:
   }
 
 private:
-  struct AxisVertex {
-    slib::vec4 ndc;
-    int32_t p_x = 0;
-    int32_t p_y = 0;
-    float p_z = 0.0f;
-    bool dirty = false;
-  };
-
+  using AxisVertex = vertex::Flat;
+  
   static void drawAxisLine(Scene &scene, const slib::vec3 &start,
                            const slib::vec3 &end, uint32_t color) {
     AxisVertex v0;
