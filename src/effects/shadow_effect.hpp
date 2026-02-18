@@ -14,7 +14,6 @@ class Scene;
 // Supports both single-face (directional/spot) and multi-face (cubemap) shadows
 class ShadowEffect {
 public:
-    static constexpr bool is_shadow_effect = true;
 
     class Vertex {
     public:
