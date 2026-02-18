@@ -102,7 +102,10 @@ public:
       if (!lightComponent || !shadowComponent || !shadowComponent->shadowMap) {
         continue;
       }
-      shadowComponent->shadowMap->clear();
+
+      //setting all faces as dirty so they will be cleared before rendering if needed
+      shadowComponent->shadowMap->clear(); 
+      
       ShadowSystem::buildLightMatrices(*shadowComponent,
                                        lightComponent->light,
                                        scene.sceneCenter,
@@ -114,8 +117,7 @@ public:
         for (Entity entity : scene.renderableEntities()) {
           auto* transform = scene.registry.transforms().get(entity);
           auto* mesh = scene.registry.meshes().get(entity);
-          auto* render = scene.registry.renders().get(entity);
-          if (!transform || !mesh || !render) {
+          if (!transform || !mesh) {
             continue;
           }
           shadowRasterizer.drawRenderable(*transform, *mesh,

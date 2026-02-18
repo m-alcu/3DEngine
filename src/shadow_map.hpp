@@ -322,7 +322,7 @@ private:
     zFar = std::max(light.radius * 2.0f, sceneRadius * 3.0f);
 
     float aspect = 1.0f;
-    float fov = 90.0f * 3.14159265f / 180.0f;
+    float fov = PI / 2.0f;
     lightProjMatrix = smath::perspective(zFar, zNear, aspect, fov);
 
     const slib::vec3& pos = light.position;
