@@ -8,7 +8,7 @@
 
 #include "camera.hpp"
 #include "cubemap.hpp"
-#include "fonts.hpp"
+#include "renderer_fonts.hpp"
 #include "light.hpp"
 #include "shadow_map.hpp"
 #include "slib.hpp"
@@ -164,7 +164,7 @@ public:
   bool depthSortEnabled = true;
   int pcfRadius = SHADOW_PCF_RADIUS;
   bool useCubemapShadows = true; // Enable omnidirectional cubemap shadows for point lights
-  Font8x8::FontType font = Font8x8::FontType::ZXSpectrum;
+  RendererFonts::FontType font = RendererFonts::FontType::ZXSpectrum;
 
   // Shadow bias configuration
   float cubeShadowMaxSlopeBias = CUBE_SHADOW_MAX_SLOPE_BIAS;

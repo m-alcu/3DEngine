@@ -5,7 +5,7 @@
 // 8x8 ASCII bitmap fonts (0x20..0x7F)
 // Each glyph is 8 rows, 1 byte per row. Bit 0 is leftmost pixel.
 
-namespace Font8x8 {
+namespace RendererFonts {
 
 enum class FontType { Default, CGA, ZXSpectrum, AmstradCPC, C64, Atari, Retro };
 

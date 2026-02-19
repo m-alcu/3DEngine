@@ -9,7 +9,7 @@
 #include <cstdint>
 #include "effects/vertex_shaders.hpp"
 
-class AxisRenderer {
+class RendererAxis {
 public:
   static void drawAxes(Scene &scene, float axisLength = 500.0f) {
     float gridSpacing = axisLength * 0.1f;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "constants.hpp"
-#include "fonts.hpp"
+#include "renderer_fonts.hpp"
 #include "scene.hpp"
 #include "shadow_map.hpp"
 
@@ -50,10 +50,10 @@ inline void drawShadowMapOverlay(Scene &scene, int margin = 10) {
                                     faceOverlaySize);
       uint32_t labelColor =
           shadowMapPtr->faceDirty[faceIdx] ? RED_COLOR : WHITE_COLOR;
-      Font8x8::drawText(scene.pixels, scene.screen.width, scene.screen.height,
-                        scene.screen.width, startX + 2, startY + 2,
-                        faceLabels[faceIdx], labelColor, BLACK_COLOR, true,
-                        scene.font);
+      RendererFonts::drawText(scene.pixels, scene.screen.width, scene.screen.height,
+                              scene.screen.width, startX + 2, startY + 2,
+                              faceLabels[faceIdx], labelColor, BLACK_COLOR, true,
+                              scene.font);
     }
   } else {
     // Single face overlay

@@ -14,10 +14,10 @@
 #include "effects/environment_map_effect.hpp"
 #include "rasterizer.hpp"
 #include "rasterizer_shadow.hpp"
-#include "fonts.hpp"
 #include "ecs/shadow_system.hpp"
 #include "renderer_axis.hpp"
 #include "renderer_overlay.hpp"
+#include "renderer_fonts.hpp"
 
 class Renderer {
 
@@ -25,8 +25,9 @@ public:
   void drawScene(Scene &scene) {
 
     prepareFrame(scene);
+    
     if (scene.showAxes) {
-      AxisRenderer::drawAxes(scene);
+      RendererAxis::drawAxes(scene);
     }
 
     // Shadow pass - render depth from light's perspective for each light source
@@ -37,12 +38,12 @@ public:
     scene.drawBackground();
 
     if (!scene.name.empty()) {
-      int textWidth = static_cast<int>(scene.name.size()) * Font8x8::getGlyphWidth(scene.font);
+      int textWidth = static_cast<int>(scene.name.size()) * RendererFonts::getGlyphWidth(scene.font);
       int tx = scene.screen.width - textWidth - 10;
       int ty = scene.screen.height - 18;
-      Font8x8::drawText(scene.pixels, scene.screen.width, scene.screen.height,
-                        scene.screen.width, tx, ty, scene.name.c_str(),
-                        0xFFFFFFFFu, 0xFF000000u, true, scene.font);
+      RendererFonts::drawText(scene.pixels, scene.screen.width, scene.screen.height,
+                              scene.screen.width, tx, ty, scene.name.c_str(),
+                              0xFFFFFFFFu, 0xFF000000u, true, scene.font);
     }
 
     for (Entity entity : scene.renderableEntities()) {

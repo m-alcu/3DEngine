@@ -143,7 +143,7 @@ inline void drawSceneControls(Scene& scene) {
     static const char* fontLabels[] = {"Default", "IBM CGA", "ZX Spectrum", "Amstrad CPC", "Commodore 64", "Atari 8-bit", "Retro"};
     int currentFont = static_cast<int>(scene.font);
     if (ImGui::Combo("Font", &currentFont, fontLabels, IM_ARRAYSIZE(fontLabels))) {
-      scene.font = static_cast<Font8x8::FontType>(currentFont);
+      scene.font = static_cast<RendererFonts::FontType>(currentFont);
     }
 
     ImGui::Separator();
