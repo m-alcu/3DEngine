@@ -1,12 +1,12 @@
 #pragma once
 
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
 #include "clipping.hpp"
 #include "projection.hpp"
 #include "scene.hpp"
 #include "bresenham.hpp"
-#include <algorithm>
-#include <cmath>
-#include <cstdint>
 #include "effects/vertex_shaders.hpp"
 
 class RendererAxis {
