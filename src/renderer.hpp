@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+#include <cstdio>
 #include "effects/blinn_phong_effect.hpp"
 #include "effects/flat_effect.hpp"
 #include "effects/gouraud_effect.hpp"
@@ -10,14 +12,11 @@
 #include "effects/textured_gouraud_effect.hpp"
 #include "effects/textured_phong_effect.hpp"
 #include "effects/environment_map_effect.hpp"
-#include "axis_renderer.hpp"
-#include "bresenham.hpp"
 #include "rasterizer.hpp"
 #include "rasterizer_shadow.hpp"
-#include <cstdint>
-#include <cstdio>
 #include "fonts.hpp"
 #include "ecs/shadow_system.hpp"
+#include "renderer_axis.hpp"
 #include "renderer_overlay.hpp"
 
 class Renderer {
