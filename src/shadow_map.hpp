@@ -145,9 +145,7 @@ public:
       buildSpotLightMatrices(light, sceneRadius);
     }
 
-    // For single-face, store combined matrix in slot 0
-    // (buildDirectional/Point/Spot set lightViewMatrix and lightProjMatrix)
-    lightSpaceMatrices[0] = lightViewMatrix * lightProjMatrix;
+
   }
 
   // Sample shadow at a world position
@@ -315,6 +313,9 @@ private:
     }
 
     lightProjMatrix = smath::perspective(_zFar, _zNear, aspect, fov);
+    
+    // For single-face, store combined matrix in slot 0
+    lightSpaceMatrices[0] = lightViewMatrix * lightProjMatrix;
   }
 
   void buildCubemapMatrices(const Light &light, float sceneRadius) {
