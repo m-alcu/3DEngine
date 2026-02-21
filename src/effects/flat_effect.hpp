@@ -27,7 +27,7 @@ public:
         return Color(emissiveColor).toBgra();
       }
 
-                          
+      slib::vec3 worldPos = vRaster.worldOverW / vRaster.oneOverW;
       slib::vec3 diffuseColor{0.0f, 0.0f, 0.0f};
       for (const auto &[entity_, lightComp] : scene.lights()) {
         const Light &light = lightComp.light;
@@ -36,7 +36,7 @@ public:
         float attenuation = light.getAttenuation(poly.points[0].world);
         const auto* shadowComp = scene.shadows().get(entity_);
         float shadow = scene.shadowsEnabled && shadowComp && shadowComp->shadowMap
-          ? shadowComp->shadowMap->sampleShadow(vRaster.world, diff, light.position)
+          ? shadowComp->shadowMap->sampleShadow(worldPos, diff, light.position)
           : 1.0f;
         float factor = light.intensity * attenuation * shadow;
         slib::vec3 lightColor = light.color * factor;

@@ -25,16 +25,17 @@ public:
       float r, g, b;
       poly.material->map_Kd.sample(vRaster.tex.x * w, vRaster.tex.y * w, r, g, b);
       slib::vec3 texColor{r, g, b};
+      slib::vec3 worldPos = vRaster.worldOverW * w;
 
       slib::vec3 color{0.0f, 0.0f, 0.0f};
       for (const auto &[entity_, lightComp] : scene.lights()) {
         const Light &light = lightComp.light;
-        slib::vec3 luxDirection = light.getDirection(vRaster.world);
-        float attenuation = light.getAttenuation(vRaster.world);
+        slib::vec3 luxDirection = light.getDirection(worldPos);
+        float attenuation = light.getAttenuation(worldPos);
         float diff = std::max(0.0f, smath::dot(poly.rotatedFaceNormal, luxDirection));
         const auto* shadowComp = scene.shadows().get(entity_);
         float shadow = scene.shadowsEnabled && shadowComp && shadowComp->shadowMap
-          ? shadowComp->shadowMap->sampleShadow(vRaster.world, diff, light.position)
+          ? shadowComp->shadowMap->sampleShadow(worldPos, diff, light.position)
           : 1.0f;  
         float factor = light.intensity * attenuation * shadow;
         slib::vec3 lightColor = light.color * factor;

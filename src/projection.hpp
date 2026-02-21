@@ -26,6 +26,8 @@ public:
            p.p_x = static_cast<int32_t>(p.ndc.x * oneOverW * halfW_FP + cxFP);
            p.p_y = static_cast<int32_t>(-p.ndc.y * oneOverW * halfH_FP + cyFP);
            p.p_z = p.ndc.z * oneOverW;
+           p.worldOverW = p.world * oneOverW;
+           p.oneOverW = oneOverW;
        }
        return true;
    }
@@ -47,6 +49,7 @@ public:
             p.p_y = static_cast<int32_t>(-p.ndc.y * oneOverW * halfH_FP + cyFP);
 
             p.p_z = p.ndc.z * oneOverW;
+            p.worldOverW = p.world * oneOverW;
 
             if (init) {
                 p.texOverW = p.tex * oneOverW;

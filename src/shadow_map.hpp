@@ -276,6 +276,7 @@ private:
     float size = sceneRadius * 1.2f;
     lightProjMatrix =
         smath::ortho(-size, size, -size, size, 0.1f, sceneRadius * 4.0f);
+    lightSpaceMatrices[0] = lightViewMatrix * lightProjMatrix;
   }
 
   void buildPointLightMatrices(const Light &light,
@@ -313,13 +314,11 @@ private:
     }
 
     lightProjMatrix = smath::perspective(_zFar, _zNear, aspect, fov);
-    
-    // For single-face, store combined matrix in slot 0
     lightSpaceMatrices[0] = lightViewMatrix * lightProjMatrix;
   }
 
   void buildCubemapMatrices(const Light &light, float sceneRadius) {
-    zNear = std::max(0.1f, sceneRadius * 0.01f);
+    zNear = std::max(10.0f, sceneRadius * 0.01f);
     zFar = std::max(light.radius * 2.0f, sceneRadius * 3.0f);
 
     float aspect = 1.0f;
@@ -360,5 +359,6 @@ private:
     float _zFar = light.radius * 2.0f;
 
     lightProjMatrix = smath::perspective(_zFar, _zNear, aspect, fov);
+    lightSpaceMatrices[0] = lightViewMatrix * lightProjMatrix;
   }
 };

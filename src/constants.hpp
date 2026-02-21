@@ -7,7 +7,7 @@ constexpr const char* SCENES_PATH = "resources/scenes";
 constexpr int SHADOW_MAP_SIZE = 512;
 constexpr float SHADOW_BIAS_MIN = 0.02f;
 constexpr float SHADOW_BIAS_MAX = 0.25f;
-constexpr int SHADOW_PCF_RADIUS = 1;
+constexpr int SHADOW_PCF_RADIUS = 0;
 constexpr int SHADOW_MAP_OVERVIEW_SIZE = 200;
 constexpr float EFFECTIVE_LIGHT_RADIUS_FACTOR = 1.00f;
 

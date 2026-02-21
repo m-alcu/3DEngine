@@ -26,6 +26,7 @@ public:
       float r, g, b;
       poly.material->map_Kd.sample(vRaster.tex.x * w, vRaster.tex.y * w, r, g, b);
       slib::vec3 texColor{r, g, b};
+      slib::vec3 worldPos = vRaster.worldOverW * w;
 
       const auto &Ks = poly.material->Ks; // vec3
       slib::vec3 N = smath::normalize(vRaster.normal); // Normal at the fragment
@@ -33,17 +34,17 @@ public:
 
       for (const auto &[entity_, lightComp] : scene.lights()) {
         const Light &light = lightComp.light;
-        slib::vec3 luxDirection = light.getDirection(vRaster.world);
+        slib::vec3 luxDirection = light.getDirection(worldPos);
         slib::vec3 L = luxDirection;
         float diff = std::max(0.0f, smath::dot(N, L));
         slib::vec3 halfwayVector =
             smath::normalize(luxDirection - scene.camera.forward);
         float specAngle = std::max(0.0f, smath::dot(N, halfwayVector));
         float spec = std::pow(specAngle, poly.material->Ns);
-        float attenuation = light.getAttenuation(vRaster.world);
+        float attenuation = light.getAttenuation(worldPos);
         const auto* shadowComp = scene.shadows().get(entity_);
         float shadow = scene.shadowsEnabled && shadowComp && shadowComp->shadowMap
-          ? shadowComp->shadowMap->sampleShadow(vRaster.world, diff, light.position)
+          ? shadowComp->shadowMap->sampleShadow(worldPos, diff, light.position)
           : 1.0f;
         float factor = light.intensity * attenuation * shadow;
         slib::vec3 lightColor = light.color * factor;

@@ -25,21 +25,22 @@ public:
       const auto &Ka = poly.material->Ka; // vec3
       const auto &Kd = poly.material->Kd; // vec3
       const auto &Ks = poly.material->Ks; // vec3
+      slib::vec3 worldPos = vRaster.worldOverW / vRaster.oneOverW;
       slib::vec3 normal = smath::normalize(vRaster.normal);
       slib::vec3 color = Ka;
       for (const auto &[entity_, lightComp] : scene.lights()) {
         const Light &light = lightComp.light;
-        slib::vec3 luxDirection = light.getDirection(vRaster.world);
+        slib::vec3 luxDirection = light.getDirection(worldPos);
         float diff = std::max(0.0f, smath::dot(normal, luxDirection));
         slib::vec3 R =
             normal * 2.0f * smath::dot(normal, luxDirection) - luxDirection;
         float specAngle =
             std::max(0.0f, smath::dot(R, scene.forwardNeg)); // viewer
         float spec = std::pow(specAngle, poly.material->Ns);
-        float attenuation = light.getAttenuation(vRaster.world);
+        float attenuation = light.getAttenuation(worldPos);
         const auto* shadowComp = scene.shadows().get(entity_);
         float shadow = scene.shadowsEnabled && shadowComp && shadowComp->shadowMap
-          ? shadowComp->shadowMap->sampleShadow(vRaster.world, diff, light.position)
+          ? shadowComp->shadowMap->sampleShadow(worldPos, diff, light.position)
           : 1.0f;
         float factor = light.intensity * attenuation * shadow;
         slib::vec3 lightColor = light.color * factor;

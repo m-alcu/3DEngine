@@ -22,15 +22,16 @@ public:
     uint32_t operator()(const Vertex &vRaster, const Scene &scene,
                         const Polygon<Vertex> &poly) const {
 
+      slib::vec3 worldPos = vRaster.worldOverW / vRaster.oneOverW;
       slib::vec3 diffuseColor{0.0f, 0.0f, 0.0f};
       for (const auto &[entity_, lightComp] : scene.lights()) {
         const Light &light = lightComp.light;
-        float attenuation = light.getAttenuation(vRaster.world);
-        const slib::vec3 &luxDirection = light.getDirection(vRaster.world);
-        float diff = std::max(0.0f, smath::dot(vRaster.normal, luxDirection));           
+        float attenuation = light.getAttenuation(worldPos);
+        const slib::vec3 luxDirection = light.getDirection(worldPos);
+        float diff = std::max(0.0f, smath::dot(vRaster.normal, luxDirection));
         const auto* shadowComp = scene.shadows().get(entity_);
         float shadow = scene.shadowsEnabled && shadowComp && shadowComp->shadowMap
-          ? shadowComp->shadowMap->sampleShadow(vRaster.world, diff, light.position)
+          ? shadowComp->shadowMap->sampleShadow(worldPos, diff, light.position)
           : 1.0f;
         diffuseColor += light.color * (diff * light.intensity * attenuation * shadow);
       }
