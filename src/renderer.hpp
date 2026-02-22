@@ -125,7 +125,7 @@ public:
         }
         for (int faceIdx = 0; faceIdx < numFaces; ++faceIdx) {
           shadowRasterizer.drawRenderable(*transform, *mesh,
-                                          lightComponent, shadowComponent,
+                                          *lightComponent, *shadowComponent,
                                           faceIdx);
         }
       }

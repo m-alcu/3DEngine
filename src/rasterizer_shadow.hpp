@@ -22,15 +22,15 @@ class ShadowRasterizer {
     public:
         using vertex = typename Effect::Vertex;
 
-        void drawRenderable(TransformComponent& transform,
-                            MeshComponent& mesh,
-                            LightComponent* lightSrc,
-                            ShadowComponent* shadowSrc,
+        void drawRenderable(const TransformComponent& transform,
+                            const MeshComponent& mesh,
+                            const LightComponent& light,
+                            const ShadowComponent& shadow,
                             int faceIndex = 0) {
             transformComponent = &transform;
             meshComponent = &mesh;
-            lightSource = lightSrc;
-            shadowComponent = shadowSrc;
+            lightSource = &light;
+            shadowComponent = &shadow;
             screenWidth = shadowComponent->shadowMap->getFaceWidth();
             screenHeight = shadowComponent->shadowMap->getFaceHeight();
             faceIdx = faceIndex;
@@ -40,10 +40,10 @@ class ShadowRasterizer {
 
     private:
         std::vector<vertex> projectedPoints;
-        TransformComponent* transformComponent = nullptr;
-        MeshComponent* meshComponent = nullptr;
-        LightComponent* lightSource = nullptr;
-        ShadowComponent* shadowComponent = nullptr;
+        const TransformComponent* transformComponent = nullptr;
+        const MeshComponent* meshComponent = nullptr;
+        const LightComponent* lightSource = nullptr;
+        const ShadowComponent* shadowComponent = nullptr;
         int32_t screenWidth = 0;
         int32_t screenHeight = 0;
         Effect effect;
