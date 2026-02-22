@@ -117,13 +117,13 @@ public:
 
       int numFaces = shadowComponent->shadowMap->numFaces;
 
-      for (int faceIdx = 0; faceIdx < numFaces; ++faceIdx) {
-        for (Entity entity : scene.renderableEntities()) {
-          auto* transform = scene.registry.transforms().get(entity);
-          auto* mesh = scene.registry.meshes().get(entity);
-          if (!transform || !mesh) {
-            continue;
-          }
+      for (Entity entity : scene.renderableEntities()) {
+        auto* transform = scene.registry.transforms().get(entity);
+        auto* mesh = scene.registry.meshes().get(entity);
+        if (!transform || !mesh) {
+          continue;
+        }
+        for (int faceIdx = 0; faceIdx < numFaces; ++faceIdx) {
           shadowRasterizer.drawRenderable(*transform, *mesh,
                                           lightComponent, shadowComponent,
                                           faceIdx);
