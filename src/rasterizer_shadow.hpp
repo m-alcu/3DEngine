@@ -47,7 +47,6 @@ class ShadowRasterizer {
         int32_t screenWidth = 0;
         int32_t screenHeight = 0;
         Effect effect;
-        Projection<vertex> projection;
         int faceIdx = 0;
 
         void processVertices() {
@@ -56,7 +55,7 @@ class ShadowRasterizer {
 
             #pragma omp parallel for if(n > 1000)
             for (int i = 0; i < n; ++i) {
-                projectedPoints[i] = effect.vs(meshComponent->vertexData[i], *transformComponent, shadowComponent, faceIdx);
+                projectedPoints[i] = effect.vs(meshComponent->vertexData[i], *transformComponent, *shadowComponent, faceIdx);
             }
         }
 

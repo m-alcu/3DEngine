@@ -22,12 +22,12 @@ public:
 
         Vertex operator()(const VertexData& vData,
                           const TransformComponent& transform,
-                          const ShadowComponent* shadowSource,
+                          const ShadowComponent& shadow,
                           int faceIdx) const {
             Vertex vertex;
             vertex.world = transform.modelMatrix * slib::vec4(vData.vertex, 1);
 
-            const auto& shadowMap = shadowSource->shadowMap;
+            const auto& shadowMap = shadow.shadowMap;
             vertex.ndc = slib::vec4(vertex.world, 1) * shadowMap->getLightSpaceMatrix(faceIdx);
             Projection<Vertex>::view(shadowMap->getFaceWidth(), shadowMap->getFaceHeight(), vertex, true);
 
