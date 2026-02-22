@@ -36,9 +36,6 @@ public:
     }
 
     scene.drawBackground();
-    std::copy(scene.backg,
-              scene.backg + scene.screen.width * scene.screen.height,
-              scene.pixels);
 
     if (scene.showAxes) {
       RendererAxis::drawAxes(scene);

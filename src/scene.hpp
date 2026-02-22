@@ -130,6 +130,7 @@ public:
   void drawBackground() const {
     float aspectRatio = static_cast<float>(screen.width) / screen.height;
     background->draw(backg, screen.height, screen.width, camera, aspectRatio);
+    std::copy(backg, backg + screen.width * screen.height, pixels);
   }
 
   // --- ECS data ---
