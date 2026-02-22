@@ -120,6 +120,10 @@ class Rasterizer {
                 polygon.drawWireframe(WHITE_COLOR, pixels, screenWidth, screenHeight, scene->zBuffer.get());
             } else {
                 rasterizeFilledPolygon(polygon, pixels);
+                if (polygon.material->illum == 1) {
+                    // Emissive material - also draw wireframe overlay for better visibility
+                    polygon.drawWireframe(CLEAR_GREY_COLOR, pixels, screenWidth, screenHeight, scene->zBuffer.get());
+                }
             }
         }
 

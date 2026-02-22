@@ -29,3 +29,4 @@ constexpr uint32_t WHITE_COLOR = 0xffffffff;
 constexpr uint32_t BLACK_COLOR = 0xff000000;
 constexpr uint32_t YELLOW_COLOR = 0xff00ffff;
 constexpr uint32_t GREY_COLOR = 0xff404040;
+constexpr uint32_t CLEAR_GREY_COLOR = 0xffc0c0c0;
