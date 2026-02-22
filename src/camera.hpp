@@ -70,6 +70,8 @@ public:
         return smath::fpsview(pos, pitch, yaw, roll);
     }
 
+    slib::vec3 forwardNeg() const { return {-forward.x, -forward.y, -forward.z}; }
+
     bool isVisibleFromCamera(const slib::vec3& world, const slib::vec3& faceNormal) const {
         slib::vec3 viewDir = pos - world;
         float dotResult = smath::dot(faceNormal, smath::normalize(viewDir));

@@ -35,7 +35,7 @@ public:
         slib::vec3 R =
             normal * 2.0f * smath::dot(normal, luxDirection) - luxDirection;
         float specAngle =
-            std::max(0.0f, smath::dot(R, scene.forwardNeg)); // viewer
+            std::max(0.0f, smath::dot(R, scene.camera.forwardNeg())); // viewer
         float spec = std::pow(specAngle, poly.material->Ns);
         float attenuation = light.getAttenuation(worldPos);
         const auto* shadowComp = scene.shadows().get(entity_);

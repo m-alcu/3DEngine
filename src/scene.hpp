@@ -141,7 +141,6 @@ public:
 
   Screen screen;
   slib::mat4 spaceMatrix;
-  slib::vec3 forwardNeg;
   std::shared_ptr<ZBuffer> zBuffer;
   uint32_t* pixels = nullptr;
   Stats stats;

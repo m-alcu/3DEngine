@@ -141,8 +141,6 @@ public:
     float aspectRatio = (float)scene.screen.width / scene.screen.height;
     scene.spaceMatrix = scene.camera.viewMatrix(scene.orbiting) * scene.camera.projectionMatrix(aspectRatio);
 
-    scene.forwardNeg = {-scene.camera.forward.x, -scene.camera.forward.y,
-                        -scene.camera.forward.z};
   }
 
   Rasterizer<FlatEffect> flatRasterizer;
