@@ -32,7 +32,7 @@ public:
 
     // Shadow pass - render depth from light's perspective for each light source
     if (scene.shadowsEnabled) {
-      renderShadowPass(scene);
+      renderLightMaps(scene);
     }
 
     scene.drawBackground();
@@ -100,7 +100,7 @@ public:
     }
   }
 
-  void renderShadowPass(Scene &scene) {
+  void renderLightMaps(Scene &scene) {
     for (Entity lightEntity : scene.lightSourceEntities()) {
       auto* lightComponent = scene.registry.lights().get(lightEntity);
       auto* shadowComponent = scene.registry.shadows().get(lightEntity);
@@ -108,8 +108,7 @@ public:
         continue;
       }
 
-      //setting all faces as dirty so they will be cleared before rendering if needed
-      shadowComponent->shadowMap->clear(); 
+      shadowComponent->shadowMap->setAllDirty(); 
       
       ShadowSystem::buildLightMatrices(*shadowComponent,
                                        lightComponent->light,

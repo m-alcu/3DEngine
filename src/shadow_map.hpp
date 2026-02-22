@@ -41,10 +41,10 @@ public:
     }
     faceDirty.resize(numFaces, false);
     lightSpaceMatrices.resize(numFaces, smath::identity());
-    clear();
+    setAllDirty();
   }
 
-  void clear() {
+  void setAllDirty() {
     std::fill(faceDirty.begin(), faceDirty.end(), true);
   }
 
@@ -61,7 +61,7 @@ public:
     for (auto& face : faces) {
       face->Resize(w, h);
     }
-    clear();
+    setAllDirty();
   }
 
   bool isCubemap() const { return numFaces == 6; }

@@ -32,7 +32,7 @@ namespace ShadowSystem {
     inline void clearShadowMaps(ComponentStore<ShadowComponent>& shadows) {
         for (auto& [entity, shadow] : shadows) {
             if (shadow.shadowMap) {
-                shadow.shadowMap->clear();
+                shadow.shadowMap->setAllDirty();
             }
         }
     }
