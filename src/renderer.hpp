@@ -24,11 +24,11 @@ class Renderer {
 public:
   void drawScene(Scene &scene) {
 
-    prepareFrame(scene);
-    
-    if (scene.showAxes) {
-      RendererAxis::drawAxes(scene);
-    }
+    scene.zBuffer->Clear(); // Clear the zBuffer
+    scene.stats.reset();
+
+    float aspectRatio = (float)scene.screen.width / scene.screen.height;
+    scene.spaceMatrix = scene.camera.viewMatrix(scene.orbiting) * scene.camera.projectionMatrix(aspectRatio);
 
     // Shadow pass - render depth from light's perspective for each light source
     if (scene.shadowsEnabled) {
@@ -36,6 +36,13 @@ public:
     }
 
     scene.drawBackground();
+    std::copy(scene.backg,
+              scene.backg + scene.screen.width * scene.screen.height,
+              scene.pixels);
+
+    if (scene.showAxes) {
+      RendererAxis::drawAxes(scene);
+    }
 
     if (!scene.name.empty()) {
       int textWidth = static_cast<int>(scene.name.size()) * RendererFonts::getGlyphWidth(scene.font);
@@ -127,20 +134,6 @@ public:
         }
       }
     }
-  }
-
-  void prepareFrame(Scene &scene) {
-
-    // std::fill_n(scene.pixels, scene.screen.width * scene.screen.height, 0);
-    std::copy(scene.backg,
-              scene.backg + scene.screen.width * scene.screen.height,
-              scene.pixels);
-    scene.zBuffer->Clear(); // Clear the zBuffer
-    scene.stats.reset();
-
-    float aspectRatio = (float)scene.screen.width / scene.screen.height;
-    scene.spaceMatrix = scene.camera.viewMatrix(scene.orbiting) * scene.camera.projectionMatrix(aspectRatio);
-
   }
 
   Rasterizer<FlatEffect> flatRasterizer;
