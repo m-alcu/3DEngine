@@ -138,24 +138,8 @@ public:
     scene.zBuffer->Clear(); // Clear the zBuffer
     scene.stats.reset();
 
-    float aspectRatio =
-        (float)scene.screen.width / scene.screen.height; // Width / Height ratio
-    float fovRadians = scene.camera.viewAngle * RAD;
-
-    slib::mat4 projectionMatrix =
-        smath::perspective(scene.camera.zFar, scene.camera.zNear, aspectRatio, fovRadians);
-
-    if (scene.orbiting) {
-      slib::vec3 up = {0.0f, 1.0f, 0.0f};
-      slib::vec3 lightDir = smath::normalize(scene.camera.orbitTarget - scene.camera.pos);
-      // gimbal lock avoidance check https://en.wikipedia.org/wiki/Gimbal_lock
-      if (std::abs(smath::dot(lightDir, up)) > 0.99f) {
-        up = {1.0f, 0.0f, 0.0f};
-      }
-      scene.spaceMatrix = smath::lookAt(scene.camera.pos, scene.camera.orbitTarget, up) * projectionMatrix;
-    } else {
-      scene.spaceMatrix = smath::fpsview(scene.camera.pos, scene.camera.pitch, scene.camera.yaw, scene.camera.roll) * projectionMatrix;
-    }
+    float aspectRatio = (float)scene.screen.width / scene.screen.height;
+    scene.spaceMatrix = scene.camera.viewMatrix(scene.orbiting) * scene.camera.projectionMatrix(aspectRatio);
 
     scene.forwardNeg = {-scene.camera.forward.x, -scene.camera.forward.y,
                         -scene.camera.forward.z};
