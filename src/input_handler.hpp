@@ -153,7 +153,7 @@ private:
     for (size_t i = 0; i < scene->entities.size(); ++i) {
       slib::vec3 worldCenter = scene->getWorldCenter(scene->entities[i]);
       PickVertex pv;
-      pv.ndc = slib::vec4(worldCenter, 1.0f) * scene->spaceMatrix;
+      pv.clip = slib::vec4(worldCenter, 1.0f) * scene->spaceMatrix;
 
       if (!Projection<PickVertex>::view(scene->screen.width,
                                         scene->screen.height, pv, true)) {

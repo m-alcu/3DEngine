@@ -9,28 +9,28 @@ public:
 
     Flat(int32_t px, int32_t py, float pz, slib::vec4 vp, slib::vec3 _world, bool _dirty,
          slib::vec3 _worldOverW = {}, float _oneOverW = 1.0f)
-        : p_x(px), p_y(py), p_z(pz), ndc(vp), world(_world), dirty(_dirty),
+        : p_x(px), p_y(py), p_z(pz), clip(vp), world(_world), dirty(_dirty),
           worldOverW(_worldOverW), oneOverW(_oneOverW) {}
 
     Flat operator+(const Flat &v) const {
-        return Flat(p_x + v.p_x, p_y, p_z + v.p_z, ndc + v.ndc, world + v.world, true,
+        return Flat(p_x + v.p_x, p_y, p_z + v.p_z, clip + v.clip, world + v.world, true,
                     worldOverW + v.worldOverW, oneOverW + v.oneOverW);
     }
 
     Flat operator-(const Flat &v) const {
-        return Flat(p_x - v.p_x, p_y, p_z - v.p_z, ndc - v.ndc, world - v.world, true,
+        return Flat(p_x - v.p_x, p_y, p_z - v.p_z, clip - v.clip, world - v.world, true,
                     worldOverW - v.worldOverW, oneOverW - v.oneOverW);
     }
 
     Flat operator*(const float &rhs) const {
-        return Flat(p_x * rhs, p_y, p_z * rhs, ndc * rhs, world * rhs, true,
+        return Flat(p_x * rhs, p_y, p_z * rhs, clip * rhs, world * rhs, true,
                     worldOverW * rhs, oneOverW * rhs);
     }
 
     Flat &operator+=(const Flat &v) {
         p_x += v.p_x;
         p_z += v.p_z;
-        ndc += v.ndc;
+        clip += v.clip;
         world += v.world;
         worldOverW += v.worldOverW;
         oneOverW += v.oneOverW;
@@ -57,7 +57,7 @@ public:
     int32_t p_y;
     float p_z;
     slib::vec3 world;
-    slib::vec4 ndc;
+    slib::vec4 clip;
     slib::vec3 worldOverW{};
     float oneOverW = 1.0f;
     bool dirty = false;
@@ -69,23 +69,23 @@ public:
 
     Lit(int32_t px, int32_t py, float pz, slib::vec3 n, slib::vec4 vp,
         slib::vec3 _world, bool _dirty, slib::vec3 _worldOverW = {}, float _oneOverW = 1.0f)
-        : p_x(px), p_y(py), p_z(pz), normal(n), ndc(vp), world(_world), dirty(_dirty),
+        : p_x(px), p_y(py), p_z(pz), normal(n), clip(vp), world(_world), dirty(_dirty),
           worldOverW(_worldOverW), oneOverW(_oneOverW) {}
 
     Lit operator+(const Lit &v) const {
         return Lit(p_x + v.p_x, p_y, p_z + v.p_z, normal + v.normal,
-                   ndc + v.ndc, world + v.world, true,
+                   clip + v.clip, world + v.world, true,
                    worldOverW + v.worldOverW, oneOverW + v.oneOverW);
     }
 
     Lit operator-(const Lit &v) const {
         return Lit(p_x - v.p_x, p_y, p_z - v.p_z, normal - v.normal,
-                   ndc - v.ndc, world - v.world, true,
+                   clip - v.clip, world - v.world, true,
                    worldOverW - v.worldOverW, oneOverW - v.oneOverW);
     }
 
     Lit operator*(const float &rhs) const {
-        return Lit(p_x * rhs, p_y, p_z * rhs, normal * rhs, ndc * rhs, world * rhs, true,
+        return Lit(p_x * rhs, p_y, p_z * rhs, normal * rhs, clip * rhs, world * rhs, true,
                    worldOverW * rhs, oneOverW * rhs);
     }
 
@@ -93,7 +93,7 @@ public:
         p_x += v.p_x;
         p_z += v.p_z;
         normal += v.normal;
-        ndc += v.ndc;
+        clip += v.clip;
         world += v.world;
         worldOverW += v.worldOverW;
         oneOverW += v.oneOverW;
@@ -123,7 +123,7 @@ public:
     float p_z;
     slib::vec3 world;
     slib::vec3 normal;
-    slib::vec4 ndc;
+    slib::vec4 clip;
     slib::vec3 worldOverW{};
     float oneOverW = 1.0f;
     bool dirty = false;
@@ -135,28 +135,28 @@ public:
 
     TexturedFlat(int32_t px, int32_t py, float pz, slib::vec4 vp, slib::zvec2 _tex,
                  slib::vec3 _world, bool _dirty, slib::vec3 _worldOverW = {})
-        : p_x(px), p_y(py), p_z(pz), ndc(vp), tex(_tex), world(_world), dirty(_dirty),
+        : p_x(px), p_y(py), p_z(pz), clip(vp), tex(_tex), world(_world), dirty(_dirty),
           worldOverW(_worldOverW) {}
 
     TexturedFlat operator+(const TexturedFlat &v) const {
-        return TexturedFlat(p_x + v.p_x, p_y, p_z + v.p_z, ndc + v.ndc, tex + v.tex,
+        return TexturedFlat(p_x + v.p_x, p_y, p_z + v.p_z, clip + v.clip, tex + v.tex,
                             world + v.world, true, worldOverW + v.worldOverW);
     }
 
     TexturedFlat operator-(const TexturedFlat &v) const {
-        return TexturedFlat(p_x - v.p_x, p_y, p_z - v.p_z, ndc - v.ndc, tex - v.tex,
+        return TexturedFlat(p_x - v.p_x, p_y, p_z - v.p_z, clip - v.clip, tex - v.tex,
                             world - v.world, true, worldOverW - v.worldOverW);
     }
 
     TexturedFlat operator*(const float &rhs) const {
-        return TexturedFlat(p_x * rhs, p_y, p_z * rhs, ndc * rhs, tex * rhs, world * rhs, true,
+        return TexturedFlat(p_x * rhs, p_y, p_z * rhs, clip * rhs, tex * rhs, world * rhs, true,
                             worldOverW * rhs);
     }
 
     TexturedFlat &operator+=(const TexturedFlat &v) {
         p_x += v.p_x;
         p_z += v.p_z;
-        ndc += v.ndc;
+        clip += v.clip;
         tex += v.tex;
         world += v.world;
         worldOverW += v.worldOverW;
@@ -183,7 +183,7 @@ public:
     int32_t p_y;
     float p_z;
     slib::vec3 world;
-    slib::vec4 ndc;
+    slib::vec4 clip;
     slib::zvec2 tex;
     slib::zvec2 texOverW;
     slib::vec3 worldOverW{};
@@ -196,23 +196,23 @@ public:
 
     TexturedLit(int32_t px, int32_t py, float pz, slib::vec3 n, slib::vec4 vp,
                 slib::vec3 _world, slib::zvec2 _tex, bool _dirty, slib::vec3 _worldOverW = {})
-        : p_x(px), p_y(py), p_z(pz), normal(n), ndc(vp), world(_world), tex(_tex),
+        : p_x(px), p_y(py), p_z(pz), normal(n), clip(vp), world(_world), tex(_tex),
           dirty(_dirty), worldOverW(_worldOverW) {}
 
     TexturedLit operator+(const TexturedLit &v) const {
         return TexturedLit(p_x + v.p_x, p_y, p_z + v.p_z, normal + v.normal,
-                           ndc + v.ndc, world + v.world, tex + v.tex, true,
+                           clip + v.clip, world + v.world, tex + v.tex, true,
                            worldOverW + v.worldOverW);
     }
 
     TexturedLit operator-(const TexturedLit &v) const {
         return TexturedLit(p_x - v.p_x, p_y, p_z - v.p_z, normal - v.normal,
-                           ndc - v.ndc, world - v.world, tex - v.tex, true,
+                           clip - v.clip, world - v.world, tex - v.tex, true,
                            worldOverW - v.worldOverW);
     }
 
     TexturedLit operator*(const float &rhs) const {
-        return TexturedLit(p_x * rhs, p_y, p_z * rhs, normal * rhs, ndc * rhs,
+        return TexturedLit(p_x * rhs, p_y, p_z * rhs, normal * rhs, clip * rhs,
                            world * rhs, tex * rhs, true, worldOverW * rhs);
     }
 
@@ -220,7 +220,7 @@ public:
         p_x += v.p_x;
         p_z += v.p_z;
         normal += v.normal;
-        ndc += v.ndc;
+        clip += v.clip;
         world += v.world;
         tex += v.tex;
         worldOverW += v.worldOverW;
@@ -250,7 +250,7 @@ public:
     float p_z;
     slib::vec3 world;
     slib::vec3 normal;
-    slib::vec4 ndc;
+    slib::vec4 clip;
     slib::zvec2 tex;
     slib::zvec2 texOverW;
     slib::vec3 worldOverW{};
@@ -262,24 +262,24 @@ public:
     Shadow() {}
 
     Shadow(int32_t px, int32_t py, float pz, slib::vec4 vp, slib::vec3 _world, bool _dirty)
-        : p_x(px), p_y(py), p_z(pz), ndc(vp), world(_world), dirty(_dirty) {}
+        : p_x(px), p_y(py), p_z(pz), clip(vp), world(_world), dirty(_dirty) {}
 
     Shadow operator+(const Shadow &v) const {
-        return Shadow(p_x + v.p_x, p_y, p_z + v.p_z, ndc + v.ndc, world + v.world, true);
+        return Shadow(p_x + v.p_x, p_y, p_z + v.p_z, clip + v.clip, world + v.world, true);
     }
 
     Shadow operator-(const Shadow &v) const {
-        return Shadow(p_x - v.p_x, p_y, p_z - v.p_z, ndc - v.ndc, world - v.world, true);
+        return Shadow(p_x - v.p_x, p_y, p_z - v.p_z, clip - v.clip, world - v.world, true);
     }
 
     Shadow operator*(const float &rhs) const {
-        return Shadow(static_cast<int32_t>(p_x * rhs), p_y, p_z * rhs, ndc * rhs, world * rhs, true);
+        return Shadow(static_cast<int32_t>(p_x * rhs), p_y, p_z * rhs, clip * rhs, world * rhs, true);
     }
 
     Shadow &operator+=(const Shadow &v) {
         p_x += v.p_x;
         p_z += v.p_z;
-        ndc += v.ndc;
+        clip += v.clip;
         world += v.world;
         return *this;
     }
@@ -300,7 +300,7 @@ public:
     int32_t p_y = 0;
     float p_z = 0.0f;
     slib::vec3 world{};
-    slib::vec4 ndc{};
+    slib::vec4 clip{};
     slib::vec3 worldOverW{};
     float oneOverW = 1.0f;
     bool dirty = false;

@@ -64,8 +64,8 @@ private:
                            const slib::vec3 &end, uint32_t color) {
     AxisVertex v0;
     AxisVertex v1;
-    v0.ndc = slib::vec4(start, 1.0f) * scene.spaceMatrix;
-    v1.ndc = slib::vec4(end, 1.0f) * scene.spaceMatrix;
+    v0.clip = slib::vec4(start, 1.0f) * scene.spaceMatrix;
+    v1.clip = slib::vec4(end, 1.0f) * scene.spaceMatrix;
 
     if (!clipLineNdc(v0, v1)) {
       return;

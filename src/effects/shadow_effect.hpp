@@ -28,7 +28,7 @@ public:
             vertex.world = transform.modelMatrix * slib::vec4(vData.vertex, 1);
 
             const auto& shadowMap = shadow.shadowMap;
-            vertex.ndc = slib::vec4(vertex.world, 1) * shadowMap->getLightSpaceMatrix(faceIdx);
+            vertex.clip = slib::vec4(vertex.world, 1) * shadowMap->getLightSpaceMatrix(faceIdx);
             Projection<Vertex>::view(shadowMap->getFaceWidth(), shadowMap->getFaceHeight(), vertex, true);
 
             return vertex;

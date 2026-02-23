@@ -8,7 +8,7 @@ enum class ClipPlane {
 };
 
 /*
-Clipping is done using the Sutherland-Hodgman algorithm (1974) in the ndc space.
+Clipping is done using the Sutherland-Hodgman algorithm (1974) in clip space.
 The Sutherland-Hodgman algorithm is a polygon clipping algorithm that clips a polygon against a convex clipping region.
 The algorithm works by iterating through each edge of the polygon and checking if the vertices are inside or outside the clipping plane.
 If a vertex is inside, it is added to the output polygon. If a vertex is outside, the algorithm checks if the previous vertex was inside. If it was, the edge between the two vertices is clipped and the intersection point is added to the output polygon.
@@ -107,10 +107,10 @@ static bool clipLineNdc(Vertex &a, Vertex &b) {
 
         if (aInside) {
         float alpha = ComputeAlpha(a, b, plane);
-        b.ndc = a.ndc + (b.ndc - a.ndc) * alpha;
+        b.clip = a.clip + (b.clip - a.clip) * alpha;
         } else {
         float alpha = ComputeAlpha(b, a, plane);
-        a.ndc = b.ndc + (a.ndc - b.ndc) * alpha;
+        a.clip = b.clip + (a.clip - b.clip) * alpha;
         }
     }
     return true;
@@ -118,7 +118,7 @@ static bool clipLineNdc(Vertex &a, Vertex &b) {
 
 template<typename Vertex>
 bool IsInside(const Vertex& v, ClipPlane plane) {
-    const auto& p = v.ndc;
+    const auto& p = v.clip;
     switch (plane) {
     case ClipPlane::Left:   return p.x >= -p.w;
     case ClipPlane::Right:  return p.x <= p.w;
@@ -132,8 +132,8 @@ bool IsInside(const Vertex& v, ClipPlane plane) {
 
 template<typename Vertex>
 float ComputeAlpha(const Vertex& a, const Vertex& b, ClipPlane plane) {
-    const auto& pa = a.ndc;
-    const auto& pb = b.ndc;
+    const auto& pa = a.clip;
+    const auto& pb = b.clip;
     float num, denom;
 
     switch (plane) {
