@@ -61,7 +61,7 @@ class Rasterizer {
 
             #pragma omp parallel for if(n > 1000)
             for (int i = 0; i < n; ++i) {
-                projectedPoints[i] = effect.vs(meshComponent->vertexData[i], *transformComponent, scene);
+                projectedPoints[i] = effect.vs(meshComponent->vertexData[i], *transformComponent, *scene);
                 scene->stats.addProcessedVertex();
             }
         }

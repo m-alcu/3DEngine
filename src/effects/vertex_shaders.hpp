@@ -12,11 +12,11 @@ class FlatVertexShader {
 public:
   Flat operator()(const VertexData &vData,
                   const TransformComponent &transform,
-                  const Scene *scene) const {
+                  const Scene &scene) const {
     Flat vertex;
     vertex.world = transform.modelMatrix * slib::vec4(vData.vertex, 1);
-    vertex.clip = slib::vec4(vertex.world, 1) * scene->spaceMatrix;
-    Projection<Flat>::view(scene->screen.width, scene->screen.height, vertex);
+    vertex.clip = slib::vec4(vertex.world, 1) * scene.spaceMatrix;
+    Projection<Flat>::view(scene.screen.width, scene.screen.height, vertex);
     return vertex;
   }
 };
@@ -25,12 +25,12 @@ class LitVertexShader {
 public:
   Lit operator()(const VertexData &vData,
                  const TransformComponent &transform,
-                 const Scene *scene) const {
+                 const Scene &scene) const {
     Lit vertex;
     vertex.world = transform.modelMatrix * slib::vec4(vData.vertex, 1);
-    vertex.clip = slib::vec4(vertex.world, 1) * scene->spaceMatrix;
+    vertex.clip = slib::vec4(vertex.world, 1) * scene.spaceMatrix;
     vertex.normal = transform.normalMatrix * slib::vec4(vData.normal, 0);
-    Projection<Lit>::view(scene->screen.width, scene->screen.height, vertex);
+    Projection<Lit>::view(scene.screen.width, scene.screen.height, vertex);
     return vertex;
   }
 };
@@ -39,12 +39,12 @@ class TexturedFlatVertexShader {
 public:
   TexturedFlat operator()(const VertexData &vData,
                           const TransformComponent &transform,
-                          const Scene *scene) const {
+                          const Scene &scene) const {
     TexturedFlat vertex;
     vertex.world = transform.modelMatrix * slib::vec4(vData.vertex, 1);
-    vertex.clip = slib::vec4(vertex.world, 1) * scene->spaceMatrix;
+    vertex.clip = slib::vec4(vertex.world, 1) * scene.spaceMatrix;
     vertex.tex = slib::zvec2(vData.texCoord.x, vData.texCoord.y, 1);
-    Projection<TexturedFlat>::texturedView(scene->screen.width, scene->screen.height, vertex);
+    Projection<TexturedFlat>::texturedView(scene.screen.width, scene.screen.height, vertex);
     return vertex;
   }
 };
@@ -53,13 +53,13 @@ class TexturedLitVertexShader {
 public:
   TexturedLit operator()(const VertexData &vData,
                          const TransformComponent &transform,
-                         const Scene *scene) const {
+                         const Scene &scene) const {
     TexturedLit vertex;
     vertex.world = transform.modelMatrix * slib::vec4(vData.vertex, 1);
-    vertex.clip = slib::vec4(vertex.world, 1) * scene->spaceMatrix;
+    vertex.clip = slib::vec4(vertex.world, 1) * scene.spaceMatrix;
     vertex.tex = slib::zvec2(vData.texCoord.x, vData.texCoord.y, 1);
     vertex.normal = transform.normalMatrix * slib::vec4(vData.normal, 0);
-    Projection<TexturedLit>::texturedView(scene->screen.width, scene->screen.height, vertex);
+    Projection<TexturedLit>::texturedView(scene.screen.width, scene.screen.height, vertex);
     return vertex;
   }
 };
