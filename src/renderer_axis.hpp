@@ -67,7 +67,7 @@ private:
     v0.clip = slib::vec4(start, 1.0f) * scene.spaceMatrix;
     v1.clip = slib::vec4(end, 1.0f) * scene.spaceMatrix;
 
-    if (!clipLineNdc(v0, v1)) {
+    if (!clipLine(v0, v1)) {
       return;
     }
 

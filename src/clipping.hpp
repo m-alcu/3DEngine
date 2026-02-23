@@ -90,7 +90,7 @@ void ClipAgainstPlane(const std::vector<Vertex>& poly, std::vector<Vertex>& outp
 }
 
 template<typename Vertex>
-static bool clipLineNdc(Vertex &a, Vertex &b) {
+static bool clipLine(Vertex &a, Vertex &b) {
     for (ClipPlane plane : {ClipPlane::Left, ClipPlane::Right,
                             ClipPlane::Bottom, ClipPlane::Top,
                             ClipPlane::Near, ClipPlane::Far}) {
