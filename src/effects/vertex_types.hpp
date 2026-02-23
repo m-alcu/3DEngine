@@ -60,7 +60,7 @@ public:
     slib::vec4 clip;
     slib::vec3 worldOverW{};
     float oneOverW = 1.0f;
-    bool dirty = false;
+    bool dirty = true;
 };
 
 class Lit {
@@ -126,7 +126,7 @@ public:
     slib::vec4 clip;
     slib::vec3 worldOverW{};
     float oneOverW = 1.0f;
-    bool dirty = false;
+    bool dirty = true;
 };
 
 class TexturedFlat {
@@ -188,7 +188,7 @@ public:
     slib::zvec2 tex;
     slib::zvec2 texOverW;
     slib::vec3 worldOverW{};
-    bool dirty = false;
+    bool dirty = true;
 };
 
 class TexturedLit {
@@ -256,7 +256,7 @@ public:
     slib::zvec2 tex;
     slib::zvec2 texOverW;
     slib::vec3 worldOverW{};
-    bool dirty = false;
+    bool dirty = true;
 };
 
 class Shadow {
@@ -305,7 +305,7 @@ public:
     slib::vec4 clip{};
     slib::vec3 worldOverW{};
     float oneOverW = 1.0f;
-    bool dirty = false;
+    bool dirty = true;
 };
 
 } // namespace vertex

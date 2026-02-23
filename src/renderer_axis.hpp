@@ -72,9 +72,9 @@ private:
     }
 
     if (!Projection<AxisVertex>::view(scene.screen.width, scene.screen.height,
-                                      v0, true) ||
+                                      v0) ||
         !Projection<AxisVertex>::view(scene.screen.width, scene.screen.height,
-                                      v1, true)) {
+                                      v1)) {
       return;
     }
 

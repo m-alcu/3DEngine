@@ -16,7 +16,7 @@ public:
     Flat vertex;
     vertex.world = transform.modelMatrix * slib::vec4(vData.vertex, 1);
     vertex.clip = slib::vec4(vertex.world, 1) * scene->spaceMatrix;
-    Projection<Flat>::view(scene->screen.width, scene->screen.height, vertex, true);
+    Projection<Flat>::view(scene->screen.width, scene->screen.height, vertex);
     return vertex;
   }
 };
@@ -30,7 +30,7 @@ public:
     vertex.world = transform.modelMatrix * slib::vec4(vData.vertex, 1);
     vertex.clip = slib::vec4(vertex.world, 1) * scene->spaceMatrix;
     vertex.normal = transform.normalMatrix * slib::vec4(vData.normal, 0);
-    Projection<Lit>::view(scene->screen.width, scene->screen.height, vertex, true);
+    Projection<Lit>::view(scene->screen.width, scene->screen.height, vertex);
     return vertex;
   }
 };
@@ -44,7 +44,7 @@ public:
     vertex.world = transform.modelMatrix * slib::vec4(vData.vertex, 1);
     vertex.clip = slib::vec4(vertex.world, 1) * scene->spaceMatrix;
     vertex.tex = slib::zvec2(vData.texCoord.x, vData.texCoord.y, 1);
-    Projection<TexturedFlat>::texturedView(scene->screen.width, scene->screen.height, vertex, true);
+    Projection<TexturedFlat>::texturedView(scene->screen.width, scene->screen.height, vertex);
     return vertex;
   }
 };
@@ -59,7 +59,7 @@ public:
     vertex.clip = slib::vec4(vertex.world, 1) * scene->spaceMatrix;
     vertex.tex = slib::zvec2(vData.texCoord.x, vData.texCoord.y, 1);
     vertex.normal = transform.normalMatrix * slib::vec4(vData.normal, 0);
-    Projection<TexturedLit>::texturedView(scene->screen.width, scene->screen.height, vertex, true);
+    Projection<TexturedLit>::texturedView(scene->screen.width, scene->screen.height, vertex);
     return vertex;
   }
 };

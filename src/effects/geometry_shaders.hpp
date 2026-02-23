@@ -9,7 +9,7 @@ class ViewGeometryShader {
 public:
   void operator()(Polygon<V> &poly, int32_t width, int32_t height) const {
     for (auto &point : poly.points) {
-      Projection<V>::view(width, height, point, false);
+      Projection<V>::view(width, height, point);
     }
   }
 };
@@ -19,7 +19,7 @@ class TexturedViewGeometryShader {
 public:
   void operator()(Polygon<V> &poly, int32_t width, int32_t height) const {
     for (auto &point : poly.points) {
-      Projection<V>::texturedView(width, height, point, false);
+      Projection<V>::texturedView(width, height, point);
     }
   }
 };

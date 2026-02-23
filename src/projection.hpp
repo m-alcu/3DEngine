@@ -10,12 +10,12 @@ public:
 
    // Project vertex to screen coordinates in 16.16 fixed-point format
    // Returns false if point is behind camera (w <= 0)
-   static bool view(const int32_t width, const int32_t height, vertex& p, bool init) {
+   static bool view(const int32_t width, const int32_t height, vertex& p) {
        if (p.clip.w <= 0.0001f) {
            return false;
        }
 
-       if (p.dirty || init) {
+       if (p.dirty) {
            constexpr float FP = 65536.0f;
            float oneOverW = 1.0f / p.clip.w;
            float halfW_FP = width  * (0.5f * FP);
@@ -28,16 +28,17 @@ public:
            p.p_z = p.clip.z * oneOverW;
            p.worldOverW = p.world * oneOverW;
            p.oneOverW = oneOverW;
+           p.dirty = false;
        }
        return true;
    }
 
-    static bool texturedView(const int32_t width, const int32_t height, vertex& p, bool init) {
+    static bool texturedView(const int32_t width, const int32_t height, vertex& p) {
        if (p.clip.w <= 0.0001f) {
            return false;
        }
 
-       if (p.dirty || init) {
+       if (p.dirty) {
             constexpr float FP = 65536.0f;
             float oneOverW = 1.0f / p.clip.w;
             float halfW_FP = width  * (0.5f * FP);
@@ -50,8 +51,8 @@ public:
 
             p.p_z = p.clip.z * oneOverW;
             p.worldOverW = p.world * oneOverW;
-
             p.texOverW = p.tex * oneOverW;
+            p.dirty = false;
        }
        return true;
    }

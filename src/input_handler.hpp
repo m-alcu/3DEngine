@@ -156,7 +156,7 @@ private:
       pv.clip = slib::vec4(worldCenter, 1.0f) * scene->spaceMatrix;
 
       if (!Projection<PickVertex>::view(scene->screen.width,
-                                        scene->screen.height, pv, true)) {
+                                        scene->screen.height, pv)) {
         continue;
       }
 

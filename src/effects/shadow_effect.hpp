@@ -29,7 +29,7 @@ public:
 
             const auto& shadowMap = shadow.shadowMap;
             vertex.clip = slib::vec4(vertex.world, 1) * shadowMap->getLightSpaceMatrix(faceIdx);
-            Projection<Vertex>::view(shadowMap->getFaceWidth(), shadowMap->getFaceHeight(), vertex, true);
+            Projection<Vertex>::view(shadowMap->getFaceWidth(), shadowMap->getFaceHeight(), vertex);
 
             return vertex;
         }
