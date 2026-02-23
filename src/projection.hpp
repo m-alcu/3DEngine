@@ -51,13 +51,7 @@ public:
             p.p_z = p.clip.z * oneOverW;
             p.worldOverW = p.world * oneOverW;
 
-            if (init) {
-                p.texOverW = p.tex * oneOverW;
-            } else {
-                p.tex *= oneOverW;
-            }
-       } else {
-            p.tex = p.texOverW;
+            p.texOverW = p.tex * oneOverW;
        }
        return true;
    }

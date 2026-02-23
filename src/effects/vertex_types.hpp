@@ -134,23 +134,23 @@ public:
     TexturedFlat() {}
 
     TexturedFlat(int32_t px, int32_t py, float pz, slib::vec4 vp, slib::zvec2 _tex,
-                 slib::vec3 _world, bool _dirty, slib::vec3 _worldOverW = {})
+                 slib::vec3 _world, bool _dirty, slib::vec3 _worldOverW = {}, slib::zvec2 _texOverW = {})
         : p_x(px), p_y(py), p_z(pz), clip(vp), tex(_tex), world(_world), dirty(_dirty),
-          worldOverW(_worldOverW) {}
+          worldOverW(_worldOverW), texOverW(_texOverW) {}
 
     TexturedFlat operator+(const TexturedFlat &v) const {
         return TexturedFlat(p_x + v.p_x, p_y, p_z + v.p_z, clip + v.clip, tex + v.tex,
-                            world + v.world, true, worldOverW + v.worldOverW);
+                            world + v.world, true, worldOverW + v.worldOverW, texOverW + v.texOverW);
     }
 
     TexturedFlat operator-(const TexturedFlat &v) const {
         return TexturedFlat(p_x - v.p_x, p_y, p_z - v.p_z, clip - v.clip, tex - v.tex,
-                            world - v.world, true, worldOverW - v.worldOverW);
+                            world - v.world, true, worldOverW - v.worldOverW, texOverW - v.texOverW);
     }
 
     TexturedFlat operator*(const float &rhs) const {
         return TexturedFlat(p_x * rhs, p_y, p_z * rhs, clip * rhs, tex * rhs, world * rhs, true,
-                            worldOverW * rhs);
+                            worldOverW * rhs, texOverW * rhs);
     }
 
     TexturedFlat &operator+=(const TexturedFlat &v) {
@@ -160,20 +160,21 @@ public:
         tex += v.tex;
         world += v.world;
         worldOverW += v.worldOverW;
+        texOverW += v.texOverW;
         return *this;
     }
 
     TexturedFlat &vraster(const TexturedFlat &v) {
         p_x += v.p_x;
         p_z += v.p_z;
-        tex += v.tex;
+        texOverW += v.texOverW;
         worldOverW += v.worldOverW;
         return *this;
     }
 
     TexturedFlat &hraster(const TexturedFlat &v) {
         p_z += v.p_z;
-        tex += v.tex;
+        texOverW += v.texOverW;
         worldOverW += v.worldOverW;
         return *this;
     }
@@ -195,25 +196,25 @@ public:
     TexturedLit() {}
 
     TexturedLit(int32_t px, int32_t py, float pz, slib::vec3 n, slib::vec4 vp,
-                slib::vec3 _world, slib::zvec2 _tex, bool _dirty, slib::vec3 _worldOverW = {})
+                slib::vec3 _world, slib::zvec2 _tex, bool _dirty, slib::vec3 _worldOverW = {}, slib::zvec2 _texOverW = {})
         : p_x(px), p_y(py), p_z(pz), normal(n), clip(vp), world(_world), tex(_tex),
-          dirty(_dirty), worldOverW(_worldOverW) {}
+          dirty(_dirty), worldOverW(_worldOverW), texOverW(_texOverW) {}
 
     TexturedLit operator+(const TexturedLit &v) const {
         return TexturedLit(p_x + v.p_x, p_y, p_z + v.p_z, normal + v.normal,
                            clip + v.clip, world + v.world, tex + v.tex, true,
-                           worldOverW + v.worldOverW);
+                           worldOverW + v.worldOverW, texOverW + v.texOverW);
     }
 
     TexturedLit operator-(const TexturedLit &v) const {
         return TexturedLit(p_x - v.p_x, p_y, p_z - v.p_z, normal - v.normal,
                            clip - v.clip, world - v.world, tex - v.tex, true,
-                           worldOverW - v.worldOverW);
+                           worldOverW - v.worldOverW, texOverW - v.texOverW);
     }
 
     TexturedLit operator*(const float &rhs) const {
         return TexturedLit(p_x * rhs, p_y, p_z * rhs, normal * rhs, clip * rhs,
-                           world * rhs, tex * rhs, true, worldOverW * rhs);
+                           world * rhs, tex * rhs, true, worldOverW * rhs, texOverW * rhs);
     }
 
     TexturedLit &operator+=(const TexturedLit &v) {
@@ -224,6 +225,7 @@ public:
         world += v.world;
         tex += v.tex;
         worldOverW += v.worldOverW;
+        texOverW += v.texOverW;
         return *this;
     }
 
@@ -231,7 +233,7 @@ public:
         p_x += v.p_x;
         p_z += v.p_z;
         normal += v.normal;
-        tex += v.tex;
+        texOverW += v.texOverW;
         worldOverW += v.worldOverW;
         return *this;
     }
@@ -239,7 +241,7 @@ public:
     TexturedLit &hraster(const TexturedLit &v) {
         p_z += v.p_z;
         normal += v.normal;
-        tex += v.tex;
+        texOverW += v.texOverW;
         worldOverW += v.worldOverW;
         return *this;
     }

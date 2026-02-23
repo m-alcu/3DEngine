@@ -21,9 +21,9 @@ public:
   public:
     uint32_t operator()(const Vertex &vRaster, const Scene &scene,
                         const Polygon<Vertex> &poly) const {
-      float w = 1.0f / vRaster.tex.w;
+      float w = 1.0f / vRaster.texOverW.w;
       float r, g, b;
-      poly.material->map_Kd.sample(vRaster.tex.x * w, vRaster.tex.y * w, r, g, b);
+      poly.material->map_Kd.sample(vRaster.texOverW.x * w, vRaster.texOverW.y * w, r, g, b);
       slib::vec3 texColor{r, g, b};
       slib::vec3 worldPos = vRaster.worldOverW * w;
 
