@@ -95,8 +95,9 @@ namespace slib
 
     struct mat4
     {
-        std::vector<std::vector<float>> data;
-        explicit mat4(std::vector<std::vector<float>> _data) : data(std::move(_data)){};
+        float data[16];
+        mat4() = default;
+        mat4(std::initializer_list<std::initializer_list<float>> rows);
 
         mat4& operator+=(const mat4& rhs);
         mat4& operator*=(const mat4& rhs);

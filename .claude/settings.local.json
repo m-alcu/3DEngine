@@ -27,7 +27,8 @@
       "WebFetch(domain:ipfs.io)",
       "WebFetch(domain:dotneteer.github.io)",
       "Bash(git mv:*)",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "Bash(/home/marti/proy/3DEngine/build/bin/test_math)"
     ]
   }
 }

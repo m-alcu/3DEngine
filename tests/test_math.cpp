@@ -178,15 +178,15 @@ TEST(Mat4Test, IdentityMatrix) {
     slib::mat4 identity = smath::identity();
 
     // Diagonal should be 1
-    EXPECT_FLOAT_EQ(identity.data[0][0], 1.0f);
-    EXPECT_FLOAT_EQ(identity.data[1][1], 1.0f);
-    EXPECT_FLOAT_EQ(identity.data[2][2], 1.0f);
-    EXPECT_FLOAT_EQ(identity.data[3][3], 1.0f);
+    EXPECT_FLOAT_EQ(identity.data[0],  1.0f);
+    EXPECT_FLOAT_EQ(identity.data[5],  1.0f);
+    EXPECT_FLOAT_EQ(identity.data[10], 1.0f);
+    EXPECT_FLOAT_EQ(identity.data[15], 1.0f);
 
     // Off-diagonal should be 0
-    EXPECT_FLOAT_EQ(identity.data[0][1], 0.0f);
-    EXPECT_FLOAT_EQ(identity.data[0][2], 0.0f);
-    EXPECT_FLOAT_EQ(identity.data[1][0], 0.0f);
+    EXPECT_FLOAT_EQ(identity.data[1], 0.0f);
+    EXPECT_FLOAT_EQ(identity.data[2], 0.0f);
+    EXPECT_FLOAT_EQ(identity.data[4], 0.0f);
 }
 
 TEST(Mat4Test, IdentityTimesVector) {
@@ -208,10 +208,10 @@ TEST(Mat4Test, MatrixMultiplication) {
     // Identity * Identity = Identity
     slib::mat4 result = a * b;
 
-    EXPECT_FLOAT_EQ(result.data[0][0], 1.0f);
-    EXPECT_FLOAT_EQ(result.data[1][1], 1.0f);
-    EXPECT_FLOAT_EQ(result.data[2][2], 1.0f);
-    EXPECT_FLOAT_EQ(result.data[3][3], 1.0f);
+    EXPECT_FLOAT_EQ(result.data[0],  1.0f);
+    EXPECT_FLOAT_EQ(result.data[5],  1.0f);
+    EXPECT_FLOAT_EQ(result.data[10], 1.0f);
+    EXPECT_FLOAT_EQ(result.data[15], 1.0f);
 }
 
 // ============================================================================

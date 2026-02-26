@@ -245,71 +245,60 @@ namespace slib
                 -std::numeric_limits<float>::max()};
     }
 
+    mat4::mat4(std::initializer_list<std::initializer_list<float>> rows)
+    {
+        int i = 0;
+        for (const auto& row : rows)
+        {
+            int j = 0;
+            for (float val : row)
+                data[i * 4 + j++] = val;
+            ++i;
+        }
+    }
+
     mat4& mat4::operator+=(const mat4& rhs)
     {
-        const auto rhsrows = rhs.data.size();
-        const auto rhscols = rhs.data.at(0).size();
-        const auto lhsrows = data.size();
-        const auto lhscols = data.at(0).size();
-
-        if (lhscols != rhsrows)
-        {
-            std::cout << "Error: mat-size mismatch." << std::endl;
-            exit(1);
-        }
-        auto maxCols = lhscols >= rhscols ? lhscols : rhscols;
-        for (int col = 0; col < static_cast<int>(maxCols); ++col)
-        {
-            for (int row = 0; row < static_cast<int>(lhsrows); ++row)
-            {
-                data[col][row] += rhs.data[col][row];
-            }
-        }
+        for (int i = 0; i < 16; ++i)
+            data[i] += rhs.data[i];
         return *this;
     }
 
     mat4& mat4::operator*=(const mat4& rhs)
     {
-        mat4 result({{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}});
-    
-        for (size_t i = 0; i < 4; ++i)
-        {
-            for (size_t j = 0; j < 4; ++j)
+        mat4 result;
+        for (int i = 0; i < 4; ++i)
+            for (int j = 0; j < 4; ++j)
             {
-                result.data[i][j] = 0;
-                for (size_t k = 0; k < 4; ++k)
-                {
-                    result.data[i][j] += data[i][k] * rhs.data[k][j];
-                }
+                result.data[i * 4 + j] = 0;
+                for (int k = 0; k < 4; ++k)
+                    result.data[i * 4 + j] += data[i * 4 + k] * rhs.data[k * 4 + j];
             }
-        }
-    
-        data = result.data;
+        *this = result;
         return *this;
     }
-    
 
     mat4 mat4::operator*(const mat4& rhs) const
     {
-        mat4 toReturn(data);
+        mat4 toReturn(*this);
         return toReturn *= rhs;
     }
 
     vec4 mat4::operator*(const vec4& v) const
     {
-        float res_x = data[0][0] * v.x + data[0][1] * v.y + data[0][2] * v.z + data[0][3] * v.w;
-        float res_y = data[1][0] * v.x + data[1][1] * v.y + data[1][2] * v.z + data[1][3] * v.w;
-        float res_z = data[2][0] * v.x + data[2][1] * v.y + data[2][2] * v.z + data[2][3] * v.w;
-        float res_w = data[3][0] * v.x + data[3][1] * v.y + data[3][2] * v.z + data[3][3] * v.w;
+        float res_x = data[0]  * v.x + data[1]  * v.y + data[2]  * v.z + data[3]  * v.w;
+        float res_y = data[4]  * v.x + data[5]  * v.y + data[6]  * v.z + data[7]  * v.w;
+        float res_z = data[8]  * v.x + data[9]  * v.y + data[10] * v.z + data[11] * v.w;
+        float res_w = data[12] * v.x + data[13] * v.y + data[14] * v.z + data[15] * v.w;
         return vec4{res_x, res_y, res_z, res_w};
     }
 
     vec4 vec4::operator*(const mat4& m) const
     {
-        float res_x = m.data[0][0] * this->x + m.data[1][0] * this->y + m.data[2][0] * this->z + m.data[3][0] * this->w;
-        float res_y = m.data[0][1] * this->x + m.data[1][1] * this->y + m.data[2][1] * this->z + m.data[3][1] * this->w;
-        float res_z = m.data[0][2] * this->x + m.data[1][2] * this->y + m.data[2][2] * this->z + m.data[3][2] * this->w;
-        float res_w = m.data[0][3] * this->x + m.data[1][3] * this->y + m.data[2][3] * this->z + m.data[3][3] * this->w;
+        float res_x = m.data[0] * x + m.data[4] * y + m.data[8]  * z + m.data[12] * w;
+        float res_y = m.data[1] * x + m.data[5] * y + m.data[9]  * z + m.data[13] * w;
+        float res_z = m.data[2] * x + m.data[6] * y + m.data[10] * z + m.data[14] * w;
+        float res_w = m.data[3] * x + m.data[7] * y + m.data[11] * z + m.data[15] * w;
         return vec4{res_x, res_y, res_z, res_w};
     }
 

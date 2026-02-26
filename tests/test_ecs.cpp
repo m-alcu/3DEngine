@@ -330,9 +330,9 @@ TEST(TransformSystemTest, UpdateAllTransforms) {
     ASSERT_NE(r2, nullptr);
 
     // t1: translated to x=10, scaled by 2 — translation lives in row 0, col 3
-    EXPECT_FLOAT_EQ(r1->modelMatrix.data[0][3], 10.0f);
+    EXPECT_FLOAT_EQ(r1->modelMatrix.data[3], 10.0f);
     // t2: translated to y=20 — translation lives in row 1, col 3
-    EXPECT_FLOAT_EQ(r2->modelMatrix.data[1][3], 20.0f);
+    EXPECT_FLOAT_EQ(r2->modelMatrix.data[7], 20.0f);
 }
 
 TEST(TransformSystemTest, UpdateAllOrbits) {

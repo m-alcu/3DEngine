@@ -30,7 +30,7 @@ TEST(TransformComponentTest, ModelMatrixDefaultIsIdentity) {
     // Identity matrix: diagonal is 1, rest is 0
     for (int i = 0; i < 4; ++i)
         for (int j = 0; j < 4; ++j)
-            EXPECT_FLOAT_EQ(t.modelMatrix.data[i][j], (i == j) ? 1.0f : 0.0f);
+            EXPECT_FLOAT_EQ(t.modelMatrix.data[i * 4 + j], (i == j) ? 1.0f : 0.0f);
 }
 
 // ============================================================================
@@ -43,7 +43,7 @@ TEST(TransformSystemTest, UpdateTransformAtOrigin) {
     // Position at origin, zoom 1, no rotation => identity
     for (int i = 0; i < 4; ++i)
         for (int j = 0; j < 4; ++j)
-            EXPECT_FLOAT_EQ(t.modelMatrix.data[i][j], (i == j) ? 1.0f : 0.0f);
+            EXPECT_FLOAT_EQ(t.modelMatrix.data[i * 4 + j], (i == j) ? 1.0f : 0.0f);
 }
 
 TEST(TransformSystemTest, UpdateTransformTranslation) {
