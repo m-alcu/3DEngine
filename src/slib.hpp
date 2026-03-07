@@ -69,8 +69,6 @@ namespace slib
         bool operator>=(const vec3& rhs) const;
         vec3& operator=(const vec4& rhs);
 
-        static vec3 boundMin();
-        static vec3 boundMax();
     };
 
     struct vec4

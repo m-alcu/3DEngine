@@ -231,20 +231,6 @@ namespace slib
         return *this;
     }
 
-    vec3 vec3::boundMin()
-    {
-        return {std::numeric_limits<float>::max(),
-                std::numeric_limits<float>::max(),
-                std::numeric_limits<float>::max()};
-    }
-
-    vec3 vec3::boundMax()
-    {
-        return {-std::numeric_limits<float>::max(),
-                -std::numeric_limits<float>::max(),
-                -std::numeric_limits<float>::max()};
-    }
-
     mat4::mat4(std::initializer_list<std::initializer_list<float>> rows)
     {
         int i = 0;

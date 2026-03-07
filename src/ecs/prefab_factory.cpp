@@ -646,8 +646,14 @@ namespace PrefabFactory {
             m.d = mat.dissolve;
             m.illum = mat.illum;
 
+                auto resolveTexPath = [&](const std::string& name) {
+                std::string normalized = name;
+                std::replace(normalized.begin(), normalized.end(), '\\', '/');
+                return basePath / normalized;
+            };
+
             if (!mat.diffuse_texname.empty()) {
-                std::filesystem::path texPath = basePath / mat.diffuse_texname;
+                std::filesystem::path texPath = resolveTexPath(mat.diffuse_texname);
                 if (std::filesystem::exists(texPath)) {
                     m.map_Kd = Texture::loadFromFile(texPath.string());
                 } else {
@@ -656,14 +662,14 @@ namespace PrefabFactory {
             }
 
             if (!mat.specular_texname.empty()) {
-                std::filesystem::path texPath = basePath / mat.specular_texname;
+                std::filesystem::path texPath = resolveTexPath(mat.specular_texname);
                 if (std::filesystem::exists(texPath)) {
                     m.map_Ks = Texture::loadFromFile(texPath.string());
                 }
             }
 
             if (!mat.specular_highlight_texname.empty()) {
-                std::filesystem::path texPath = basePath / mat.specular_highlight_texname;
+                std::filesystem::path texPath = resolveTexPath(mat.specular_highlight_texname);
                 if (std::filesystem::exists(texPath)) {
                     m.map_Ns = Texture::loadFromFile(texPath.string());
                 }

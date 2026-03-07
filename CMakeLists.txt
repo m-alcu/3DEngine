@@ -15,17 +15,6 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(SDL3)
 
-# YAML parsing library
-FetchContent_Declare(
-    yaml-cpp
-    GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
-    GIT_TAG yaml-cpp-0.9.0
-)
-set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
-set(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(yaml-cpp)
-
 set(SRC_DIRS src src/vendor/imgui src/vendor/nothings src/vendor/tinyobjloader src/objects src/effects src/backgrounds src/scenes src/ecs)
 
 set(SRC_FILES "")
@@ -56,7 +45,7 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     $<TARGET_FILE_DIR:${PROJECT_NAME}>/resources
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3 yaml-cpp::yaml-cpp)
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3)
 
 target_compile_options(${PROJECT_NAME} PRIVATE
     $<$<CONFIG:Release>:-O3>

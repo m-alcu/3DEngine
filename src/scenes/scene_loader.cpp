@@ -1,5 +1,6 @@
 #include "scene_loader.hpp"
-#include <yaml-cpp/yaml.h>
+#define TINY_YAML_IMPLEMENTATION
+#include "../vendor/tiny_yaml/tiny_yaml.hpp"
 #include <filesystem>
 #include <stdexcept>
 #include <unordered_map>
