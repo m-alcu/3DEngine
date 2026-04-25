@@ -719,7 +719,8 @@ namespace PrefabFactory {
 
                         if (texIdx >= 0) {
                             vd.texCoord.x = attrib.texcoords[2 * texIdx + 0];
-                            vd.texCoord.y = attrib.texcoords[2 * texIdx + 1];
+                            // OBJ V=0 is bottom; stb_image row 0 is top — flip to match
+                            vd.texCoord.y = 1.0f - attrib.texcoords[2 * texIdx + 1];
                         } else {
                             vd.texCoord = { 0.0f, 0.0f };
                         }
