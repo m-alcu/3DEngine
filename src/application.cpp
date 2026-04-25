@@ -1,7 +1,14 @@
 #include "application.hpp"
 
 #include "scene_ui.hpp"
+#include "scenes/scene_factory.hpp"
+#include "vendor/imgui/imgui.h"
+#include "vendor/imgui/imgui_impl_sdl3.h"
+#include "vendor/imgui/imgui_impl_sdlrenderer3.h"
+
+#include <SDL3/SDL.h>
 #include <cstdio>
+#include <memory>
 
 #ifdef __EMSCRIPTEN__
 #include "../libs/emscripten/emscripten_mainloop_stub.h"
