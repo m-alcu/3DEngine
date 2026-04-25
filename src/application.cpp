@@ -1,12 +1,8 @@
 #include "application.hpp"
 
-#include "backgrounds/background_factory.hpp"
 #include "constants.hpp"
 #include "scene_ui.hpp"
-#include "scenes/scene_factory.hpp"
 #include <cstdio>
-#include <string>
-#include <vector>
 
 #ifdef __EMSCRIPTEN__
 #include "../libs/emscripten/emscripten_mainloop_stub.h"
@@ -134,27 +130,7 @@ void Application::drawUi() {
                      10.0f);
 
   SceneUI::drawSolidControls(*scene);
-
-  int currentBackground = static_cast<int>(scene->backgroundType);
-  const auto& names = SceneFactory::allSceneNames();
-  auto itemGetter = [](void* data, int idx) -> const char* {
-    auto* v = static_cast<const std::vector<std::string>*>(data);
-    return (*v)[idx].c_str();
-  };
-  if (ImGui::Combo("Scene", &currentSceneIndex, itemGetter,
-                   const_cast<void*>(static_cast<const void*>(&names)),
-                   SceneFactory::sceneCount())) {
-    auto newScene = SceneFactory::createSceneByIndex(
-        currentSceneIndex, {SCREEN_WIDTH, SCREEN_HEIGHT});
-    if (newScene) {
-      scene = std::move(newScene);
-      scene->setup();
-      scene->backgroundType = static_cast<BackgroundType>(currentBackground);
-      scene->background = std::unique_ptr<Background>(
-          BackgroundFactory::createBackground(scene->backgroundType));
-    }
-  }
-
+  SceneUI::drawSceneSelector(scene, currentSceneIndex, {SCREEN_WIDTH, SCREEN_HEIGHT});
   SceneUI::drawSceneControls(*scene);
 
   ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",

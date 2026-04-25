@@ -1,9 +1,35 @@
 #pragma once
 
+#include "backgrounds/background_factory.hpp"
 #include "scene.hpp"
+#include "scenes/scene_factory.hpp"
 #include "vendor/imgui/imgui.h"
 
+#include <memory>
+#include <vector>
+
 namespace SceneUI {
+
+inline void drawSceneSelector(std::unique_ptr<Scene>& scene, int& currentSceneIndex, Screen screen) {
+    int currentBackground = static_cast<int>(scene->backgroundType);
+    const auto& names = SceneFactory::allSceneNames();
+    auto itemGetter = [](void* data, int idx) -> const char* {
+        auto* v = static_cast<const std::vector<std::string>*>(data);
+        return (*v)[idx].c_str();
+    };
+    if (ImGui::Combo("Scene", &currentSceneIndex, itemGetter,
+                     const_cast<void*>(static_cast<const void*>(&names)),
+                     SceneFactory::sceneCount())) {
+        auto newScene = SceneFactory::createSceneByIndex(currentSceneIndex, screen);
+        if (newScene) {
+            scene = std::move(newScene);
+            scene->setup();
+            scene->backgroundType = static_cast<BackgroundType>(currentBackground);
+            scene->background = std::unique_ptr<Background>(
+                BackgroundFactory::createBackground(scene->backgroundType));
+        }
+    }
+}
 
 inline void drawSolidControls(Scene& scene) {
     if (scene.entities.empty()) return;
