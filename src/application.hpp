@@ -1,5 +1,6 @@
 #pragma once
 
+#include "app_config.hpp"
 #include "app_state.hpp"
 #include "input_handler.hpp"
 #include "platform_resources.hpp"
@@ -37,5 +38,6 @@ private:
   Renderer solidRenderer;
   std::unique_ptr<InputHandler> inputHandler;
 
+  AppConfig config;
   AppState state;
 };

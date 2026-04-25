@@ -204,4 +204,4 @@ model->setup("resources/model.obj");
 - Dear ImGui (in `src/vendor/imgui/`)
 - stb_image (in `src/vendor/nothings/`) - Image loading (PNG, JPG, BMP, TGA, etc.)
 - Google Test (fetched via CMake FetchContent for testing)
-- C++23 standard required
+- C++17 standard required

@@ -9,7 +9,7 @@
 
 namespace SceneUI {
 
-inline void drawSceneSelector(AppState& state) {
+inline void drawSceneSelector(AppState& state, Screen screen) {
     int currentBackground = static_cast<int>(state.scene->backgroundType);
     const auto& names = SceneFactory::allSceneNames();
     auto itemGetter = [](void* data, int idx) -> const char* {
@@ -19,7 +19,7 @@ inline void drawSceneSelector(AppState& state) {
     if (ImGui::Combo("Scene", &state.currentSceneIndex, itemGetter,
                      const_cast<void*>(static_cast<const void*>(&names)),
                      SceneFactory::sceneCount())) {
-        auto newScene = SceneFactory::createSceneByIndex(state.currentSceneIndex, state.screen);
+        auto newScene = SceneFactory::createSceneByIndex(state.currentSceneIndex, screen);
         if (newScene) {
             state.scene = std::move(newScene);
             state.scene->setup();

@@ -24,7 +24,9 @@ bool Application::init() {
 
   SDL_WindowFlags windowFlags =
       SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN | SDL_WINDOW_HIGH_PIXEL_DENSITY;
-  if (!window.create("3D Engine", state.screen.width * 2, state.screen.height * 2,
+  if (!window.create(config.windowTitle,
+                     config.screen.width * config.windowScale,
+                     config.screen.height * config.windowScale,
                      windowFlags)) {
     std::printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
     return false;
@@ -37,8 +39,8 @@ bool Application::init() {
   SDL_SetRenderVSync(sdlRenderer.get(), 1);
 
   if (!texture.create(sdlRenderer.get(), SDL_PIXELFORMAT_ARGB8888,
-                      SDL_TEXTUREACCESS_STREAMING, state.screen.width,
-                      state.screen.height)) {
+                      SDL_TEXTUREACCESS_STREAMING, config.screen.width,
+                      config.screen.height)) {
     SDL_Log("Error: SDL_CreateTexture(): %s\n", SDL_GetError());
     return false;
   }
@@ -49,7 +51,7 @@ bool Application::init() {
 
   imgui.init(window.get(), sdlRenderer.get());
 
-  state.scene = SceneFactory::createSceneByIndex(state.currentSceneIndex, state.screen);
+  state.scene = SceneFactory::createSceneByIndex(state.currentSceneIndex, config.screen);
   state.scene->setup();
   inputHandler = std::make_unique<InputHandler>(window.get(), state.keys);
 
@@ -118,7 +120,7 @@ void Application::renderScene() {
 void Application::presentFrame() {
   ImGui::Render();
 
-  SDL_UpdateTexture(texture.get(), nullptr, &state.scene->pixels[0], 4 * state.screen.width);
+  SDL_UpdateTexture(texture.get(), nullptr, &state.scene->pixels[0], 4 * config.screen.width);
   SDL_RenderTexture(sdlRenderer.get(), texture.get(), nullptr, nullptr);
 
   ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(),
@@ -135,7 +137,7 @@ void Application::drawUi() {
                      10.0f);
 
   SceneUI::drawSolidControls(*state.scene);
-  SceneUI::drawSceneSelector(state);
+  SceneUI::drawSceneSelector(state, config.screen);
   SceneUI::drawSceneControls(*state.scene);
 
   ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
