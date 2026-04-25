@@ -1,6 +1,5 @@
 #include "application.hpp"
 
-#include "constants.hpp"
 #include "scene_ui.hpp"
 #include <cstdio>
 
@@ -18,7 +17,7 @@ bool Application::init() {
 
   SDL_WindowFlags windowFlags =
       SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN | SDL_WINDOW_HIGH_PIXEL_DENSITY;
-  if (!window.create("3D Engine", SCREEN_WIDTH * 2, SCREEN_HEIGHT * 2,
+  if (!window.create("3D Engine", state.screen.width * 2, state.screen.height * 2,
                      windowFlags)) {
     std::printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
     return false;
@@ -31,8 +30,8 @@ bool Application::init() {
   SDL_SetRenderVSync(sdlRenderer.get(), 1);
 
   if (!texture.create(sdlRenderer.get(), SDL_PIXELFORMAT_ARGB8888,
-                      SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH,
-                      SCREEN_HEIGHT)) {
+                      SDL_TEXTUREACCESS_STREAMING, state.screen.width,
+                      state.screen.height)) {
     SDL_Log("Error: SDL_CreateTexture(): %s\n", SDL_GetError());
     return false;
   }
@@ -43,10 +42,9 @@ bool Application::init() {
 
   imgui.init(window.get(), sdlRenderer.get());
 
-  scene = SceneFactory::createSceneByIndex(currentSceneIndex,
-                                           {SCREEN_WIDTH, SCREEN_HEIGHT});
-  scene->setup();
-  inputHandler = std::make_unique<InputHandler>(window.get(), keys);
+  state.scene = SceneFactory::createSceneByIndex(state.currentSceneIndex, state.screen);
+  state.scene->setup();
+  inputHandler = std::make_unique<InputHandler>(window.get(), state.keys);
 
   return true;
 }
@@ -58,7 +56,7 @@ int Application::run() {
   io.IniFilename = nullptr;
   EMSCRIPTEN_MAINLOOP_BEGIN
 #else
-  while (!keys[SDLK_ESCAPE] && !closedWindow)
+  while (!state.keys[SDLK_ESCAPE] && !state.closedWindow)
 #endif
   {
     runFrame();
@@ -86,8 +84,8 @@ void Application::runFrame() {
 }
 
 void Application::processInput() {
-  closedWindow = inputHandler->processEvents(scene);
-  inputHandler->processKeyboardInput(scene);
+  state.closedWindow = inputHandler->processEvents(state.scene);
+  inputHandler->processKeyboardInput(state.scene);
 }
 
 bool Application::shouldPauseFrame() const {
@@ -103,17 +101,17 @@ void Application::beginUiFrame() {
 
 void Application::updateScene() {
   ImGuiIO& io = ImGui::GetIO();
-  scene->update(io.DeltaTime);
+  state.scene->update(io.DeltaTime);
 }
 
 void Application::renderScene() {
-  solidRenderer.drawScene(*scene);
+  solidRenderer.drawScene(*state.scene);
 }
 
 void Application::presentFrame() {
   ImGui::Render();
 
-  SDL_UpdateTexture(texture.get(), nullptr, &scene->pixels[0], 4 * SCREEN_WIDTH);
+  SDL_UpdateTexture(texture.get(), nullptr, &state.scene->pixels[0], 4 * state.screen.width);
   SDL_RenderTexture(sdlRenderer.get(), texture.get(), nullptr, nullptr);
 
   ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(),
@@ -125,18 +123,18 @@ void Application::drawUi() {
   ImGuiIO& io = ImGui::GetIO();
 
   ImGui::Begin("3d params");
-  ImGui::SliderFloat("cam speed", &scene->camera.speed, 0.1f, 10.0f);
-  ImGui::SliderFloat("pitch/yaw/roll sens", &scene->camera.sensitivity, 0.0f,
+  ImGui::SliderFloat("cam speed", &state.scene->camera.speed, 0.1f, 10.0f);
+  ImGui::SliderFloat("pitch/yaw/roll sens", &state.scene->camera.sensitivity, 0.0f,
                      10.0f);
 
-  SceneUI::drawSolidControls(*scene);
-  SceneUI::drawSceneSelector(scene, currentSceneIndex, {SCREEN_WIDTH, SCREEN_HEIGHT});
-  SceneUI::drawSceneControls(*scene);
+  SceneUI::drawSolidControls(*state.scene);
+  SceneUI::drawSceneSelector(state);
+  SceneUI::drawSceneControls(*state.scene);
 
   ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
               1000.0f / io.Framerate, io.Framerate);
-  SceneUI::drawCameraInfo(*scene);
-  SceneUI::drawStats(*scene);
+  SceneUI::drawCameraInfo(*state.scene);
+  SceneUI::drawStats(*state.scene);
 
   ImGui::End();
 }

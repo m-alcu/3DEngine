@@ -1,11 +1,10 @@
 #pragma once
 
+#include "app_state.hpp"
 #include "input_handler.hpp"
 #include "platform_resources.hpp"
 #include "renderer.hpp"
-#include "scene.hpp"
 
-#include <map>
 #include <memory>
 
 class Application {
@@ -28,6 +27,7 @@ private:
   void renderScene();
   void presentFrame();
   void runFrame();
+
   SdlContext sdl;
   SdlWindow window;
   SdlRenderer sdlRenderer;
@@ -35,10 +35,7 @@ private:
   ImguiContext imgui;
 
   Renderer solidRenderer;
-  std::unique_ptr<Scene> scene;
   std::unique_ptr<InputHandler> inputHandler;
-  std::map<int, bool> keys;
 
-  bool closedWindow = false;
-  int currentSceneIndex = 0;
+  AppState state;
 };
