@@ -88,25 +88,46 @@ int Application::run() {
 }
 
 void Application::runFrame() {
-  closedWindow = inputHandler->processEvents(scene);
-  inputHandler->processKeyboardInput(scene);
+  processInput();
 
-  if (SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED) {
+  if (shouldPauseFrame()) {
     SDL_Delay(10);
     return;
   }
 
+  beginUiFrame();
+  drawUi();
+  updateScene();
+  renderScene();
+  presentFrame();
+}
+
+void Application::processInput() {
+  closedWindow = inputHandler->processEvents(scene);
+  inputHandler->processKeyboardInput(scene);
+}
+
+bool Application::shouldPauseFrame() const {
+  return SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED;
+}
+
+void Application::beginUiFrame() {
   ImGui_ImplSDLRenderer3_NewFrame();
   ImGui_ImplSDL3_NewFrame();
   ImGui::NewFrame();
   ImGui::SetNextWindowBgAlpha(0.3f);
+}
 
-  drawUi();
-
+void Application::updateScene() {
   ImGuiIO& io = ImGui::GetIO();
   scene->update(io.DeltaTime);
-  solidRenderer.drawScene(*scene);
+}
 
+void Application::renderScene() {
+  solidRenderer.drawScene(*scene);
+}
+
+void Application::presentFrame() {
   ImGui::Render();
 
   SDL_UpdateTexture(texture, nullptr, &scene->pixels[0], 4 * SCREEN_WIDTH);

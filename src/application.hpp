@@ -20,7 +20,13 @@ public:
   int run();
 
 private:
+  void processInput();
+  bool shouldPauseFrame() const;
+  void beginUiFrame();
   void drawUi();
+  void updateScene();
+  void renderScene();
+  void presentFrame();
   void runFrame();
   void shutdown();
 
