@@ -1,10 +1,10 @@
 #pragma once
 
 #include "input_handler.hpp"
+#include "platform_resources.hpp"
 #include "renderer.hpp"
 #include "scene.hpp"
 
-#include <SDL3/SDL.h>
 #include <map>
 #include <memory>
 
@@ -28,11 +28,11 @@ private:
   void renderScene();
   void presentFrame();
   void runFrame();
-  void shutdown();
-
-  SDL_Window* window = nullptr;
-  SDL_Renderer* sdlRenderer = nullptr;
-  SDL_Texture* texture = nullptr;
+  SdlContext sdl;
+  SdlWindow window;
+  SdlRenderer sdlRenderer;
+  SdlTexture texture;
+  ImguiContext imgui;
 
   Renderer solidRenderer;
   std::unique_ptr<Scene> scene;
@@ -40,6 +40,5 @@ private:
   std::map<int, bool> keys;
 
   bool closedWindow = false;
-  bool initialized = false;
   int currentSceneIndex = 0;
 };

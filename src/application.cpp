@@ -4,8 +4,6 @@
 #include "constants.hpp"
 #include "scene_ui.hpp"
 #include "scenes/scene_factory.hpp"
-#include "vendor/imgui/imgui_impl_sdlrenderer3.h"
-
 #include <cstdio>
 #include <string>
 #include <vector>
@@ -14,56 +12,45 @@
 #include "../libs/emscripten/emscripten_mainloop_stub.h"
 #endif
 
-Application::~Application() { shutdown(); }
+Application::~Application() = default;
 
 bool Application::init() {
-  if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD)) {
+  if (!sdl.init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD)) {
     std::printf("Error: SDL_Init(): %s\n", SDL_GetError());
     return false;
   }
-  initialized = true;
 
   SDL_WindowFlags windowFlags =
       SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN | SDL_WINDOW_HIGH_PIXEL_DENSITY;
-  window = SDL_CreateWindow("3D Engine", SCREEN_WIDTH * 2, SCREEN_HEIGHT * 2,
-                            windowFlags);
-  if (window == nullptr) {
+  if (!window.create("3D Engine", SCREEN_WIDTH * 2, SCREEN_HEIGHT * 2,
+                     windowFlags)) {
     std::printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
     return false;
   }
 
-  sdlRenderer = SDL_CreateRenderer(window, nullptr);
-  if (sdlRenderer == nullptr) {
+  if (!sdlRenderer.create(window.get())) {
     SDL_Log("Error: SDL_CreateRenderer(): %s\n", SDL_GetError());
     return false;
   }
-  SDL_SetRenderVSync(sdlRenderer, 1);
+  SDL_SetRenderVSync(sdlRenderer.get(), 1);
 
-  texture = SDL_CreateTexture(sdlRenderer, SDL_PIXELFORMAT_ARGB8888,
-                              SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH,
-                              SCREEN_HEIGHT);
-  if (texture == nullptr) {
+  if (!texture.create(sdlRenderer.get(), SDL_PIXELFORMAT_ARGB8888,
+                      SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH,
+                      SCREEN_HEIGHT)) {
     SDL_Log("Error: SDL_CreateTexture(): %s\n", SDL_GetError());
     return false;
   }
-  SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_NONE);
-  SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
-  SDL_ShowWindow(window);
+  SDL_SetTextureBlendMode(texture.get(), SDL_BLENDMODE_NONE);
+  SDL_SetWindowPosition(window.get(), SDL_WINDOWPOS_CENTERED,
+                        SDL_WINDOWPOS_CENTERED);
+  SDL_ShowWindow(window.get());
 
-  IMGUI_CHECKVERSION();
-  ImGui::CreateContext();
-  ImGuiIO& io = ImGui::GetIO();
-  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-  io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
-
-  ImGui::StyleColorsDark();
-  ImGui_ImplSDL3_InitForSDLRenderer(window, sdlRenderer);
-  ImGui_ImplSDLRenderer3_Init(sdlRenderer);
+  imgui.init(window.get(), sdlRenderer.get());
 
   scene = SceneFactory::createSceneByIndex(currentSceneIndex,
                                            {SCREEN_WIDTH, SCREEN_HEIGHT});
   scene->setup();
-  inputHandler = std::make_unique<InputHandler>(window, keys);
+  inputHandler = std::make_unique<InputHandler>(window.get(), keys);
 
   return true;
 }
@@ -108,7 +95,7 @@ void Application::processInput() {
 }
 
 bool Application::shouldPauseFrame() const {
-  return SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED;
+  return SDL_GetWindowFlags(window.get()) & SDL_WINDOW_MINIMIZED;
 }
 
 void Application::beginUiFrame() {
@@ -130,11 +117,12 @@ void Application::renderScene() {
 void Application::presentFrame() {
   ImGui::Render();
 
-  SDL_UpdateTexture(texture, nullptr, &scene->pixels[0], 4 * SCREEN_WIDTH);
-  SDL_RenderTexture(sdlRenderer, texture, nullptr, nullptr);
+  SDL_UpdateTexture(texture.get(), nullptr, &scene->pixels[0], 4 * SCREEN_WIDTH);
+  SDL_RenderTexture(sdlRenderer.get(), texture.get(), nullptr, nullptr);
 
-  ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), sdlRenderer);
-  SDL_RenderPresent(sdlRenderer);
+  ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(),
+                                        sdlRenderer.get());
+  SDL_RenderPresent(sdlRenderer.get());
 }
 
 void Application::drawUi() {
@@ -175,32 +163,4 @@ void Application::drawUi() {
   SceneUI::drawStats(*scene);
 
   ImGui::End();
-}
-
-void Application::shutdown() {
-  if (!initialized) {
-    return;
-  }
-
-  if (ImGui::GetCurrentContext() != nullptr) {
-    ImGui_ImplSDLRenderer3_Shutdown();
-    ImGui_ImplSDL3_Shutdown();
-    ImGui::DestroyContext();
-  }
-
-  if (texture != nullptr) {
-    SDL_DestroyTexture(texture);
-    texture = nullptr;
-  }
-  if (sdlRenderer != nullptr) {
-    SDL_DestroyRenderer(sdlRenderer);
-    sdlRenderer = nullptr;
-  }
-  if (window != nullptr) {
-    SDL_DestroyWindow(window);
-    window = nullptr;
-  }
-
-  SDL_Quit();
-  initialized = false;
 }
