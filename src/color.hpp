@@ -9,31 +9,30 @@ public:
     // Default constructor: black (0, 0, 0)
     constexpr Color() : slib::vec3(0.0f, 0.0f, 0.0f) {}
 
-    // Constructor with blue, green, red components
-    constexpr Color(float b, float g, float r) : slib::vec3(b, g, r) {}
+    // Constructor with red, green, blue components
+    constexpr Color(float r, float g, float b) : slib::vec3(r, g, b) {}
 
     // Constructor from slib::vec3 directly
     constexpr Color(const slib::vec3& v) : slib::vec3(v) {}
 
     uint32_t toBgra() const {
-        // Clamp and convert to int in one step
-        auto clamp = [](float val) -> int {
-            if (val <= 0.0f) return 0;
-            if (val >= 255.0f) return 255;
-            return static_cast<int>(val);
+        auto toU8 = [](float val) -> uint32_t {
+            if (val <= 0.0f) return 0u;
+            if (val >= 255.0f) return 255u;
+            return static_cast<uint32_t>(val + 0.5f);
         };
 
         return 0xff000000u |
-               (static_cast<uint32_t>(clamp(x)) << 16) |
-               (static_cast<uint32_t>(clamp(y)) << 8) |
-               static_cast<uint32_t>(clamp(z));
+               (toU8(x) << 16) |
+               (toU8(y) <<  8) |
+                toU8(z);
     }
 
-    float& blue()  { return x; }
+    float& red()   { return x; }
     float& green() { return y; }
-    float& red()   { return z; }
+    float& blue()  { return z; }
 
-    const float& blue()  const { return x; }
+    const float& red()   const { return x; }
     const float& green() const { return y; }
-    const float& red()   const { return z; }
+    const float& blue()  const { return z; }
 };
