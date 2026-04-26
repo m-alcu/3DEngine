@@ -1,6 +1,7 @@
 #pragma once
 #include "transform_component.hpp"
 #include "component_store.hpp"
+#include "../constants.hpp"
 #include "../slib.hpp"
 #include "../smath.hpp"
 #include <cmath>
@@ -44,9 +45,8 @@ namespace TransformSystem {
 
     namespace detail {
         inline float wrapTwoPi(float a) {
-            const float TWO_PI = 6.2831853071795864769f;
-            a = std::fmod(a, TWO_PI);
-            if (a < 0) a += TWO_PI;
+            a = std::fmod(a, 2.0f * PI);
+            if (a < 0) a += 2.0f * PI;
             return a;
         }
     }
