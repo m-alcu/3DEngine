@@ -31,6 +31,7 @@ public:
         const Light &light = lightComp.light;
         slib::vec3 luxDirection = light.getDirection(worldPos);
         float diff = std::max(0.0f, smath::dot(vRaster.normal, luxDirection));
+        if (diff == 0.0f) continue;
         float attenuation = light.getAttenuation(worldPos);
         float shadow = lighting::sampleShadow(scene, entity_, worldPos, diff, light.position);
         float factor = light.intensity * attenuation * shadow;

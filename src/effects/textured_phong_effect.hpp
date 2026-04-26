@@ -28,7 +28,6 @@ public:
       slib::vec3 texColor{r, g, b};
       slib::vec3 worldPos = vRaster.worldOverW * w;
 
-      const auto &Ks = poly.material->Ks; // vec3
       slib::vec3 normal = smath::normalize(vRaster.normal);
       slib::vec3 color{0.0f, 0.0f, 0.0f};
 
@@ -43,7 +42,7 @@ public:
         float factor = light.intensity * attenuation * shadow;
         slib::vec3 lightColor = light.color * factor;
         color += texColor * lightColor * diff;
-        color += Ks * lightColor * spec;
+        color += poly.material->Ks * lightColor * spec;
       }
 
       return color.toBgra();
