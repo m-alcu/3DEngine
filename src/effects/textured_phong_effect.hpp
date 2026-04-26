@@ -36,13 +36,12 @@ public:
         slib::vec3 luxDirection = light.getDirection(worldPos);
         float diff = std::max(0.0f, smath::dot(normal, luxDirection));
         if (diff == 0.0f) continue;
+        float shadow = lighting::sampleShadow(scene, entity_, worldPos, diff, light.position);
+        if (shadow == 0.0f) continue;
         float spec = lighting::specular(normal, luxDirection, scene.camera.forward, poly.material->Ns, scene.blinnPhong);
         float attenuation = light.getAttenuation(worldPos);
-        float shadow = lighting::sampleShadow(scene, entity_, worldPos, diff, light.position);
-        float factor = light.intensity * attenuation * shadow;
-        slib::vec3 lightColor = light.color * factor;
-        color += texColor * lightColor * diff;
-        color += poly.material->Ks * lightColor * spec;
+        slib::vec3 lightColor = light.color * light.intensity * attenuation * shadow;
+        color += (texColor * diff + poly.material->Ks * spec) * lightColor;
       }
 
       return color.toBgra();
