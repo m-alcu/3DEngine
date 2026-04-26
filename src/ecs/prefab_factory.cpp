@@ -214,25 +214,27 @@ namespace PrefabFactory {
     }
 
     void buildKnot(MeshComponent& mesh, MaterialComponent& material,
-                   int uSteps, int vSteps, float scale, float r) {
-        // Classic trefoil knot centerline: 3 lobes, closes after t in [0, 2π]
+                   int lobes, int uSteps, int vSteps, float scale, float r) {
+        // n-lobe knot: generalizes the trefoil (lobes=3) to any lobe count.
+        // Centerline: P(t) = scale*(sin(t)+2*sin((n-1)*t), cos(t)-2*cos((n-1)*t), -sin(n*t))
+        const float n  = static_cast<float>(lobes);
+        const float n1 = n - 1.0f;
         std::vector<VertexData> vertices(uSteps * vSteps);
 
         for (int i = 0; i < uSteps; i++) {
             float t = 2.0f * PI * i / uSteps;
 
-            // Centerline position
             slib::vec3 P = {
-                scale * (std::sin(t) + 2.0f * std::sin(2.0f * t)),
-                scale * (std::cos(t) - 2.0f * std::cos(2.0f * t)),
-                scale * (-std::sin(3.0f * t))
+                scale * (std::sin(t)  + 2.0f * std::sin(n1 * t)),
+                scale * (std::cos(t)  - 2.0f * std::cos(n1 * t)),
+                scale * (-std::sin(n  * t))
             };
 
-            // Analytical tangent
+            // Analytical tangent (exact derivative of P)
             slib::vec3 dP = {
-                std::cos(t) + 4.0f * std::cos(2.0f * t),
-                -std::sin(t) + 4.0f * std::sin(2.0f * t),
-                -3.0f * std::cos(3.0f * t)
+                std::cos(t)  + 2.0f * n1 * std::cos(n1 * t),
+                -std::sin(t) + 2.0f * n1 * std::sin(n1 * t),
+                -n * std::cos(n * t)
             };
             slib::vec3 T = smath::normalize(dP);
 

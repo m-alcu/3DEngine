@@ -9,7 +9,7 @@ scene:
   solids:
     - type: knot
       name: "Knotg"
-      u_steps: 120
+      lobes: 5
       v_steps: 12
       scale: 100.0
       tube_radius: 30.0
