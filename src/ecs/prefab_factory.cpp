@@ -17,6 +17,18 @@
 
 namespace {
 
+    void addCheckerMaterial(MaterialComponent& material, const std::string& key, slib::vec3 diffuse) {
+        MaterialProperties props = MaterialSystem::getMaterialProperties(MaterialType::Metal);
+        material.materials.insert({key, MaterialSystem::initDefaultMaterial(
+            props,
+            slib::vec3{0x00, 0x00, 0x00},
+            diffuse,
+            slib::vec3{0xff, 0xff, 0xff},
+            std::string(RES_PATH) + "checker-map_tho.png",
+            TextureFilter::NEIGHBOUR
+        )});
+    }
+
     bool isRedTile(float u, float v, int rows, int cols) {
         int x = static_cast<int>(u * cols);
         int y = static_cast<int>(v * rows);
@@ -24,8 +36,8 @@ namespace {
     }
 
     void setVertexNormalsToPosition(MeshComponent& mesh) {
-        for (int i = 0; i < mesh.numVertices; i++) {
-            mesh.vertexData[i].normal = mesh.vertexData[i].vertex;
+        for (auto& vd : mesh.vertexData) {
+            vd.normal = vd.vertex;
         }
     }
 
@@ -70,7 +82,6 @@ namespace PrefabFactory {
         v.vertex = { -half, -half, +half }; v.texCoord = { 1, 0 }; vertices.push_back(v);
 
         mesh.vertexData = vertices;
-        mesh.numVertices = static_cast<int>(vertices.size());
 
         MaterialProperties properties = MaterialSystem::getMaterialProperties(MaterialType::Metal);
         std::string materialKey = "floorTexture";
@@ -92,7 +103,6 @@ namespace PrefabFactory {
             mesh.faceData.push_back(face);
         }
 
-        mesh.numFaces = static_cast<int>(mesh.faceData.size());
         MeshSystem::updateFaceNormals(mesh);
         MeshSystem::updateVertexNormals(mesh);
         MeshSystem::updateRadius(mesh);
@@ -110,7 +120,6 @@ namespace PrefabFactory {
         v.vertex = { -half, +half, 0} ; v.texCoord = { 0, 1 }; vertices.push_back(v);
 
         mesh.vertexData = vertices;
-        mesh.numVertices = static_cast<int>(vertices.size());
 
         MaterialProperties properties = MaterialSystem::getMaterialProperties(MaterialType::Plastic);
         std::string materialKey = "planeMaterial";
@@ -127,7 +136,6 @@ namespace PrefabFactory {
         face.face.vertexIndices = { 0, 1, 2, 3 };
         face.face.materialKey = materialKey;
         mesh.faceData.push_back(face);
-        mesh.numFaces = static_cast<int>(mesh.faceData.size());
         MeshSystem::updateFaceNormals(mesh);
         MeshSystem::updateVertexNormals(mesh);
         MeshSystem::updateRadius(mesh);
@@ -155,30 +163,8 @@ namespace PrefabFactory {
             }
         }
 
-        mesh.numVertices = static_cast<int>(vertices.size());
-
-        MaterialProperties properties = MaterialSystem::getMaterialProperties(MaterialType::Metal);
-        std::string mtlPath = "checker-map_tho.png";
-
-        Material mat = MaterialSystem::initDefaultMaterial(
-            properties,
-            slib::vec3{0x00, 0x00, 0x00},
-            slib::vec3{0x00, 0x58, 0xfc},
-            slib::vec3{0xff, 0xff, 0xff},
-            std::string(RES_PATH + mtlPath),
-            TextureFilter::NEIGHBOUR
-        );
-        material.materials.insert({"blue", mat});
-
-        mat = MaterialSystem::initDefaultMaterial(
-            properties,
-            slib::vec3{0x00, 0x00, 0x00},
-            slib::vec3{0xff, 0xff, 0xff},
-            slib::vec3{0xff, 0xff, 0xff},
-            std::string(RES_PATH + mtlPath),
-            TextureFilter::NEIGHBOUR
-        );
-        material.materials.insert({"white", mat});
+        addCheckerMaterial(material, "blue",  slib::vec3{0x00, 0x58, 0xfc});
+        addCheckerMaterial(material, "white", slib::vec3{0xff, 0xff, 0xff});
 
         std::vector<FaceData> faces;
         for (int i = 0; i < uSteps; i++) {
@@ -207,7 +193,6 @@ namespace PrefabFactory {
         }
 
         mesh.faceData = faces;
-        mesh.numFaces = static_cast<int>(faces.size());
         MeshSystem::updateFaceNormals(mesh);
         MeshSystem::updateVertexNormals(mesh);
         MeshSystem::updateRadius(mesh);
@@ -252,31 +237,10 @@ namespace PrefabFactory {
             }
         }
 
-        mesh.vertexData  = vertices;
-        mesh.numVertices = static_cast<int>(vertices.size());
+        mesh.vertexData = vertices;
 
-        MaterialProperties props = MaterialSystem::getMaterialProperties(MaterialType::Metal);
-        std::string mtlPath = "checker-map_tho.png";
-
-        Material matBlue = MaterialSystem::initDefaultMaterial(
-            props,
-            slib::vec3{0x00, 0x00, 0x00},
-            slib::vec3{0x00, 0x58, 0xfc},
-            slib::vec3{0xff, 0xff, 0xff},
-            std::string(RES_PATH + mtlPath),
-            TextureFilter::NEIGHBOUR
-        );
-        material.materials.insert({"blue", matBlue});
-
-        Material matWhite = MaterialSystem::initDefaultMaterial(
-            props,
-            slib::vec3{0x00, 0x00, 0x00},
-            slib::vec3{0xff, 0xff, 0xff},
-            slib::vec3{0xff, 0xff, 0xff},
-            std::string(RES_PATH + mtlPath),
-            TextureFilter::NEIGHBOUR
-        );
-        material.materials.insert({"white", matWhite});
+        addCheckerMaterial(material, "blue",  slib::vec3{0x00, 0x58, 0xfc});
+        addCheckerMaterial(material, "white", slib::vec3{0xff, 0xff, 0xff});
 
         // Quads: each patch shares one face normal (fixes flat-shading seams)
         std::vector<FaceData> faces;
@@ -297,8 +261,7 @@ namespace PrefabFactory {
             }
         }
 
-        mesh.faceData  = faces;
-        mesh.numFaces  = static_cast<int>(faces.size());
+        mesh.faceData = faces;
         MeshSystem::updateFaceNormals(mesh);
         MeshSystem::updateVertexNormals(mesh);
         MeshSystem::updateRadius(mesh);
@@ -328,8 +291,6 @@ namespace PrefabFactory {
                 mesh.vertexData[i * (lon + 1) + j].texCoord = { u, v };
             }
         }
-
-        mesh.numVertices = static_cast<int>(vertices.size());
 
         MaterialProperties properties = MaterialSystem::getMaterialProperties(MaterialType::Metal);
         std::string mtlPath = "earth_texture.png";
@@ -379,7 +340,6 @@ namespace PrefabFactory {
         }
 
         mesh.faceData = faces;
-        mesh.numFaces = static_cast<int>(faces.size());
         MeshSystem::updateFaceNormals(mesh);
         setVertexNormalsToPosition(mesh);
         MeshSystem::updateRadius(mesh);
@@ -405,30 +365,8 @@ namespace PrefabFactory {
             }
         }
 
-        mesh.numVertices = static_cast<int>(vertices.size());
-
-        MaterialProperties properties = MaterialSystem::getMaterialProperties(MaterialType::Metal);
-        std::string mtlPath = "checker-map_tho.png";
-
-        Material mat = MaterialSystem::initDefaultMaterial(
-            properties,
-            slib::vec3{0x00, 0x00, 0x00},
-            slib::vec3{0xff, 0x00, 0x00},
-            slib::vec3{0xff, 0xff, 0xff},
-            std::string(RES_PATH + mtlPath),
-            TextureFilter::NEIGHBOUR
-        );
-        material.materials.insert({"red", mat});
-
-        mat = MaterialSystem::initDefaultMaterial(
-            properties,
-            slib::vec3{0x00, 0x00, 0x00},
-            slib::vec3{0xff, 0xff, 0xff},
-            slib::vec3{0xff, 0xff, 0xff},
-            std::string(RES_PATH + mtlPath),
-            TextureFilter::NEIGHBOUR
-        );
-        material.materials.insert({"white", mat});
+        addCheckerMaterial(material, "red",   slib::vec3{0xff, 0x00, 0x00});
+        addCheckerMaterial(material, "white", slib::vec3{0xff, 0xff, 0xff});
 
         std::vector<FaceData> faces;
         for (int i = 0; i < lat; i++) {
@@ -456,7 +394,6 @@ namespace PrefabFactory {
         }
 
         mesh.faceData = faces;
-        mesh.numFaces = static_cast<int>(faces.size());
         MeshSystem::updateFaceNormals(mesh);
         setVertexNormalsToPosition(mesh);
         MeshSystem::updateRadius(mesh);
@@ -487,30 +424,18 @@ namespace PrefabFactory {
             vertex.texCoord = { (vertex.vertex.x / axisDist + 1) / 2,
                                 (vertex.vertex.y / axisDist + 1) / 2 };
         }
-        mesh.numVertices = static_cast<int>(vertices.size());
-
-        MaterialProperties properties = MaterialSystem::getMaterialProperties(MaterialType::Metal);
-        std::string mtlPath = "checker-map_tho.png";
-
-        Material mat = MaterialSystem::initDefaultMaterial(
-            properties,
-            slib::vec3{0x00, 0x58, 0xfc},
-            slib::vec3{0x00, 0x58, 0xfc},
-            slib::vec3{0x00, 0x58, 0xfc},
-            std::string(RES_PATH + mtlPath),
-            TextureFilter::NEIGHBOUR
-        );
-        material.materials.insert({"blue", mat});
-
-        mat = MaterialSystem::initDefaultMaterial(
-            properties,
-            slib::vec3{0xff, 0xff, 0xff},
-            slib::vec3{0xff, 0xff, 0xff},
-            slib::vec3{0xff, 0xff, 0xff},
-            std::string(RES_PATH + mtlPath),
-            TextureFilter::NEIGHBOUR
-        );
-        material.materials.insert({"white", mat});
+        {
+            MaterialProperties props = MaterialSystem::getMaterialProperties(MaterialType::Metal);
+            std::string path = std::string(RES_PATH) + "checker-map_tho.png";
+            Material mat = MaterialSystem::initDefaultMaterial(props,
+                slib::vec3{0x00, 0x58, 0xfc}, slib::vec3{0x00, 0x58, 0xfc}, slib::vec3{0x00, 0x58, 0xfc},
+                path, TextureFilter::NEIGHBOUR);
+            material.materials.insert({"blue", mat});
+            mat = MaterialSystem::initDefaultMaterial(props,
+                slib::vec3{0xff, 0xff, 0xff}, slib::vec3{0xff, 0xff, 0xff}, slib::vec3{0xff, 0xff, 0xff},
+                path, TextureFilter::NEIGHBOUR);
+            material.materials.insert({"white", mat});
+        }
 
         const uint16_t quads[6][4] = {
             {2, 0, 1, 3},
@@ -535,7 +460,6 @@ namespace PrefabFactory {
         }
 
         mesh.faceData = faces;
-        mesh.numFaces = static_cast<int>(faces.size());
         MeshSystem::updateFaceNormals(mesh);
         MeshSystem::updateVertexNormals(mesh);
         MeshSystem::updateRadius(mesh);
@@ -572,7 +496,6 @@ namespace PrefabFactory {
         }
 
         mesh.vertexData = v;
-        mesh.numVertices = static_cast<int>(v.size());
 
         MaterialProperties props = MaterialSystem::getMaterialProperties(MaterialType::Light);
         std::string mtlPath = "checker-map_tho.png";
@@ -608,7 +531,6 @@ namespace PrefabFactory {
         }
 
         mesh.faceData = faces;
-        mesh.numFaces = static_cast<int>(faces.size());
         MeshSystem::updateFaceNormals(mesh);
         MeshSystem::updateVertexNormals(mesh);
         MeshSystem::updateRadius(mesh);
@@ -629,7 +551,6 @@ namespace PrefabFactory {
         vertices.push_back({  -axisDist, -axisDist, -axisDist });
         vertices.push_back({   axisDist, -axisDist, -axisDist });
         mesh.vertexData = vertices;
-        mesh.numVertices = static_cast<int>(vertices.size());
 
         MaterialProperties properties = MaterialSystem::getMaterialProperties(MaterialType::Metal);
 
@@ -680,7 +601,6 @@ namespace PrefabFactory {
         faces.push_back(face4);
 
         mesh.faceData = faces;
-        mesh.numFaces = static_cast<int>(faces.size());
         MeshSystem::updateFaceNormals(mesh);
         MeshSystem::updateVertexNormals(mesh);
         MeshSystem::updateRadius(mesh);
@@ -872,8 +792,6 @@ namespace PrefabFactory {
 
         mesh.vertexData = std::move(finalVertices);
         mesh.faceData = std::move(faces);
-        mesh.numVertices = static_cast<int>(mesh.vertexData.size());
-        mesh.numFaces = static_cast<int>(mesh.faceData.size());
 
         MeshSystem::updateFaceNormals(mesh);
         if (!hasLoadedNormals) {
@@ -1002,8 +920,6 @@ namespace PrefabFactory {
         }
 
         mesh.faceData = faces;
-        mesh.numVertices = num_vertex;
-        mesh.numFaces = num_faces;
 
         MeshSystem::updateFaceNormals(mesh);
         MeshSystem::updateVertexNormals(mesh);

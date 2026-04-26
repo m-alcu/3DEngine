@@ -136,6 +136,11 @@ inline void drawSolidControls(Scene& scene) {
     }
 }
 
+inline void drawCameraControls(Scene& scene) {
+    ImGui::SliderFloat("Cam Speed", &scene.camera.speed, 0.1f, 10.0f);
+    ImGui::SliderFloat("Pitch/Yaw/Roll Sens", &scene.camera.sensitivity, 0.0f, 10.0f);
+}
+
 inline void drawSceneControls(Scene& scene) {
     int currentBackground = static_cast<int>(scene.backgroundType);
     if (ImGui::Combo("Background", &currentBackground, backgroundNames,

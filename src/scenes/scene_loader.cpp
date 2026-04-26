@@ -64,18 +64,18 @@ BackgroundType SceneLoader::parseBackgroundType(const std::string& str) {
 // Sub-parsers
 // ---------------------------------------------------------------------------
 
+static slib::vec3 parseVec3(const YAML::Node& n) {
+    return {n[0].as<float>(), n[1].as<float>(), n[2].as<float>()};
+}
+
 void SceneLoader::parseCamera(const YAML::Node& node, Camera& camera) {
-    if (node["position"]) {
-        auto p = node["position"];
-        camera.pos = {p[0].as<float>(), p[1].as<float>(), p[2].as<float>()};
-    }
+    if (node["position"])
+        camera.pos = parseVec3(node["position"]);
     if (node["pitch"])       camera.pitch       = node["pitch"].as<float>();
     if (node["yaw"])         camera.yaw         = node["yaw"].as<float>();
     if (node["roll"])        camera.roll        = node["roll"].as<float>();
-    if (node["forward"]) {
-        auto f = node["forward"];
-        camera.forward = {f[0].as<float>(), f[1].as<float>(), f[2].as<float>()};
-    }
+    if (node["forward"])
+        camera.forward = parseVec3(node["forward"]);
     if (node["z_near"])      camera.zNear       = node["z_near"].as<float>();
     if (node["z_far"])       camera.zFar        = node["z_far"].as<float>();
     if (node["view_angle"])  camera.viewAngle   = node["view_angle"].as<float>();
@@ -87,16 +87,12 @@ void SceneLoader::parseCamera(const YAML::Node& node, Camera& camera) {
 void SceneLoader::parseLight(const YAML::Node& node, Light& light) {
     if (node["type"])
         light.type = parseLightType(node["type"].as<std::string>());
-    if (node["color"]) {
-        auto c = node["color"];
-        light.color = {c[0].as<float>(), c[1].as<float>(), c[2].as<float>()};
-    }
+    if (node["color"])
+        light.color = parseVec3(node["color"]);
     if (node["intensity"])
         light.intensity = node["intensity"].as<float>();
-    if (node["direction"]) {
-        auto d = node["direction"];
-        light.direction = {d[0].as<float>(), d[1].as<float>(), d[2].as<float>()};
-    }
+    if (node["direction"])
+        light.direction = parseVec3(node["direction"]);
     if (node["radius"])
         light.radius = node["radius"].as<float>();
     if (node["inner_cutoff"])
@@ -112,16 +108,12 @@ void SceneLoader::parseOrbit(const YAML::Node& node, TransformComponent& transfo
     float omega = 1.0f;
     float initialPhase = 0.0f;
 
-    if (node["center"]) {
-        auto c = node["center"];
-        center = {c[0].as<float>(), c[1].as<float>(), c[2].as<float>()};
-    }
+    if (node["center"])
+        center = parseVec3(node["center"]);
     if (node["radius"])
         radius = node["radius"].as<float>();
-    if (node["plane_normal"]) {
-        auto n = node["plane_normal"];
-        planeNormal = {n[0].as<float>(), n[1].as<float>(), n[2].as<float>()};
-    }
+    if (node["plane_normal"])
+        planeNormal = parseVec3(node["plane_normal"]);
     if (node["omega"])
         omega = node["omega"].as<float>();
     if (node["initial_phase"])
@@ -132,16 +124,16 @@ void SceneLoader::parseOrbit(const YAML::Node& node, TransformComponent& transfo
 
 void SceneLoader::parsePosition(const YAML::Node& node, TransformComponent& transform) {
     if (node["position"]) {
-        auto p = node["position"];
-        transform.position.x = p[0].as<float>();
-        transform.position.y = p[1].as<float>();
-        transform.position.z = p[2].as<float>();
+        auto p = parseVec3(node["position"]);
+        transform.position.x = p.x;
+        transform.position.y = p.y;
+        transform.position.z = p.z;
     }
     if (node["angles"]) {
-        auto a = node["angles"];
-        transform.position.xAngle = a[0].as<float>();
-        transform.position.yAngle = a[1].as<float>();
-        transform.position.zAngle = a[2].as<float>();
+        auto a = parseVec3(node["angles"]);
+        transform.position.xAngle = a.x;
+        transform.position.yAngle = a.y;
+        transform.position.zAngle = a.z;
     }
     if (node["zoom"])
         transform.position.zoom = node["zoom"].as<float>();
@@ -240,13 +232,8 @@ Entity SceneLoader::parseEntity(const YAML::Node& node, Scene& scene) {
         isLight = true;
     }
 
-    if (node["emissive_color"]) {
-        auto ec = node["emissive_color"];
-        MaterialSystem::setEmissiveColor(material,
-                                         {ec[0].as<float>(),
-                                          ec[1].as<float>(),
-                                          ec[2].as<float>()});
-    }
+    if (node["emissive_color"])
+        MaterialSystem::setEmissiveColor(material, parseVec3(node["emissive_color"]));
 
     if (node["orbit"]) {
         parseOrbit(node["orbit"], transform);

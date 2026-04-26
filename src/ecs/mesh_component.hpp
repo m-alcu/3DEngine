@@ -25,8 +25,6 @@ struct FaceData {
 struct MeshComponent {
     std::vector<VertexData> vertexData;
     std::vector<FaceData> faceData;
-    int numVertices = 0;
-    int numFaces = 0;
     float radius = 0.0f;
     bool boundsDirty = true;
 };

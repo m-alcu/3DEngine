@@ -56,7 +56,7 @@ class Rasterizer {
         Projection<vertex> projection;
 
         void processVertices() {
-            projectedPoints.resize(meshComponent->numVertices);
+            projectedPoints.resize(meshComponent->vertexData.size());
             const int n = static_cast<int>(meshComponent->vertexData.size());
 
             #pragma omp parallel for if(n > 1000)

@@ -7,9 +7,10 @@
 namespace MeshSystem {
 
     inline void updateFaceNormals(MeshComponent& mesh) {
-        if (mesh.numFaces == 0) return;
+        const int nFaces = static_cast<int>(mesh.faceData.size());
+        if (nFaces == 0) return;
 
-        for (int i = 0; i < mesh.numFaces; i++) {
+        for (int i = 0; i < nFaces; i++) {
             const Face &face = mesh.faceData[i].face;
             const size_t n = face.vertexIndices.size();
 
@@ -32,22 +33,25 @@ namespace MeshSystem {
     }
 
     inline void updateVertexNormals(MeshComponent& mesh) {
-        if (mesh.numVertices == 0) return;
+        const int nVerts = static_cast<int>(mesh.vertexData.size());
+        const int nFaces = static_cast<int>(mesh.faceData.size());
+        if (nVerts == 0) return;
 
-        std::vector<slib::vec3> acc(mesh.numVertices, {0.0f, 0.0f, 0.0f});
-        for (int j = 0; j < mesh.numFaces; j++) {
+        std::vector<slib::vec3> acc(nVerts, {0.0f, 0.0f, 0.0f});
+        for (int j = 0; j < nFaces; j++) {
             for (int vi : mesh.faceData[j].face.vertexIndices) {
                 acc[vi] += mesh.faceData[j].faceNormal;
             }
         }
-        for (int i = 0; i < mesh.numVertices; i++) {
+        for (int i = 0; i < nVerts; i++) {
             mesh.vertexData[i].normal = smath::normalize(acc[i]);
         }
     }
 
     inline void updateRadius(MeshComponent& mesh) {
+        const int nVerts = static_cast<int>(mesh.vertexData.size());
         mesh.radius = 0.0f;
-        for (int i = 0; i < mesh.numVertices; i++) {
+        for (int i = 0; i < nVerts; i++) {
             float d = smath::distance(mesh.vertexData[i].vertex);
             if (d > mesh.radius) mesh.radius = d;
         }

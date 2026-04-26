@@ -2,7 +2,6 @@
 #include <cstdint>
 #include "slib.hpp"
 #include "material.hpp"
-#include "ecs/mesh_component.hpp"
 #include "z_buffer.hpp"
 #include "bresenham.hpp"
 
@@ -11,16 +10,11 @@ class Polygon
 {
 public:
     std::vector<V> points;
-    Face face;
     slib::vec3 rotatedFaceNormal;
     Material* material;
-    float flatDiffuse{};
 
-    Polygon(const Polygon& _p)
-        : points(_p.points), face(_p.face), rotatedFaceNormal(_p.rotatedFaceNormal),
-          material(_p.material), flatDiffuse(_p.flatDiffuse) {};
-    Polygon(std::vector<V> _points, slib::vec3 _fn, Material& _material) : points(std::move(_points)), face(), rotatedFaceNormal(_fn), material(&_material) {};
-    Polygon(std::vector<V> _points, slib::vec3 _fn) : points(std::move(_points)), face(), rotatedFaceNormal(_fn), material(nullptr) {};
+    Polygon(std::vector<V> _points, slib::vec3 _fn, Material& _material) : points(std::move(_points)), rotatedFaceNormal(_fn), material(&_material) {};
+    Polygon(std::vector<V> _points, slib::vec3 _fn) : points(std::move(_points)), rotatedFaceNormal(_fn), material(nullptr) {};
 
     void drawWireframe(uint32_t color, uint32_t* pixels, int screenWidth, int screenHeight, ZBuffer* zBuffer) {
         const size_t n = points.size();

@@ -449,8 +449,8 @@ TEST(PrefabFactoryTest, BuildCube) {
 
     PrefabFactory::buildCube(mesh, material);
 
-    EXPECT_EQ(mesh.numVertices, 24);
-    EXPECT_EQ(mesh.numFaces, 6);
+    EXPECT_EQ(mesh.vertexData.size(), 24u);
+    EXPECT_EQ(mesh.faceData.size(), 6u);
     EXPECT_FALSE(material.materials.empty());
     EXPECT_TRUE(material.materials.count("floorTexture") > 0);
 }
@@ -461,8 +461,8 @@ TEST(PrefabFactoryTest, BuildPlane) {
 
     PrefabFactory::buildPlane(mesh, material, 10.0f);
 
-    EXPECT_EQ(mesh.numVertices, 4);
-    EXPECT_EQ(mesh.numFaces, 1);
+    EXPECT_EQ(mesh.vertexData.size(), 4u);
+    EXPECT_EQ(mesh.faceData.size(), 1u);
     EXPECT_TRUE(material.materials.count("planeMaterial") > 0);
 }
 
@@ -476,8 +476,8 @@ TEST(PrefabFactoryTest, BuildObj) {
     bool hasNormals = PrefabFactory::buildObj(objPath.string(), mesh, material, transform);
 
     EXPECT_FALSE(hasNormals);
-    EXPECT_EQ(mesh.numVertices, 3);
-    EXPECT_EQ(mesh.numFaces, 1);
+    EXPECT_EQ(mesh.vertexData.size(), 3u);
+    EXPECT_EQ(mesh.faceData.size(), 1u);
     EXPECT_TRUE(material.materials.count("default") > 0);
 }
 

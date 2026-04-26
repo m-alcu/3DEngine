@@ -132,10 +132,7 @@ void Application::drawUi() {
   ImGuiIO& io = ImGui::GetIO();
 
   ImGui::Begin("3d params");
-  ImGui::SliderFloat("cam speed", &state.scene->camera.speed, 0.1f, 10.0f);
-  ImGui::SliderFloat("pitch/yaw/roll sens", &state.scene->camera.sensitivity, 0.0f,
-                     10.0f);
-
+  SceneUI::drawCameraControls(*state.scene);
   SceneUI::drawSolidControls(*state.scene);
   SceneUI::drawSceneSelector(state, config.screen);
   SceneUI::drawSceneControls(*state.scene);
