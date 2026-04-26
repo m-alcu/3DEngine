@@ -22,16 +22,20 @@ public:
                         const Polygon<Vertex> &poly) const {
 
       slib::vec3 worldPos = vRaster.worldOverW / vRaster.oneOverW;
-      slib::vec3 diffuseColor{0.0f, 0.0f, 0.0f};
+      slib::vec3 normal = smath::normalize(vRaster.normal);
+      slib::vec3 color = poly.material->Ka;
       for (const auto &[entity_, lightComp] : scene.lights()) {
         const Light &light = lightComp.light;
+        slib::vec3 luxDirection = light.getDirection(worldPos);
+        float diff = std::max(0.0f, smath::dot(normal, luxDirection));
+        if (diff == 0.0f) continue;
         float attenuation = light.getAttenuation(worldPos);
-        const slib::vec3 luxDirection = light.getDirection(worldPos);
-        float diff = std::max(0.0f, smath::dot(vRaster.normal, luxDirection));
         float shadow = lighting::sampleShadow(scene, entity_, worldPos, diff, light.position);
-        diffuseColor += light.color * (diff * light.intensity * attenuation * shadow);
+        float factor = light.intensity * attenuation * shadow;
+        slib::vec3 lightColor = light.color * factor;
+        color += poly.material->Kd * diff * lightColor;
       }
-      return (poly.material->Ka + poly.material->Kd * diffuseColor).toBgra();
+      return color.toBgra();
     }
   };
 
