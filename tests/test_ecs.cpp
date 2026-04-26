@@ -560,9 +560,9 @@ TEST(RenderComponentTest, MutationThroughPointer) {
     rc.shading = Shading::Wireframe;
 
     store.add(1, rc);
-    store.get(1)->shading = Shading::BlinnPhong;
+    store.get(1)->shading = Shading::Phong;
 
-    EXPECT_EQ(store.get(1)->shading, Shading::BlinnPhong);
+    EXPECT_EQ(store.get(1)->shading, Shading::Phong);
     // Original unchanged
     EXPECT_EQ(rc.shading, Shading::Wireframe);
 }

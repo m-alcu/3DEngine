@@ -147,6 +147,7 @@ inline void drawSceneControls(Scene& scene) {
 
     ImGui::Checkbox("Show Axis Helper", &scene.showAxes);
     ImGui::Checkbox("Face Depth Sorting", &scene.depthSortEnabled);
+    ImGui::Checkbox("Blinn-Phong Specular", &scene.blinnPhong);
     ImGui::Checkbox("Shadows Enabled", &scene.shadowsEnabled);
     ImGui::Checkbox("Show Shadow Map Overlay", &scene.showShadowMapOverlay);
     ImGui::Checkbox("Use Cubemap Shadows (Point Lights)", &scene.useCubemapShadows);

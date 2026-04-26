@@ -161,6 +161,7 @@ public:
   bool showShadowMapOverlay = false;
   bool showAxes = false;
   bool depthSortEnabled = true;
+  bool blinnPhong = false;
   int pcfRadius = SHADOW_PCF_RADIUS;
   bool useCubemapShadows = true; // Enable omnidirectional cubemap shadows for point lights
   RendererFonts::FontType font = RendererFonts::FontType::ZXSpectrum;

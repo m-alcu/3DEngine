@@ -21,11 +21,11 @@ Shading SceneLoader::parseShading(const std::string& str) {
         {"wireframe",            Shading::Wireframe},
         {"flat",                 Shading::Flat},
         {"gouraud",              Shading::Gouraud},
-        {"blinn_phong",          Shading::BlinnPhong},
+        {"blinn_phong",          Shading::Phong},
         {"phong",                Shading::Phong},
         {"textured_flat",        Shading::TexturedFlat},
         {"textured_gouraud",     Shading::TexturedGouraud},
-        {"textured_blinn_phong", Shading::TexturedBlinnPhong},
+        {"textured_blinn_phong", Shading::TexturedPhong},
         {"textured_phong",       Shading::TexturedPhong},
     };
     auto it = map.find(str);

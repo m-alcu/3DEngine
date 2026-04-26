@@ -4,11 +4,9 @@ enum class Shading {
     Wireframe,
     Flat,
     Gouraud,
-    BlinnPhong,
     Phong,
     TexturedFlat,
     TexturedGouraud,
-    TexturedBlinnPhong,
     TexturedPhong,
     EnvironmentMap
 };
@@ -18,11 +16,9 @@ static const char* shadingNames[] = {
     "Wireframe",
     "Flat",
     "Gouraud",
-    "Blinn-Phong",
     "Phong",
     "Textured Flat",
     "Textured Gouraud",
-    "Textured Blinn-Phong",
     "Textured Phong",
     "Environment Map"
 };

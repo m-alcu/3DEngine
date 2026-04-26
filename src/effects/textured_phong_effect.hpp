@@ -10,7 +10,7 @@
 #include "geometry_shaders.hpp"
 #include "lighting.hpp"
 
-// Specular: reflection vector R = 2(N·L)N - L, then dot(R, viewDir)
+// Specular: Phong (reflection R) or Blinn-Phong (halfway H), toggled by scene.blinnPhong
 class TexturedPhongEffect {
 public:
   using Vertex = vertex::TexturedLit;
@@ -36,11 +36,14 @@ public:
         const Light &light = lightComp.light;
         slib::vec3 luxDirection = light.getDirection(worldPos);
         float diff = std::max(0.0f, smath::dot(normal, luxDirection));
-        slib::vec3 R =
-            normal * 2.0f * smath::dot(normal, luxDirection) - luxDirection;
-        float specAngle =
-            std::max(0.0f, smath::dot(R, scene.camera.forwardNeg()));
-        float spec = std::pow(specAngle, poly.material->Ns);
+        float spec;
+        if (scene.blinnPhong) {
+            slib::vec3 H = smath::normalize(luxDirection - scene.camera.forward);
+            spec = std::pow(std::max(0.0f, smath::dot(normal, H)), poly.material->Ns);
+        } else {
+            slib::vec3 R = normal * 2.0f * smath::dot(normal, luxDirection) - luxDirection;
+            spec = std::pow(std::max(0.0f, smath::dot(R, scene.camera.forwardNeg())), poly.material->Ns);
+        }
         float attenuation = light.getAttenuation(worldPos);
         float shadow = lighting::sampleShadow(scene, entity_, worldPos, diff, light.position);
         float factor = light.intensity * attenuation * shadow;

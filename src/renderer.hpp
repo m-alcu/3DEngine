@@ -2,12 +2,10 @@
 
 #include <cstdint>
 #include <cstdio>
-#include "effects/blinn_phong_effect.hpp"
 #include "effects/flat_effect.hpp"
 #include "effects/gouraud_effect.hpp"
 #include "effects/phong_effect.hpp"
 #include "effects/shadow_effect.hpp"
-#include "effects/textured_blinn_phong_effect.hpp"
 #include "effects/textured_flat_effect.hpp"
 #include "effects/textured_gouraud_effect.hpp"
 #include "effects/textured_phong_effect.hpp"
@@ -75,12 +73,6 @@ public:
       case Shading::TexturedGouraud:
         texturedGouraudRasterizer.drawRenderable(*transform, *mesh, *material, render->shading, &scene);
         break;
-      case Shading::BlinnPhong:
-        blinnPhongRasterizer.drawRenderable(*transform, *mesh, *material, render->shading, &scene);
-        break;
-      case Shading::TexturedBlinnPhong:
-        texturedBlinnPhongRasterizer.drawRenderable(*transform, *mesh, *material, render->shading, &scene);
-        break;
       case Shading::Phong:
         phongRasterizer.drawRenderable(*transform, *mesh, *material, render->shading, &scene);
         break;
@@ -135,11 +127,9 @@ public:
   Rasterizer<FlatEffect> flatRasterizer;
   Rasterizer<GouraudEffect> gouraudRasterizer;
   Rasterizer<PhongEffect> phongRasterizer;
-  Rasterizer<BlinnPhongEffect> blinnPhongRasterizer;
   Rasterizer<TexturedFlatEffect> texturedFlatRasterizer;
   Rasterizer<TexturedGouraudEffect> texturedGouraudRasterizer;
   Rasterizer<TexturedPhongEffect> texturedPhongRasterizer;
-  Rasterizer<TexturedBlinnPhongEffect> texturedBlinnPhongRasterizer;
   Rasterizer<EnvironmentMapEffect> environmentMapRasterizer;
   ShadowRasterizer<ShadowEffect> shadowRasterizer;
 };
