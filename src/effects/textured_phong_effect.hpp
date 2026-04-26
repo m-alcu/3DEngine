@@ -36,14 +36,7 @@ public:
         const Light &light = lightComp.light;
         slib::vec3 luxDirection = light.getDirection(worldPos);
         float diff = std::max(0.0f, smath::dot(normal, luxDirection));
-        float spec;
-        if (scene.blinnPhong) {
-            slib::vec3 H = smath::normalize(luxDirection - scene.camera.forward);
-            spec = std::pow(std::max(0.0f, smath::dot(normal, H)), poly.material->Ns);
-        } else {
-            slib::vec3 R = normal * 2.0f * smath::dot(normal, luxDirection) - luxDirection;
-            spec = std::pow(std::max(0.0f, smath::dot(R, scene.camera.forwardNeg())), poly.material->Ns);
-        }
+        float spec = lighting::specular(normal, luxDirection, scene.camera.forward, poly.material->Ns, scene.blinnPhong);
         float attenuation = light.getAttenuation(worldPos);
         float shadow = lighting::sampleShadow(scene, entity_, worldPos, diff, light.position);
         float factor = light.intensity * attenuation * shadow;
