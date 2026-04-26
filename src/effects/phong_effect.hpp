@@ -22,12 +22,9 @@ public:
     uint32_t operator()(const Vertex &vRaster, const Scene &scene,
                         const Polygon<Vertex> &poly) const {
 
-      const auto &Ka = poly.material->Ka; // vec3
-      const auto &Kd = poly.material->Kd; // vec3
-      const auto &Ks = poly.material->Ks; // vec3
       slib::vec3 worldPos = vRaster.worldOverW / vRaster.oneOverW;
       slib::vec3 normal = smath::normalize(vRaster.normal);
-      slib::vec3 color = Ka;
+      slib::vec3 color = poly.material->Ka;
       for (const auto &[entity_, lightComp] : scene.lights()) {
         const Light &light = lightComp.light;
         slib::vec3 luxDirection = light.getDirection(worldPos);
@@ -37,7 +34,7 @@ public:
         float shadow = lighting::sampleShadow(scene, entity_, worldPos, diff, light.position);
         float factor = light.intensity * attenuation * shadow;
         slib::vec3 lightColor = light.color * factor;
-        color += (Kd * diff + Ks * spec) * lightColor;
+        color += (poly.material->Kd * diff + poly.material->Ks * spec) * lightColor;
       }
       return color.toBgra();
     }
