@@ -48,42 +48,39 @@ public:
                               0xFFFFFFFFu, 0xFF000000u, true, scene.font);
     }
 
-    for (Entity entity : scene.renderableEntities()) {
+    for (const auto& [entity, render] : scene.registry.renders()) {
       auto* transform = scene.registry.transforms().get(entity);
       auto* mesh = scene.registry.meshes().get(entity);
       auto* material = scene.registry.materials().get(entity);
-      auto* render = scene.registry.renders().get(entity);
-      if (!transform || !mesh || !material || !render) {
+      if (!transform || !mesh || !material) {
         continue;
       }
 
-      switch (render->shading) {
+      switch (render.shading) {
       case Shading::Flat:
-        flatRasterizer.drawRenderable(*transform, *mesh, *material, render->shading, &scene);
-        break;
       case Shading::Wireframe:
-        flatRasterizer.drawRenderable(*transform, *mesh, *material, render->shading, &scene);
+        flatRasterizer.drawRenderable(*transform, *mesh, *material, render.shading, &scene);
         break;
       case Shading::TexturedFlat:
-        texturedFlatRasterizer.drawRenderable(*transform, *mesh, *material, render->shading, &scene);
+        texturedFlatRasterizer.drawRenderable(*transform, *mesh, *material, render.shading, &scene);
         break;
       case Shading::Gouraud:
-        gouraudRasterizer.drawRenderable(*transform, *mesh, *material, render->shading, &scene);
+        gouraudRasterizer.drawRenderable(*transform, *mesh, *material, render.shading, &scene);
         break;
       case Shading::TexturedGouraud:
-        texturedGouraudRasterizer.drawRenderable(*transform, *mesh, *material, render->shading, &scene);
+        texturedGouraudRasterizer.drawRenderable(*transform, *mesh, *material, render.shading, &scene);
         break;
       case Shading::Phong:
-        phongRasterizer.drawRenderable(*transform, *mesh, *material, render->shading, &scene);
+        phongRasterizer.drawRenderable(*transform, *mesh, *material, render.shading, &scene);
         break;
       case Shading::TexturedPhong:
-        texturedPhongRasterizer.drawRenderable(*transform, *mesh, *material, render->shading, &scene);
+        texturedPhongRasterizer.drawRenderable(*transform, *mesh, *material, render.shading, &scene);
         break;
       case Shading::EnvironmentMap:
-        environmentMapRasterizer.drawRenderable(*transform, *mesh, *material, render->shading, &scene);
+        environmentMapRasterizer.drawRenderable(*transform, *mesh, *material, render.shading, &scene);
         break;
       default:
-        flatRasterizer.drawRenderable(*transform, *mesh, *material, render->shading, &scene);
+        flatRasterizer.drawRenderable(*transform, *mesh, *material, render.shading, &scene);
       }
     }
 
@@ -93,23 +90,22 @@ public:
   }
 
   void renderLightMaps(Scene &scene) {
-    for (Entity lightEntity : scene.lightSourceEntities()) {
-      auto* lightComponent = scene.registry.lights().get(lightEntity);
+    for (const auto& [lightEntity, lightComponent] : scene.registry.lights()) {
       auto* shadowComponent = scene.registry.shadows().get(lightEntity);
-      if (!lightComponent || !shadowComponent || !shadowComponent->shadowMap) {
+      if (!shadowComponent || !shadowComponent->shadowMap) {
         continue;
       }
 
-      shadowComponent->shadowMap->setAllDirty(); 
-      
+      shadowComponent->shadowMap->setAllDirty();
+
       ShadowSystem::buildLightMatrices(*shadowComponent,
-                                       lightComponent->light,
+                                       lightComponent.light,
                                        scene.sceneCenter,
                                        scene.sceneRadius);
 
       int numFaces = shadowComponent->shadowMap->numFaces;
 
-      for (Entity entity : scene.renderableEntities()) {
+      for (const auto& [entity, render] : scene.registry.renders()) {
         auto* transform = scene.registry.transforms().get(entity);
         auto* mesh = scene.registry.meshes().get(entity);
         if (!transform || !mesh) {
@@ -117,7 +113,7 @@ public:
         }
         for (int faceIdx = 0; faceIdx < numFaces; ++faceIdx) {
           shadowRasterizer.drawRenderable(*transform, *mesh,
-                                          *lightComponent, *shadowComponent,
+                                          lightComponent, *shadowComponent,
                                           faceIdx);
         }
       }

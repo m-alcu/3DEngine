@@ -98,28 +98,6 @@ public:
     return TransformSystem::getWorldCenter(*transform);
   }
 
-  std::vector<Entity> lightSourceEntities() const {
-    std::vector<Entity> result;
-    result.reserve(registry.lights().size());
-    for (const auto& [entity, light] : registry.lights()) {
-      result.push_back(entity);
-    }
-    return result;
-  }
-
-  std::vector<Entity> renderableEntities() const {
-    std::vector<Entity> result;
-    result.reserve(registry.renders().size());
-    for (const auto& [entity, render] : registry.renders()) {
-      if (!registry.transforms().has(entity) || !registry.meshes().has(entity) ||
-          !registry.materials().has(entity)) {
-        continue;
-      }
-      result.push_back(entity);
-    }
-    return result;
-  }
-
   auto& lights() { return registry.lights(); }
   const auto& lights() const { return registry.lights(); }
   auto& shadows() { return registry.shadows(); }
