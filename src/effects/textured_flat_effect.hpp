@@ -21,9 +21,8 @@ public:
                         const Polygon<Vertex> &poly) const {
 
       float w = 1.0f / vRaster.texOverW.w;
-      float r, g, b;
-      poly.material->map_Kd.sample(vRaster.texOverW.x * w, vRaster.texOverW.y * w, r, g, b);
-      slib::vec3 texColor{r, g, b};
+      slib::vec3 texColor;
+      poly.material->map_Kd.sample(vRaster.texOverW.x * w, vRaster.texOverW.y * w, texColor.x, texColor.y, texColor.z);
       slib::vec3 worldPos = vRaster.worldOverW * w;
 
       slib::vec3 color{0.0f, 0.0f, 0.0f};
