@@ -114,7 +114,7 @@ class Rasterizer {
         void drawPolygon(Polygon<vertex>& polygon) {
             effect.gs(polygon, screenWidth, screenHeight);
             scene->stats.addPoly();
-            uint32_t* pixels = static_cast<uint32_t*>(scene->pixels);
+            uint32_t* pixels = scene->pixels.data();
             if (shading == Shading::Wireframe) {
                 polygon.drawWireframe(WHITE_COLOR, pixels, screenWidth, screenHeight, scene->zBuffer.get());
             } else {

@@ -80,7 +80,7 @@ private:
 
     drawBresenhamLine(v0.p_x >> 16, v0.p_y >> 16, v0.p_z,
                       v1.p_x >> 16, v1.p_y >> 16, v1.p_z,
-                      static_cast<uint32_t*>(scene.pixels), color,
+                      scene.pixels.data(), color,
                       scene.screen.width, scene.screen.height, scene.zBuffer.get());
   }
 

@@ -43,7 +43,7 @@ public:
       int textWidth = static_cast<int>(scene.name.size()) * RendererFonts::getGlyphWidth(scene.font);
       int tx = scene.screen.width - textWidth - 10;
       int ty = scene.screen.height - 18;
-      RendererFonts::drawText(scene.pixels, scene.screen.width, scene.screen.height,
+      RendererFonts::drawText(scene.pixels.data(), scene.screen.width, scene.screen.height,
                               scene.screen.width, tx, ty, scene.name.c_str(),
                               0xFFFFFFFFu, 0xFF000000u, true, scene.font);
     }

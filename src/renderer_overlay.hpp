@@ -45,12 +45,12 @@ inline void drawShadowMapOverlay(Scene &scene, int margin = 10) {
 
     for (int faceIdx = 0; faceIdx < 6; ++faceIdx) {
       int startX = margin + faceIdx * (faceOverlaySize + 2);
-      shadowMapPtr->drawFaceOverlay(faceIdx, scene.pixels, scene.screen.width,
+      shadowMapPtr->drawFaceOverlay(faceIdx, scene.pixels.data(), scene.screen.width,
                                     scene.screen.height, startX, startY,
                                     faceOverlaySize);
       uint32_t labelColor =
           shadowMapPtr->faceDirty[faceIdx] ? RED_COLOR : WHITE_COLOR;
-      RendererFonts::drawText(scene.pixels, scene.screen.width, scene.screen.height,
+      RendererFonts::drawText(scene.pixels.data(), scene.screen.width, scene.screen.height,
                               scene.screen.width, startX + 2, startY + 2,
                               faceLabels[faceIdx], labelColor, BLACK_COLOR, true,
                               scene.font);
@@ -60,7 +60,7 @@ inline void drawShadowMapOverlay(Scene &scene, int margin = 10) {
     int overlaySize = SHADOW_MAP_OVERVIEW_SIZE;
     int startX = margin;
     int startY = scene.screen.height - overlaySize - margin;
-    shadowMapPtr->drawOverlay(scene.pixels, scene.screen.width,
+    shadowMapPtr->drawOverlay(scene.pixels.data(), scene.screen.width,
                               scene.screen.height, startX, startY, overlaySize);
   }
 }

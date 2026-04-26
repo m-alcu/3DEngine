@@ -40,14 +40,9 @@ public:
 
   Scene(const Screen &scr)
       : screen(scr), zBuffer(std::make_shared<ZBuffer>(scr.width, scr.height)),
-        spaceMatrix(smath::identity()) {
-    pixels = new uint32_t[screen.width * screen.height];
-    backg = new uint32_t[screen.width * screen.height];
-  }
-
-  ~Scene() {
-    delete[] pixels;
-    delete[] backg;
+        spaceMatrix(smath::identity()),
+        pixels(scr.width * scr.height, 0),
+        backg(scr.width * scr.height, 0) {
   }
 
   // --- Lifecycle ---
@@ -104,10 +99,10 @@ public:
   const auto& shadows() const { return registry.shadows(); }
   CubeMap* getCubeMap() const { return background ? background->getCubeMap() : nullptr; }
 
-  void drawBackground() const {
+  void drawBackground() {
     float aspectRatio = static_cast<float>(screen.width) / screen.height;
-    background->draw(backg, screen.height, screen.width, camera, aspectRatio);
-    std::copy(backg, backg + screen.width * screen.height, pixels);
+    background->draw(backg.data(), screen.height, screen.width, camera, aspectRatio);
+    std::copy(backg.begin(), backg.end(), pixels.begin());
   }
 
   // --- ECS data ---
@@ -120,7 +115,7 @@ public:
   Screen screen;
   slib::mat4 spaceMatrix;
   std::shared_ptr<ZBuffer> zBuffer;
-  uint32_t* pixels = nullptr;
+  std::vector<uint32_t> pixels;
   Stats stats;
 
   // --- Camera ---
@@ -150,7 +145,7 @@ public:
   // --- Background ---
 
   BackgroundType backgroundType = BackgroundType::DESERT;
-  uint32_t* backg = nullptr;
+  std::vector<uint32_t> backg;
   std::unique_ptr<Background> background = std::unique_ptr<Background>(
       BackgroundFactory::createBackground(backgroundType));
 

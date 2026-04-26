@@ -120,7 +120,7 @@ void Application::renderScene() {
 void Application::presentFrame() {
   ImGui::Render();
 
-  SDL_UpdateTexture(texture.get(), nullptr, &state.scene->pixels[0], 4 * config.screen.width);
+  SDL_UpdateTexture(texture.get(), nullptr, state.scene->pixels.data(), 4 * config.screen.width);
   SDL_RenderTexture(sdlRenderer.get(), texture.get(), nullptr, nullptr);
 
   ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(),
