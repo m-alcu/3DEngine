@@ -35,9 +35,8 @@ public:
       float NdotV = smath::dot(N, V);
       slib::vec3 R = N * (2.0f * NdotV) - V;
 
-      float r, g, b;
-      cubemap->sample(R.x, R.y, R.z, r, g, b);
-      slib::vec3 environmentColor{r,g,b};
+      slib::vec3 environmentColor;
+      cubemap->sample(R.x, R.y, R.z, environmentColor.x, environmentColor.y, environmentColor.z);
 
       const auto &Ks = poly.material->Ks;
       slib::vec3 color{0.0f, 0.0f, 0.0f};
@@ -52,8 +51,7 @@ public:
         slib::vec3 halfwayVector = smath::normalize(luxDirection - scene.camera.forward);
         float spec = std::pow(std::max(0.0f, smath::dot(N, halfwayVector)), poly.material->Ns);
         float attenuation = light.getAttenuation(worldPos);
-        float factor = light.intensity * attenuation * shadow;
-        slib::vec3 lightColor = light.color * factor;
+        slib::vec3 lightColor = light.color * (light.intensity * attenuation * shadow);
         color += environmentColor * lightColor * diff;
         color += Ks * lightColor * spec;
       }      
