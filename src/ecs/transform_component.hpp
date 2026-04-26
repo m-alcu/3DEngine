@@ -19,6 +19,8 @@ struct OrbitState {
     float omega = 1.0f;
     float phase = 0.0f;
     bool enabled = false;
+    slib::vec3 u{ 1,0,0 };
+    slib::vec3 v{ 0,0,1 };
 };
 
 struct TransformComponent {
@@ -26,7 +28,9 @@ struct TransformComponent {
     slib::mat4 modelMatrix{smath::identity()};
     slib::mat4 normalMatrix{smath::identity()};
 
+    bool autoRotate = false;
+    float incXangle = 0.0f;
+    float incYangle = 0.0f;
+
     OrbitState orbit;
-    slib::vec3 orbitU{ 1,0,0 };
-    slib::vec3 orbitV{ 0,0,1 };
 };

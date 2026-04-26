@@ -21,7 +21,6 @@
 #include "ecs/mesh_system.hpp"
 #include "ecs/name_component.hpp"
 #include "ecs/registry.hpp"
-#include "ecs/rotation_system.hpp"
 #include "ecs/shadow_system.hpp"
 #include "ecs/transform_system.hpp"
 
@@ -69,7 +68,7 @@ public:
 
   virtual void update(float dt) {
     TransformSystem::updateAllOrbits(registry.transforms(), dt);
-    RotationSystem::updateAll(registry);
+    TransformSystem::updateAllRotations(registry.transforms());
     TransformSystem::updateAllTransforms(registry.transforms());
     LightSystem::syncPositions(registry);
     ShadowSystem::ensureShadowMaps(registry.shadows(), registry.lights(), pcfRadius, useCubemapShadows, cubeShadowMaxSlopeBias);

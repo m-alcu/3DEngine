@@ -53,8 +53,8 @@ namespace TransformSystem {
 
     inline void buildOrbitBasis(TransformComponent& t, const slib::vec3& n) {
         slib::vec3 a = (std::fabs(n.x) < 0.9f) ? slib::vec3{1,0,0} : slib::vec3{0,1,0};
-        t.orbitU = smath::normalize(smath::cross(n, a));
-        t.orbitV = smath::normalize(smath::cross(n, t.orbitU));
+        t.orbit.u = smath::normalize(smath::cross(n, a));
+        t.orbit.v = smath::normalize(smath::cross(n, t.orbit.u));
     }
 
     inline void enableCircularOrbit(TransformComponent& t,
@@ -84,7 +84,7 @@ namespace TransformSystem {
         float c = std::cos(t.orbit.phase);
         float s = std::sin(t.orbit.phase);
 
-        slib::vec3 P = t.orbit.center + (t.orbitU * c + t.orbitV * s) * t.orbit.radius;
+        slib::vec3 P = t.orbit.center + (t.orbit.u * c + t.orbit.v * s) * t.orbit.radius;
 
         t.position.x = P.x;
         t.position.y = P.y;
@@ -92,6 +92,15 @@ namespace TransformSystem {
     }
 
     // --- Batch system functions ---
+
+    // Apply per-entity auto-rotation increments
+    inline void updateAllRotations(ComponentStore<TransformComponent>& store) {
+        for (auto& [entity, t] : store) {
+            if (t.autoRotate) {
+                incAngles(t, t.incXangle, t.incYangle, 0.0f);
+            }
+        }
+    }
 
     // Iterate all transforms, update orbit positions
     inline void updateAllOrbits(ComponentStore<TransformComponent>& store, float dt) {

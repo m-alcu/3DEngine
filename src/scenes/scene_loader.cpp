@@ -159,7 +159,6 @@ Entity SceneLoader::parseEntity(const YAML::Node& node, Scene& scene) {
     MeshComponent mesh{};
     MaterialComponent material{};
     RenderComponent render{};
-    RotationComponent rotation{};
     NameComponent name{};
     bool isLight = false;
 
@@ -217,13 +216,13 @@ Entity SceneLoader::parseEntity(const YAML::Node& node, Scene& scene) {
     }
 
     if (node["rotation_enabled"]) {
-        rotation.enabled = node["rotation_enabled"].as<bool>();
+        transform.autoRotate = node["rotation_enabled"].as<bool>();
     }
 
     if (node["rotation_speed"]) {
         auto rs = node["rotation_speed"];
-        rotation.incXangle = rs[0].as<float>();
-        rotation.incYangle = rs[1].as<float>();
+        transform.incXangle = rs[0].as<float>();
+        transform.incYangle = rs[1].as<float>();
     }
 
     if (node["light"]) {
@@ -252,10 +251,6 @@ Entity SceneLoader::parseEntity(const YAML::Node& node, Scene& scene) {
     scene.registry.materials().add(entity, std::move(material));
     scene.registry.renders().add(entity, std::move(render));
     scene.registry.names().add(entity, std::move(name));
-
-    if (!isLight) {
-        scene.registry.rotations().add(entity, std::move(rotation));
-    }
 
     return entity;
 }

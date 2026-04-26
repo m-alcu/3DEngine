@@ -8,8 +8,6 @@
 #include "../src/ecs/light_component.hpp"
 #include "../src/ecs/light_system.hpp"
 #include "../src/ecs/shadow_system.hpp"
-#include "../src/ecs/rotation_component.hpp"
-#include "../src/ecs/rotation_system.hpp"
 #include "../src/ecs/render_component.hpp"
 #include "../src/ecs/prefab_factory.hpp"
 
@@ -165,21 +163,17 @@ TEST(RegistryTest, DestroyEntityRemovesFromAllStores) {
 
     TransformComponent t;
     LightComponent lc;
-    RotationComponent rc;
     RenderComponent ren;
     reg.transforms().add(e, t);
     reg.lights().add(e, lc);
-    reg.rotations().add(e, rc);
     reg.renders().add(e, ren);
     EXPECT_TRUE(reg.transforms().has(e));
     EXPECT_TRUE(reg.lights().has(e));
-    EXPECT_TRUE(reg.rotations().has(e));
     EXPECT_TRUE(reg.renders().has(e));
 
     reg.destroyEntity(e);
     EXPECT_FALSE(reg.transforms().has(e));
     EXPECT_FALSE(reg.lights().has(e));
-    EXPECT_FALSE(reg.rotations().has(e));
     EXPECT_FALSE(reg.renders().has(e));
 }
 
@@ -187,7 +181,6 @@ TEST(RegistryTest, ClearRemovesAllComponents) {
     Registry reg;
     TransformComponent t1, t2;
     LightComponent lc;
-    RotationComponent rc;
     RenderComponent ren1, ren2;
 
     Entity e1 = reg.createEntity();
@@ -195,18 +188,15 @@ TEST(RegistryTest, ClearRemovesAllComponents) {
     reg.transforms().add(e1, t1);
     reg.transforms().add(e2, t2);
     reg.lights().add(e1, lc);
-    reg.rotations().add(e2, rc);
     reg.renders().add(e1, ren1);
     reg.renders().add(e2, ren2);
 
     EXPECT_EQ(reg.transforms().size(), 2u);
     EXPECT_EQ(reg.lights().size(), 1u);
-    EXPECT_EQ(reg.rotations().size(), 1u);
     EXPECT_EQ(reg.renders().size(), 2u);
     reg.clear();
     EXPECT_EQ(reg.transforms().size(), 0u);
     EXPECT_EQ(reg.lights().size(), 0u);
-    EXPECT_EQ(reg.rotations().size(), 0u);
     EXPECT_EQ(reg.renders().size(), 0u);
 }
 
@@ -492,85 +482,56 @@ TEST(PrefabFactoryTest, BuildObj) {
 }
 
 // ============================================================================
-// System Tests — RotationSystem
+// System Tests — TransformSystem rotation (formerly RotationSystem)
 // ============================================================================
 
 TEST(RotationSystemTest, UpdateAll) {
-    Registry reg;
-    Entity e = reg.createEntity();
-
+    ComponentStore<TransformComponent> store;
     TransformComponent t;
     t.position.xAngle = 0.0f;
     t.position.yAngle = 0.0f;
-    reg.transforms().add(e, t);
+    t.autoRotate = true;
+    t.incXangle = 5.0f;
+    t.incYangle = 10.0f;
+    store.add(1, t);
 
-    RotationComponent r;
-    r.enabled = true;
-    r.incXangle = 5.0f;
-    r.incYangle = 10.0f;
-    reg.rotations().add(e, r);
+    TransformSystem::updateAllRotations(store);
 
-    RotationSystem::updateAll(reg);
-
-    auto* result = reg.transforms().get(e);
+    auto* result = store.get(1);
     ASSERT_NE(result, nullptr);
     EXPECT_FLOAT_EQ(result->position.xAngle, 5.0f);
     EXPECT_FLOAT_EQ(result->position.yAngle, 10.0f);
 }
 
 TEST(RotationSystemTest, DisabledSkipped) {
-    Registry reg;
-    Entity e = reg.createEntity();
-
+    ComponentStore<TransformComponent> store;
     TransformComponent t;
     t.position.xAngle = 0.0f;
-    reg.transforms().add(e, t);
+    t.autoRotate = false;
+    t.incXangle = 5.0f;
+    store.add(1, t);
 
-    RotationComponent r;
-    r.enabled = false;
-    r.incXangle = 5.0f;
-    reg.rotations().add(e, r);
+    TransformSystem::updateAllRotations(store);
 
-    RotationSystem::updateAll(reg);
-
-    // Angles should not have changed
-    EXPECT_FLOAT_EQ(reg.transforms().get(e)->position.xAngle, 0.0f);
-}
-
-TEST(RotationSystemTest, NoTransformSafe) {
-    Registry reg;
-    Entity e = reg.createEntity();
-
-    // Add rotation but no transform — should not crash
-    RotationComponent r;
-    r.enabled = true;
-    r.incXangle = 5.0f;
-    reg.rotations().add(e, r);
-
-    EXPECT_NO_THROW(RotationSystem::updateAll(reg));
+    EXPECT_FLOAT_EQ(store.get(1)->position.xAngle, 0.0f);
 }
 
 TEST(RotationSystemTest, MultipleEntities) {
-    Registry reg;
-    Entity e1 = reg.createEntity();
-    Entity e2 = reg.createEntity();
-
+    ComponentStore<TransformComponent> store;
     TransformComponent t1, t2;
     t1.position.xAngle = 0.0f;
+    t1.autoRotate = true;
+    t1.incXangle = 1.0f;
     t2.position.xAngle = 100.0f;
-    reg.transforms().add(e1, t1);
-    reg.transforms().add(e2, t2);
+    t2.autoRotate = true;
+    t2.incXangle = 2.0f;
+    store.add(1, t1);
+    store.add(2, t2);
 
-    RotationComponent r1, r2;
-    r1.incXangle = 1.0f;
-    r2.incXangle = 2.0f;
-    reg.rotations().add(e1, r1);
-    reg.rotations().add(e2, r2);
+    TransformSystem::updateAllRotations(store);
 
-    RotationSystem::updateAll(reg);
-
-    EXPECT_FLOAT_EQ(reg.transforms().get(e1)->position.xAngle, 1.0f);
-    EXPECT_FLOAT_EQ(reg.transforms().get(e2)->position.xAngle, 102.0f);
+    EXPECT_FLOAT_EQ(store.get(1)->position.xAngle, 1.0f);
+    EXPECT_FLOAT_EQ(store.get(2)->position.xAngle, 102.0f);
 }
 
 // ============================================================================

@@ -1,4 +1,5 @@
 #pragma once
+#include <vector>
 #include "mesh_component.hpp"
 #include "component_store.hpp"
 #include "../smath.hpp"
@@ -33,16 +34,14 @@ namespace MeshSystem {
     inline void updateVertexNormals(MeshComponent& mesh) {
         if (mesh.numVertices == 0) return;
 
-        for (int i = 0; i < mesh.numVertices; i++) {
-            slib::vec3 vertexNormal = {0.0f, 0.0f, 0.0f};
-            for(int j = 0; j < mesh.numFaces; j++) {
-                for (int vi : mesh.faceData[j].face.vertexIndices) {
-                    if (vi == i) {
-                        vertexNormal += mesh.faceData[j].faceNormal;
-                    }
-                }
+        std::vector<slib::vec3> acc(mesh.numVertices, {0.0f, 0.0f, 0.0f});
+        for (int j = 0; j < mesh.numFaces; j++) {
+            for (int vi : mesh.faceData[j].face.vertexIndices) {
+                acc[vi] += mesh.faceData[j].faceNormal;
             }
-            mesh.vertexData[i].normal = smath::normalize(vertexNormal);
+        }
+        for (int i = 0; i < mesh.numVertices; i++) {
+            mesh.vertexData[i].normal = smath::normalize(acc[i]);
         }
     }
 

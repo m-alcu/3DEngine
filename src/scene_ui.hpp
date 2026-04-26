@@ -79,12 +79,9 @@ inline void drawSolidControls(Scene& scene) {
       render->shading = static_cast<Shading>(currentShading);
     }
 
-    auto* rotation = scene.registry.rotations().get(entity);
-    if (rotation) {
-      ImGui::Checkbox("Rotate", &rotation->enabled);
-      ImGui::SliderFloat("Rot X Speed", &rotation->incXangle, 0.0f, 1.0f);
-      ImGui::SliderFloat("Rot Y Speed", &rotation->incYangle, 0.0f, 1.0f);
-    }
+    ImGui::Checkbox("Rotate", &transform->autoRotate);
+    ImGui::SliderFloat("Rot X Speed", &transform->incXangle, 0.0f, 1.0f);
+    ImGui::SliderFloat("Rot Y Speed", &transform->incYangle, 0.0f, 1.0f);
 
     float position[3] = {transform->position.x,
                          transform->position.y,
