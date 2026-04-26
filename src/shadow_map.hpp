@@ -11,7 +11,6 @@
 #include "bresenham.hpp"
 #include "slib.hpp"
 #include "smath.hpp"
-#include "color.hpp"
 
 class ShadowMap {
 public:
@@ -111,7 +110,7 @@ public:
                  uint8_t gray = (depth < 1.0f)
                      ? static_cast<uint8_t>(std::clamp((maxDepth - depth) / depthRange * 255.0f, 0.0f, 255.0f))
                      : 0;
-                 return Color(gray, gray, gray).toBgra();
+                 return slib::vec3(gray, gray, gray).toBgra();
                });
 
     // Draw border

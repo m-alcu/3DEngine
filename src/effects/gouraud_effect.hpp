@@ -1,5 +1,4 @@
 #pragma once
-#include "../color.hpp"
 #include "../polygon.hpp"
 #include "../projection.hpp"
 #include "../slib.hpp"
@@ -35,7 +34,7 @@ public:
           : 1.0f;
         diffuseColor += light.color * (diff * light.intensity * attenuation * shadow);
       }
-      return Color(poly.material->Ka + poly.material->Kd * diffuseColor).toBgra();
+      return (poly.material->Ka + poly.material->Kd * diffuseColor).toBgra();
     }
   };
 

@@ -1,5 +1,4 @@
 #pragma once
-#include "../color.hpp"
 #include "../polygon.hpp"
 #include "../projection.hpp"
 #include "../scene.hpp"
@@ -42,7 +41,7 @@ public:
         color += texColor * lightColor * diff;
       }
 
-      return Color(color).toBgra();
+      return color.toBgra();
     }
   };
 

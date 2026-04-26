@@ -1,5 +1,4 @@
 #pragma once
-#include "../color.hpp"
 #include "../polygon.hpp"
 #include "../projection.hpp"
 #include "../slib.hpp"
@@ -24,7 +23,7 @@ public:
       if (poly.material->illum == 1) {
         // Emissive material - use emissive color
         slib::vec3 emissiveColor = poly.material->Ke;
-        return Color(emissiveColor).toBgra();
+        return emissiveColor.toBgra();
       }
 
       slib::vec3 worldPos = vRaster.worldOverW / vRaster.oneOverW;
@@ -43,7 +42,7 @@ public:
         diffuseColor += lightColor * diff;
       }
 
-      return Color(poly.material->Ka + poly.material->Kd * diffuseColor).toBgra();
+      return (poly.material->Ka + poly.material->Kd * diffuseColor).toBgra();
     }
   };
 

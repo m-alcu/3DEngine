@@ -4,7 +4,6 @@
 #include <cmath>
 #include "background.hpp"
 #include "../slib.hpp"
-#include "../color.hpp"
 #include "../constants.hpp"
 #include "../vendor/nothings/stb_image.h"
 

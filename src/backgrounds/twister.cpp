@@ -37,7 +37,7 @@ void Twister::texLine(uint32_t* pixels, int pitch, int x1, int x2, int v, int l,
         float g = px.g * scale;
         float b = px.b * scale;
 
-        pixels[x + width * v] = Color(r, g, b).toBgra();
+        pixels[x + width * v] = slib::vec3(r, g, b).toBgra();
     }
 }
 

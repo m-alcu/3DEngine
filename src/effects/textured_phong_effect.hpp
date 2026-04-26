@@ -1,5 +1,4 @@
 #pragma once
-#include "../color.hpp"
 #include "../polygon.hpp"
 #include "../projection.hpp"
 #include "../slib.hpp"
@@ -52,7 +51,7 @@ public:
         color += Ks * lightColor * spec;
       }
 
-      return Color(color).toBgra();
+      return color.toBgra();
     }
   };
 

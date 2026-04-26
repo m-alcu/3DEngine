@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <cstdint>
 #include <iostream>
 #include <limits>
 #include <string>
@@ -68,7 +69,7 @@ namespace slib
         bool operator<=(const vec3& rhs) const;
         bool operator>=(const vec3& rhs) const;
         vec3& operator=(const vec4& rhs);
-
+        uint32_t toBgra() const;
     };
 
     struct vec4

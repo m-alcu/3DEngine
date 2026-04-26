@@ -1,5 +1,4 @@
 #pragma once
-#include "../color.hpp"
 #include "../polygon.hpp"
 #include "../projection.hpp"
 #include "../slib.hpp"
@@ -41,7 +40,7 @@ public:
         slib::vec3 lightColor = light.color * factor;
         color += texColor * lightColor * diff;
       }
-      return Color(color).toBgra();
+      return color.toBgra();
     }
   };
 

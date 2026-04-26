@@ -231,6 +231,16 @@ namespace slib
         return *this;
     }
 
+    uint32_t vec3::toBgra() const
+    {
+        auto toU8 = [](float val) -> uint32_t {
+            if (val <= 0.0f) return 0u;
+            if (val >= 255.0f) return 255u;
+            return static_cast<uint32_t>(val + 0.5f);
+        };
+        return 0xff000000u | (toU8(x) << 16) | (toU8(y) << 8) | toU8(z);
+    }
+
     mat4::mat4(std::initializer_list<std::initializer_list<float>> rows)
     {
         int i = 0;

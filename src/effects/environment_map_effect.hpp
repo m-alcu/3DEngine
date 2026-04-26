@@ -1,5 +1,4 @@
 #pragma once
-#include "../color.hpp"
 #include "../cubemap.hpp"
 #include "../polygon.hpp"
 #include "../projection.hpp"
@@ -25,7 +24,7 @@ public:
 
       CubeMap *cubemap = scene.getCubeMap();
       if (!cubemap) {
-        return Color(poly.material->Ka).toBgra();
+        return poly.material->Ka.toBgra();
       }
 
       slib::vec3 N = smath::normalize(vRaster.normal);
@@ -62,7 +61,7 @@ public:
         color += Ks * lightColor * spec;
       }      
 
-      return Color(color).toBgra();
+      return color.toBgra();
     }
   };
 
