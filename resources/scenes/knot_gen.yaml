@@ -1,0 +1,37 @@
+scene:
+  name: "Knotg"
+
+  shadows_enabled: true
+  pcf_radius: 1
+  depth_sort_enabled: true
+  background: desert
+
+  solids:
+    - type: knot
+      name: "Knotg"
+      u_steps: 120
+      v_steps: 12
+      scale: 100.0
+      tube_radius: 30.0
+      position: [0.0, 0.0, -500.0]
+      angles: [90.0, 0.0, 0.0]
+      shading: phong
+      rotation_enabled: true
+      rotation_speed: [0.2, 0.5]
+
+    - type: icosahedron
+      name: "Light"
+      position: [0.0, 0.0, -500.0]
+      zoom: 0.2
+      shading: flat
+      rotation_enabled: false
+      light:
+        type: point
+        color: [1.0, 1.0, 1.0]
+        intensity: 5.0
+      orbit:
+        center: [0.0, 0.0, -500.0]
+        radius: 500.0
+        plane_normal: [0.0, 1.0, 1.0]
+        omega: 1.0471975
+        initial_phase: 0.0

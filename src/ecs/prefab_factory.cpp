@@ -213,6 +213,95 @@ namespace PrefabFactory {
         MeshSystem::updateRadius(mesh);
     }
 
+    void buildKnot(MeshComponent& mesh, MaterialComponent& material,
+                   int uSteps, int vSteps, float scale, float r) {
+        // Classic trefoil knot centerline: 3 lobes, closes after t in [0, 2π]
+        std::vector<VertexData> vertices(uSteps * vSteps);
+
+        for (int i = 0; i < uSteps; i++) {
+            float t = 2.0f * PI * i / uSteps;
+
+            // Centerline position
+            slib::vec3 P = {
+                scale * (std::sin(t) + 2.0f * std::sin(2.0f * t)),
+                scale * (std::cos(t) - 2.0f * std::cos(2.0f * t)),
+                scale * (-std::sin(3.0f * t))
+            };
+
+            // Analytical tangent
+            slib::vec3 dP = {
+                std::cos(t) + 4.0f * std::cos(2.0f * t),
+                -std::sin(t) + 4.0f * std::sin(2.0f * t),
+                -3.0f * std::cos(3.0f * t)
+            };
+            slib::vec3 T = smath::normalize(dP);
+
+            // Tube frame: pick an up vector not parallel to T
+            slib::vec3 up = (std::fabs(T.z) < 0.9f) ? slib::vec3{0,0,1} : slib::vec3{1,0,0};
+            slib::vec3 N = smath::normalize(smath::cross(T, up));
+            slib::vec3 B = smath::cross(T, N);
+
+            for (int j = 0; j < vSteps; j++) {
+                float s = 2.0f * PI * j / vSteps;
+                float cs = std::cos(s), ss = std::sin(s);
+                slib::vec3 pos = P + (N * cs + B * ss) * r;
+                vertices[i * vSteps + j].vertex   = pos;
+                vertices[i * vSteps + j].texCoord = { (float)i / uSteps, (float)j / vSteps };
+            }
+        }
+
+        mesh.vertexData  = vertices;
+        mesh.numVertices = static_cast<int>(vertices.size());
+
+        MaterialProperties props = MaterialSystem::getMaterialProperties(MaterialType::Metal);
+        std::string mtlPath = "checker-map_tho.png";
+
+        Material matBlue = MaterialSystem::initDefaultMaterial(
+            props,
+            slib::vec3{0x00, 0x00, 0x00},
+            slib::vec3{0x00, 0x58, 0xfc},
+            slib::vec3{0xff, 0xff, 0xff},
+            std::string(RES_PATH + mtlPath),
+            TextureFilter::NEIGHBOUR
+        );
+        material.materials.insert({"blue", matBlue});
+
+        Material matWhite = MaterialSystem::initDefaultMaterial(
+            props,
+            slib::vec3{0x00, 0x00, 0x00},
+            slib::vec3{0xff, 0xff, 0xff},
+            slib::vec3{0xff, 0xff, 0xff},
+            std::string(RES_PATH + mtlPath),
+            TextureFilter::NEIGHBOUR
+        );
+        material.materials.insert({"white", matWhite});
+
+        // Quads: each patch shares one face normal (fixes flat-shading seams)
+        std::vector<FaceData> faces;
+        faces.reserve(uSteps * vSteps);
+        for (int i = 0; i < uSteps; i++) {
+            int ni = (i + 1) % uSteps;
+            for (int j = 0; j < vSteps; j++) {
+                int nj = (j + 1) % vSteps;
+                FaceData face;
+                face.face.vertexIndices = {
+                    i  * vSteps + nj,
+                    ni * vSteps + nj,
+                    ni * vSteps + j,
+                    i  * vSteps + j
+                };
+                face.face.materialKey = ((i + j) % 2 == 0) ? "blue" : "white";
+                faces.push_back(face);
+            }
+        }
+
+        mesh.faceData  = faces;
+        mesh.numFaces  = static_cast<int>(faces.size());
+        MeshSystem::updateFaceNormals(mesh);
+        MeshSystem::updateVertexNormals(mesh);
+        MeshSystem::updateRadius(mesh);
+    }
+
     void buildWorld(MeshComponent& mesh, MaterialComponent& material,
                     int lat, int lon) {
         std::vector<VertexData> vertices;

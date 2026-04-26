@@ -188,6 +188,12 @@ Entity SceneLoader::parseEntity(const YAML::Node& node, Scene& scene) {
         float R    = node["major_radius"] ? node["major_radius"].as<float>() : 500.0f;
         float r    = node["minor_radius"] ? node["minor_radius"].as<float>() : 250.0f;
         PrefabFactory::buildTorus(mesh, material, uSteps, vSteps, R, r);
+    } else if (type == "knot") {
+        int uSteps  = node["u_steps"]    ? node["u_steps"].as<int>()      : 120;
+        int vSteps  = node["v_steps"]    ? node["v_steps"].as<int>()      : 12;
+        float scale = node["scale"]      ? node["scale"].as<float>()      : 100.0f;
+        float r     = node["tube_radius"]? node["tube_radius"].as<float>(): 30.0f;
+        PrefabFactory::buildKnot(mesh, material, uSteps, vSteps, scale, r);
     } else if (type == "plane") {
         float size = node["size"] ? node["size"].as<float>() : 10.0f;
         PrefabFactory::buildPlane(mesh, material, size);

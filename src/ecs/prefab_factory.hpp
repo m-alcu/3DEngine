@@ -10,6 +10,8 @@ namespace PrefabFactory {
     void buildPlane(MeshComponent& mesh, MaterialComponent& material, float size);
     void buildTorus(MeshComponent& mesh, MaterialComponent& material,
                     int uSteps, int vSteps, float R, float r);
+    void buildKnot(MeshComponent& mesh, MaterialComponent& material,
+                   int uSteps, int vSteps, float scale, float r);
     void buildWorld(MeshComponent& mesh, MaterialComponent& material,
                     int lat, int lon);
     void buildAmiga(MeshComponent& mesh, MaterialComponent& material,
