@@ -35,8 +35,7 @@ public:
         float attenuation = light.getAttenuation(worldPos);
         float shadow = lighting::sampleShadow(scene, entity_, worldPos, diff, light.position);
         float factor = light.intensity * attenuation * shadow;
-        slib::vec3 lightColor = light.color * factor;
-        color += texColor * lightColor * diff;
+        color += texColor * diff * (light.color * factor);
       }
       return color.toBgra();
     }

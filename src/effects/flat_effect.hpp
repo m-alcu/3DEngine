@@ -27,19 +27,19 @@ public:
       }
 
       slib::vec3 worldPos = vRaster.worldOverW / vRaster.oneOverW;
-      slib::vec3 diffuseColor{0.0f, 0.0f, 0.0f};
+      slib::vec3 color = poly.material->Ka;
       for (const auto &[entity_, lightComp] : scene.lights()) {
         const Light &light = lightComp.light;
-        float diff =
-          std::max(0.0f, smath::dot(poly.rotatedFaceNormal, light.getDirection(poly.points[0].world)));
+        float diff = std::max(0.0f, smath::dot(poly.rotatedFaceNormal, light.getDirection(poly.points[0].world)));
+        if (diff == 0.0f) continue;
         float attenuation = light.getAttenuation(poly.points[0].world);
         float shadow = lighting::sampleShadow(scene, entity_, worldPos, diff, light.position);
         float factor = light.intensity * attenuation * shadow;
         slib::vec3 lightColor = light.color * factor;
-        diffuseColor += lightColor * diff;
+        color += poly.material->Kd * diff * lightColor;
       }
 
-      return (poly.material->Ka + poly.material->Kd * diffuseColor).toBgra();
+      return color.toBgra();
     }
   };
 
