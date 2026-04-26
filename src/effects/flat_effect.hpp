@@ -32,10 +32,10 @@ public:
         const Light &light = lightComp.light;
         float diff = std::max(0.0f, smath::dot(poly.rotatedFaceNormal, light.getDirection(poly.points[0].world)));
         if (diff == 0.0f) continue;
-        float attenuation = light.getAttenuation(poly.points[0].world);
         float shadow = lighting::sampleShadow(scene, entity_, worldPos, diff, light.position);
-        float factor = light.intensity * attenuation * shadow;
-        slib::vec3 lightColor = light.color * factor;
+        if (shadow == 0.0f) continue;
+        float attenuation = light.getAttenuation(poly.points[0].world);
+        slib::vec3 lightColor = light.color * (light.intensity * attenuation * shadow);
         color += poly.material->Kd * diff * lightColor;
       }
 

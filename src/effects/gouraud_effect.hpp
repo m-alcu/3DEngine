@@ -29,10 +29,10 @@ public:
         slib::vec3 luxDirection = light.getDirection(worldPos);
         float diff = std::max(0.0f, smath::dot(normal, luxDirection));
         if (diff == 0.0f) continue;
-        float attenuation = light.getAttenuation(worldPos);
         float shadow = lighting::sampleShadow(scene, entity_, worldPos, diff, light.position);
-        float factor = light.intensity * attenuation * shadow;
-        slib::vec3 lightColor = light.color * factor;
+        if (shadow == 0.0f) continue;
+        float attenuation = light.getAttenuation(worldPos);
+        slib::vec3 lightColor = light.color * (light.intensity * attenuation * shadow);
         color += poly.material->Kd * diff * lightColor;
       }
       return color.toBgra();
