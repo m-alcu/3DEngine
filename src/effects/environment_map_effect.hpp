@@ -27,8 +27,9 @@ public:
         return poly.material->Ka.toBgra();
       }
 
+      slib::vec3 worldPos = vRaster.worldOverW / vRaster.oneOverW;
       slib::vec3 N = smath::normalize(vRaster.normal);
-      slib::vec3 V = smath::normalize(scene.camera.pos - vRaster.world);
+      slib::vec3 V = smath::normalize(scene.camera.pos - worldPos);
 
       // Reflection: R = 2(N·V)N - V
       float NdotV = smath::dot(N, V);
@@ -38,20 +39,19 @@ public:
       cubemap->sample(R.x, R.y, R.z, r, g, b);
       slib::vec3 environmentColor{r,g,b};
 
-      const auto &Ks = poly.material->Ks; // vec3
+      const auto &Ks = poly.material->Ks;
       slib::vec3 color{0.0f, 0.0f, 0.0f};
 
       for (const auto &[entity_, lightComp] : scene.lights()) {
         const Light &light = lightComp.light;
-        slib::vec3 luxDirection = light.getDirection(vRaster.world);
-        slib::vec3 L = luxDirection;
-        float diff = std::max(0.0f, smath::dot(N, L));
-        slib::vec3 halfwayVector =
-            smath::normalize(luxDirection - scene.camera.forward);
-        float specAngle = std::max(0.0f, smath::dot(N, halfwayVector));
-        float spec = std::pow(specAngle, poly.material->Ns);
-        float attenuation = light.getAttenuation(vRaster.world);
-        float shadow = lighting::sampleShadow(scene, entity_, vRaster.world, diff, light.position);
+        slib::vec3 luxDirection = light.getDirection(worldPos);
+        float diff = std::max(0.0f, smath::dot(N, luxDirection));
+        if (diff == 0.0f) continue;
+        float shadow = lighting::sampleShadow(scene, entity_, worldPos, diff, light.position);
+        if (shadow == 0.0f) continue;
+        slib::vec3 halfwayVector = smath::normalize(luxDirection - scene.camera.forward);
+        float spec = std::pow(std::max(0.0f, smath::dot(N, halfwayVector)), poly.material->Ns);
+        float attenuation = light.getAttenuation(worldPos);
         float factor = light.intensity * attenuation * shadow;
         slib::vec3 lightColor = light.color * factor;
         color += environmentColor * lightColor * diff;
