@@ -8,8 +8,9 @@
 #include "../ecs/transform_component.hpp"
 #include "vertex_shaders.hpp"
 #include "geometry_shaders.hpp"
+#include "lighting.hpp"
 
-// solid color attribute not interpolated
+// Specular: halfway vector H = normalize(L + viewDir), then dot(N, H)
 class TexturedBlinnPhongEffect {
 public:
   using Vertex = vertex::TexturedLit;
@@ -41,10 +42,7 @@ public:
         float specAngle = std::max(0.0f, smath::dot(N, halfwayVector));
         float spec = std::pow(specAngle, poly.material->Ns);
         float attenuation = light.getAttenuation(worldPos);
-        const auto* shadowComp = scene.shadows().get(entity_);
-        float shadow = scene.shadowsEnabled && shadowComp && shadowComp->shadowMap
-          ? shadowComp->shadowMap->sampleShadow(worldPos, diff, light.position)
-          : 1.0f;
+        float shadow = lighting::sampleShadow(scene, entity_, worldPos, diff, light.position);
         float factor = light.intensity * attenuation * shadow;
         slib::vec3 lightColor = light.color * factor;
         color += texColor * lightColor * diff;

@@ -3,22 +3,22 @@
 #include <cstdint>
 #include <cmath>
 #include <algorithm>
-#include "scene.hpp"
-#include "ecs/light_component.hpp"
-#include "ecs/mesh_component.hpp"
-#include "ecs/material_component.hpp"
-#include "ecs/render_component.hpp"
-#include "ecs/transform_component.hpp"
-#include "ecs/transform_system.hpp"
-#include "slib.hpp"
-#include "smath.hpp"
-#include "polygon.hpp"
-#include "clipping.hpp"
+#include "../scene.hpp"
+#include "../ecs/light_component.hpp"
+#include "../ecs/mesh_component.hpp"
+#include "../ecs/material_component.hpp"
+#include "../ecs/render_component.hpp"
+#include "../ecs/transform_component.hpp"
+#include "../ecs/transform_system.hpp"
+#include "../slib.hpp"
+#include "../smath.hpp"
+#include "../polygon.hpp"
+#include "../clipping.hpp"
 #include "rasterizer_slope.hpp"
 #include "rasterizer_walker.hpp"
-#include "projection.hpp"
+#include "../projection.hpp"
 #include "rasterizer_utils.hpp"
-#include "effects/geometry_shaders.hpp"
+#include "../effects/geometry_shaders.hpp"
 
 
 template<class Effect>
@@ -53,7 +53,7 @@ class Rasterizer {
         int32_t screenWidth = 0;
         int32_t screenHeight = 0;
         Effect effect;
-		Projection<vertex> projection;
+        Projection<vertex> projection;
 
         void processVertices() {
             projectedPoints.resize(meshComponent->numVertices);
@@ -109,9 +109,8 @@ class Rasterizer {
                 drawPolygon(clippedPoly);
                 scene->stats.addDrawCall();
             }
-        }        
+        }
 
-        // Unified polygon drawing for both regular and shadow rendering
         void drawPolygon(Polygon<vertex>& polygon) {
             effect.gs(polygon, screenWidth, screenHeight);
             scene->stats.addPoly();
@@ -139,5 +138,4 @@ class Rasterizer {
                 }
             });
         }
-
-    };
+};

@@ -8,8 +8,8 @@
 #include "../ecs/transform_component.hpp"
 #include "vertex_shaders.hpp"
 #include "geometry_shaders.hpp"
+#include "lighting.hpp"
 
-// solid color attribute not interpolated
 class GouraudEffect {
 public:
   using Vertex = vertex::Lit;
@@ -28,10 +28,7 @@ public:
         float attenuation = light.getAttenuation(worldPos);
         const slib::vec3 luxDirection = light.getDirection(worldPos);
         float diff = std::max(0.0f, smath::dot(vRaster.normal, luxDirection));
-        const auto* shadowComp = scene.shadows().get(entity_);
-        float shadow = scene.shadowsEnabled && shadowComp && shadowComp->shadowMap
-          ? shadowComp->shadowMap->sampleShadow(worldPos, diff, light.position)
-          : 1.0f;
+        float shadow = lighting::sampleShadow(scene, entity_, worldPos, diff, light.position);
         diffuseColor += light.color * (diff * light.intensity * attenuation * shadow);
       }
       return (poly.material->Ka + poly.material->Kd * diffuseColor).toBgra();

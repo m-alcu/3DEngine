@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include "ecs/mesh_component.hpp"
+#include "../ecs/mesh_component.hpp"
 
 template<class V>
 inline std::vector<V> collectPolyVerts(const std::vector<V>& projectedPoints,
