@@ -46,42 +46,28 @@ namespace {
 namespace PrefabFactory {
 
     void buildCube(MeshComponent& mesh, MaterialComponent& material) {
-        const float half = 10.f;
+        const float h = 10.f;
+        auto vtx = [](float x, float y, float z, float u, float v) {
+            VertexData vd;
+            vd.vertex   = {x, y, z};
+            vd.texCoord = {u, v};
+            return vd;
+        };
 
-        std::vector<VertexData> vertices;
-        VertexData v;
-
-        v.vertex = { -half, -half, +half }; v.texCoord = { 1, 1 }; vertices.push_back(v);
-        v.vertex = { +half, -half, +half }; v.texCoord = { 0, 1 }; vertices.push_back(v);
-        v.vertex = { +half, +half, +half }; v.texCoord = { 0, 0 }; vertices.push_back(v);
-        v.vertex = { -half, +half, +half }; v.texCoord = { 1, 0 }; vertices.push_back(v);
-
-        v.vertex = { +half, -half, -half }; v.texCoord = { 1, 1 }; vertices.push_back(v);
-        v.vertex = { -half, -half, -half }; v.texCoord = { 0, 1 }; vertices.push_back(v);
-        v.vertex = { -half, +half, -half }; v.texCoord = { 0, 0 }; vertices.push_back(v);
-        v.vertex = { +half, +half, -half }; v.texCoord = { 1, 0 }; vertices.push_back(v);
-
-        v.vertex = { -half, -half, -half }; v.texCoord = { 1, 1 }; vertices.push_back(v);
-        v.vertex = { -half, -half, +half }; v.texCoord = { 0, 1 }; vertices.push_back(v);
-        v.vertex = { -half, +half, +half }; v.texCoord = { 0, 0 }; vertices.push_back(v);
-        v.vertex = { -half, +half, -half }; v.texCoord = { 1, 0 }; vertices.push_back(v);
-
-        v.vertex = { +half, -half, +half }; v.texCoord = { 1, 1 }; vertices.push_back(v);
-        v.vertex = { +half, -half, -half }; v.texCoord = { 0, 1 }; vertices.push_back(v);
-        v.vertex = { +half, +half, -half }; v.texCoord = { 0, 0 }; vertices.push_back(v);
-        v.vertex = { +half, +half, +half }; v.texCoord = { 1, 0 }; vertices.push_back(v);
-
-        v.vertex = { -half, +half, +half }; v.texCoord = { 1, 1 }; vertices.push_back(v);
-        v.vertex = { +half, +half, +half }; v.texCoord = { 0, 1 }; vertices.push_back(v);
-        v.vertex = { +half, +half, -half }; v.texCoord = { 0, 0 }; vertices.push_back(v);
-        v.vertex = { -half, +half, -half }; v.texCoord = { 1, 0 }; vertices.push_back(v);
-
-        v.vertex = { -half, -half, -half }; v.texCoord = { 1, 1 }; vertices.push_back(v);
-        v.vertex = { +half, -half, -half }; v.texCoord = { 0, 1 }; vertices.push_back(v);
-        v.vertex = { +half, -half, +half }; v.texCoord = { 0, 0 }; vertices.push_back(v);
-        v.vertex = { -half, -half, +half }; v.texCoord = { 1, 0 }; vertices.push_back(v);
-
-        mesh.vertexData = vertices;
+        mesh.vertexData = {
+            // +Z
+            vtx(-h,-h,+h, 1,1), vtx(+h,-h,+h, 0,1), vtx(+h,+h,+h, 0,0), vtx(-h,+h,+h, 1,0),
+            // -Z
+            vtx(+h,-h,-h, 1,1), vtx(-h,-h,-h, 0,1), vtx(-h,+h,-h, 0,0), vtx(+h,+h,-h, 1,0),
+            // -X
+            vtx(-h,-h,-h, 1,1), vtx(-h,-h,+h, 0,1), vtx(-h,+h,+h, 0,0), vtx(-h,+h,-h, 1,0),
+            // +X
+            vtx(+h,-h,+h, 1,1), vtx(+h,-h,-h, 0,1), vtx(+h,+h,-h, 0,0), vtx(+h,+h,+h, 1,0),
+            // +Y
+            vtx(-h,+h,+h, 1,1), vtx(+h,+h,+h, 0,1), vtx(+h,+h,-h, 0,0), vtx(-h,+h,-h, 1,0),
+            // -Y
+            vtx(-h,-h,-h, 1,1), vtx(+h,-h,-h, 0,1), vtx(+h,-h,+h, 0,0), vtx(-h,-h,+h, 1,0),
+        };
 
         MaterialProperties properties = MaterialSystem::getMaterialProperties(MaterialType::Metal);
         std::string materialKey = "floorTexture";
