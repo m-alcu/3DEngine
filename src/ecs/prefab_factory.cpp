@@ -219,7 +219,8 @@ namespace PrefabFactory {
                 float cs = std::cos(s), ss = std::sin(s);
                 slib::vec3 pos = P + (N * cs + B * ss) * r;
                 vertices[i * vSteps + j].vertex   = pos;
-                vertices[i * vSteps + j].texCoord = { (float)i / uSteps, (float)j / vSteps };
+                const float maxDim = 3.0f * scale + r;
+                vertices[i * vSteps + j].texCoord = { (pos.x / maxDim + 1.0f) / 2.0f, (pos.y / maxDim + 1.0f) / 2.0f };
             }
         }
 
