@@ -1,24 +1,24 @@
 #pragma once
 #include <algorithm>
 #include <cmath>
-#include <cstdio>
 #include <memory>
 #include <vector>
 #include "z_buffer.hpp"
 #include "constants.hpp"
 #include "light.hpp"
-#include "scaler.hpp"
-#include "bresenham.hpp"
 #include "slib.hpp"
 #include "smath.hpp"
 
+// Depth-buffer storage and sampling for shadow mapping.
+// Light-space matrices are built by ShadowSystem (see ecs/shadow_system.hpp);
+// debug overlays are drawn by RendererOverlay (see renderer_overlay.hpp).
+// Supports both single-face (directional/spot) and 6-face cubemap (point) shadows.
 class ShadowMap {
 public:
   int numFaces;
   int faceWidth;
   int faceHeight;
   std::vector<std::unique_ptr<ZBuffer>> faces;
-  std::vector<bool> faceDirty;
   std::vector<slib::mat4> lightSpaceMatrices;
   slib::mat4 lightProjMatrix;
 
@@ -38,19 +38,12 @@ public:
     for (int i = 0; i < numFaces; ++i) {
       faces.push_back(std::make_unique<ZBuffer>(w, h));
     }
-    faceDirty.resize(numFaces, false);
     lightSpaceMatrices.resize(numFaces, smath::identity());
-    setAllDirty();
   }
 
-  void setAllDirty() {
-    std::fill(faceDirty.begin(), faceDirty.end(), true);
-  }
-
-  void clearFaceIfDirty(int faceIdx) {
-    if (faceDirty[faceIdx]) {
-      faces[faceIdx]->Clear();
-      faceDirty[faceIdx] = false;
+  void clearAllFaces() {
+    for (auto& face : faces) {
+      face->Clear();
     }
   }
 
@@ -60,7 +53,6 @@ public:
     for (auto& face : faces) {
       face->Resize(w, h);
     }
-    setAllDirty();
   }
 
   bool isCubemap() const { return numFaces == 6; }
@@ -80,90 +72,15 @@ public:
     return faces[faceIdx]->Get(pos);
   }
 
-  // Convenience for face 0 (used by overlay)
-  bool testAndSetDepth(int pos, float depth) {
-    return faces[0]->TestAndSet(pos, depth);
-  }
-
-  float getDepth(int pos) const {
-    return faces[0]->Get(pos);
-  }
-
-  // Draw single face as overlay on screen
-  void drawFaceOverlay(int faceIdx, uint32_t* pixels, int screenW, int screenH,
-                       int startX, int startY, int overlaySize) const {
-    float minDepth = 1.0f;
-    float maxDepth = -1.0f;
-    for (int i = 0; i < faceWidth * faceHeight; ++i) {
-      float d = faces[faceIdx]->Get(i);
-      minDepth = std::min(minDepth, d);
-      maxDepth = std::max(maxDepth, d);
-    }
-    float depthRange = std::max(maxDepth - minDepth, 0.0001f);
-
-    int fw = faceWidth, fh = faceHeight;
-    blitScaled(pixels, screenW, screenH,
-               startX, startY, overlaySize, overlaySize,
-               faceWidth, faceHeight,
-               [&](int srcX, int srcY) -> uint32_t {
-                 float depth = faces[faceIdx]->Get(srcY * fw + srcX);
-                 uint8_t gray = (depth < 1.0f)
-                     ? static_cast<uint8_t>(std::clamp((maxDepth - depth) / depthRange * 255.0f, 0.0f, 255.0f))
-                     : 0;
-                 return slib::vec3(gray, gray, gray).toBgra();
-               });
-
-    // Draw border
-    int endX = startX + overlaySize - 1;
-    int endY = startY + overlaySize - 1;
-    drawBresenhamLine(startX, startY, endX, startY, pixels, WHITE_COLOR, screenW, screenH);
-    drawBresenhamLine(startX, endY, endX, endY, pixels, WHITE_COLOR, screenW, screenH);
-    drawBresenhamLine(startX, startY, startX, endY, pixels, WHITE_COLOR, screenW, screenH);
-    drawBresenhamLine(endX, startY, endX, endY, pixels, WHITE_COLOR, screenW, screenH);
-  }
-
-  // Legacy single-face overlay (delegates to face 0)
-  void drawOverlay(uint32_t* pixels, int screenW, int screenH,
-                   int startX, int startY, int overlaySize) const {
-    drawFaceOverlay(0, pixels, screenW, screenH, startX, startY, overlaySize);
-  }
-
-  // Build light-space matrices for shadow mapping
-  void buildLightMatrices(const Light &light, const slib::vec3 &sceneCenter,
-                          float sceneRadius) {
-    if (light.type == LightType::Directional) {
-      buildDirectionalLightMatrices(light, sceneCenter, sceneRadius);
-    } else if (light.type == LightType::Point) {
-      if (numFaces == 6) {
-        buildCubemapMatrices(light, sceneRadius);
-        return; // lightSpaceMatrices already set for all 6 faces
-      } else {
-        buildPointLightMatrices(light, sceneCenter, sceneRadius);
-      }
-    } else if (light.type == LightType::Spot) {
-      buildSpotLightMatrices(light, sceneRadius);
-    }
-
-
-  }
-
-  // Sample shadow at a world position
+  // Sample shadow at a world position.
   // Returns: 1.0 = fully lit, 0.0 = fully shadowed
   float sampleShadow(const slib::vec3 &worldPos, float cosTheta,
-                    const slib::vec3 &lightPos = {0, 0, 0}) const {
-    if (numFaces == 6) {
-      int faceIdx = selectFace(worldPos - lightPos);
-      if (faceDirty[faceIdx]) return 1.0f;
-      return sampleFace(faceIdx, worldPos, cosTheta);
-    }
-    if (faceDirty[0]) return 1.0f;
-    return sampleFace(0, worldPos, cosTheta);
+                    const slib::vec3 &lightPos) const {
+    int faceIdx = (numFaces == 6) ? selectFace(worldPos - lightPos) : 0;
+    return sampleFace(faceIdx, worldPos, cosTheta);
   }
 
 private:
-  // Temporary storage for single-face light matrix building
-  slib::mat4 lightViewMatrix = smath::identity();
-
   // Select cubemap face based on direction from light to point
   int selectFace(const slib::vec3& dir) const {
     float absX = std::abs(dir.x);
@@ -257,107 +174,5 @@ private:
     } else {
       return static_cast<float>(shadow) / samples;
     }
-  }
-
-  void buildDirectionalLightMatrices(const Light &light,
-                                     const slib::vec3 &sceneCenter,
-                                     float sceneRadius) {
-    slib::vec3 lightDir = smath::normalize(light.direction);
-    slib::vec3 lightPos = sceneCenter + lightDir * sceneRadius * 2.0f;
-
-    slib::vec3 up = {0.0f, 1.0f, 0.0f};
-    if (std::abs(smath::dot(lightDir, up)) > 0.99f) {
-      up = {1.0f, 0.0f, 0.0f};
-    }
-
-    lightViewMatrix = smath::lookAt(lightPos, sceneCenter, up);
-
-    float size = sceneRadius * 1.2f;
-    lightProjMatrix =
-        smath::ortho(-size, size, -size, size, 0.1f, sceneRadius * 4.0f);
-    lightSpaceMatrices[0] = lightViewMatrix * lightProjMatrix;
-  }
-
-  void buildPointLightMatrices(const Light &light,
-                               const slib::vec3 &sceneCenter,
-                               float sceneRadius) {
-    slib::vec3 up = {0.0f, 1.0f, 0.0f};
-    slib::vec3 lightDir = smath::normalize(sceneCenter - light.position);
-    if (std::abs(smath::dot(lightDir, up)) > 0.99f) {
-      up = {1.0f, 0.0f, 0.0f};
-    }
-
-    lightViewMatrix = smath::lookAt(light.position, sceneCenter, up);
-
-    slib::vec3 toScene = sceneCenter - light.position;
-    float distToScene = std::sqrt(smath::dot(toScene, toScene));
-    distToScene = std::max(distToScene, 1.0f);
-    float effectiveRadius = sceneRadius * EFFECTIVE_LIGHT_RADIUS_FACTOR;
-    float fov = 2.0f * std::atan(effectiveRadius / distToScene);
-    fov = std::clamp(fov, 20.0f * RAD, 90.0f * RAD);
-
-    float aspect = static_cast<float>(faceWidth) / faceHeight;
-
-    float _zNear, _zFar;
-    if (distToScene > sceneRadius * 1.5f) {
-      _zNear = std::max(1.0f, distToScene - sceneRadius);
-      _zFar = distToScene + sceneRadius * 2.0f;
-    } else {
-      _zNear = std::max(0.1f, distToScene * 0.05f);
-      _zFar = std::max(_zNear * 2.0f, distToScene + sceneRadius * 1.2f);
-    }
-
-    const float maxDepthRatio = 300.0f;
-    if (_zFar / _zNear > maxDepthRatio) {
-      _zNear = _zFar / maxDepthRatio;
-    }
-
-    lightProjMatrix = smath::perspective(_zFar, _zNear, aspect, fov);
-    lightSpaceMatrices[0] = lightViewMatrix * lightProjMatrix;
-  }
-
-  void buildCubemapMatrices(const Light &light, float sceneRadius) {
-    zNear = std::max(10.0f, sceneRadius * 0.01f);
-    zFar = std::max(light.radius * 2.0f, sceneRadius * 3.0f);
-
-    float aspect = 1.0f;
-    float fov = PI / 2.0f;
-    lightProjMatrix = smath::perspective(zFar, zNear, aspect, fov);
-
-    const slib::vec3& pos = light.position;
-
-    // +X, -X, +Y, -Y, +Z, -Z
-    slib::mat4 views[6] = {
-      smath::lookAt(pos, pos + slib::vec3{1, 0, 0}, {0, -1, 0}),
-      smath::lookAt(pos, pos + slib::vec3{-1, 0, 0}, {0, -1, 0}),
-      smath::lookAt(pos, pos + slib::vec3{0, 1, 0}, {0, 0, 1}),
-      smath::lookAt(pos, pos + slib::vec3{0, -1, 0}, {0, 0, -1}),
-      smath::lookAt(pos, pos + slib::vec3{0, 0, 1}, {0, -1, 0}),
-      smath::lookAt(pos, pos + slib::vec3{0, 0, -1}, {0, -1, 0}),
-    };
-
-    for (int i = 0; i < 6; ++i) {
-      lightSpaceMatrices[i] = views[i] * lightProjMatrix;
-    }
-  }
-
-  void buildSpotLightMatrices(const Light &light, float sceneRadius) {
-    slib::vec3 lightDir = smath::normalize(light.direction);
-    slib::vec3 target = light.position + lightDir * light.radius;
-
-    slib::vec3 up = {0.0f, 1.0f, 0.0f};
-    if (std::abs(smath::dot(lightDir, up)) > 0.99f) {
-      up = {1.0f, 0.0f, 0.0f};
-    }
-
-    lightViewMatrix = smath::lookAt(light.position, target, up);
-
-    float fov = std::acos(light.outerCutoff) * 2.0f;
-    float aspect = static_cast<float>(faceWidth) / faceHeight;
-    float _zNear = 1.0f;
-    float _zFar = light.radius * 2.0f;
-
-    lightProjMatrix = smath::perspective(_zFar, _zNear, aspect, fov);
-    lightSpaceMatrices[0] = lightViewMatrix * lightProjMatrix;
   }
 };

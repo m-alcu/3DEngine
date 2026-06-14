@@ -25,20 +25,25 @@ class ShadowRasterizer {
         void drawRenderable(const TransformComponent& transform,
                             const MeshComponent& mesh,
                             const LightComponent& light,
-                            const ShadowComponent& shadow,
-                            int faceIndex = 0) {
+                            const ShadowComponent& shadow) {
             transformComponent = &transform;
             meshComponent = &mesh;
             lightSource = &light;
             shadowComponent = &shadow;
             screenWidth = shadowComponent->shadowMap->getFaceWidth();
             screenHeight = shadowComponent->shadowMap->getFaceHeight();
-            faceIdx = faceIndex;
-            processVertices();
-            drawShadowFaces();
+
+            // World positions are face-independent, so compute them once and
+            // reproject per cubemap face (a no-op extra step for single-face maps).
+            processWorld();
+            for (faceIdx = 0; faceIdx < shadowComponent->shadowMap->numFaces; ++faceIdx) {
+                projectFace();
+                drawShadowFaces();
+            }
         }
 
     private:
+        std::vector<vertex> worldPoints;
         std::vector<vertex> projectedPoints;
         const TransformComponent* transformComponent = nullptr;
         const MeshComponent* meshComponent = nullptr;
@@ -49,13 +54,25 @@ class ShadowRasterizer {
         Effect effect;
         int faceIdx = 0;
 
-        void processVertices() {
-            projectedPoints.resize(meshComponent->vertexData.size());
+        void processWorld() {
             const int n = static_cast<int>(meshComponent->vertexData.size());
+            worldPoints.resize(n);
 
             #pragma omp parallel for if(n > 1000)
             for (int i = 0; i < n; ++i) {
-                projectedPoints[i] = effect.vs(meshComponent->vertexData[i], *transformComponent, *shadowComponent, faceIdx);
+                worldPoints[i] = effect.vs.world(meshComponent->vertexData[i], *transformComponent);
+            }
+        }
+
+        void projectFace() {
+            const int n = static_cast<int>(worldPoints.size());
+            projectedPoints.resize(n);
+            const ShadowMap& shadowMap = *shadowComponent->shadowMap;
+
+            #pragma omp parallel for if(n > 1000)
+            for (int i = 0; i < n; ++i) {
+                projectedPoints[i] = worldPoints[i];
+                effect.vs.project(projectedPoints[i], shadowMap, faceIdx);
             }
         }
 
@@ -74,7 +91,6 @@ class ShadowRasterizer {
         inline void clipAndDraw(Polygon<vertex>& poly) {
             auto clippedPoly = ClipCullPolygon(poly);
             if (!clippedPoly.points.empty()) {
-                shadowComponent->shadowMap->clearFaceIfDirty(faceIdx);
                 drawPolygon(clippedPoly);
             }
         }

@@ -19,19 +19,18 @@ public:
 
     class VertexShader {
     public:
-
-        Vertex operator()(const VertexData& vData,
-                          const TransformComponent& transform,
-                          const ShadowComponent& shadow,
-                          int faceIdx) const {
+        // Stage 1: model -> world space (independent of which cubemap face).
+        Vertex world(const VertexData& vData, const TransformComponent& transform) const {
             Vertex vertex;
             vertex.world = transform.modelMatrix * slib::vec4(vData.vertex, 1);
-
-            const auto& shadowMap = shadow.shadowMap;
-            vertex.clip = slib::vec4(vertex.world, 1) * shadowMap->getLightSpaceMatrix(faceIdx);
-            Projection<Vertex>::view(shadowMap->getFaceWidth(), shadowMap->getFaceHeight(), vertex);
-
             return vertex;
+        }
+
+        // Stage 2: world -> light clip + screen space for a given face.
+        void project(Vertex& vertex, const ShadowMap& shadowMap, int faceIdx) const {
+            vertex.clip = slib::vec4(vertex.world, 1) * shadowMap.getLightSpaceMatrix(faceIdx);
+            vertex.dirty = true;
+            Projection<Vertex>::view(shadowMap.getFaceWidth(), shadowMap.getFaceHeight(), vertex);
         }
     };
 

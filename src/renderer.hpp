@@ -96,14 +96,10 @@ public:
         continue;
       }
 
-      shadowComponent->shadowMap->setAllDirty();
-
-      ShadowSystem::buildLightMatrices(*shadowComponent,
-                                       lightComponent.light,
-                                       scene.sceneCenter,
-                                       scene.sceneRadius);
-
-      int numFaces = shadowComponent->shadowMap->numFaces;
+      ShadowMap& shadowMap = *shadowComponent->shadowMap;
+      ShadowSystem::buildLightMatrices(shadowMap, lightComponent.light,
+                                       scene.sceneCenter, scene.sceneRadius);
+      shadowMap.clearAllFaces();
 
       for (const auto& [entity, render] : scene.registry.renders()) {
         auto* transform = scene.registry.transforms().get(entity);
@@ -111,11 +107,7 @@ public:
         if (!transform || !mesh) {
           continue;
         }
-        for (int faceIdx = 0; faceIdx < numFaces; ++faceIdx) {
-          shadowRasterizer.drawRenderable(*transform, *mesh,
-                                          lightComponent, *shadowComponent,
-                                          faceIdx);
-        }
+        shadowRasterizer.drawRenderable(*transform, *mesh, lightComponent, *shadowComponent);
       }
     }
   }

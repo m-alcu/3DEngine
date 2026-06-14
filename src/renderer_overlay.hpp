@@ -1,11 +1,49 @@
 #pragma once
 
+#include <algorithm>
+#include "bresenham.hpp"
 #include "constants.hpp"
 #include "renderer_fonts.hpp"
+#include "scaler.hpp"
 #include "scene.hpp"
 #include "shadow_map.hpp"
+#include "slib.hpp"
 
 namespace RendererOverlay {
+
+// Draw a single shadow-map face as a grayscale depth overlay with a border.
+inline void drawShadowFaceOverlay(const ShadowMap &shadowMap, int faceIdx,
+                                  uint32_t *pixels, int screenW, int screenH,
+                                  int startX, int startY, int overlaySize) {
+  int fw = shadowMap.getFaceWidth();
+  int fh = shadowMap.getFaceHeight();
+
+  float minDepth = 1.0f;
+  float maxDepth = -1.0f;
+  for (int i = 0; i < fw * fh; ++i) {
+    float d = shadowMap.getDepth(faceIdx, i);
+    minDepth = std::min(minDepth, d);
+    maxDepth = std::max(maxDepth, d);
+  }
+  float depthRange = std::max(maxDepth - minDepth, 0.0001f);
+
+  blitScaled(pixels, screenW, screenH, startX, startY, overlaySize, overlaySize,
+             fw, fh, [&](int srcX, int srcY) -> uint32_t {
+               float depth = shadowMap.getDepth(faceIdx, srcY * fw + srcX);
+               uint8_t gray = (depth < 1.0f)
+                   ? static_cast<uint8_t>(std::clamp(
+                         (maxDepth - depth) / depthRange * 255.0f, 0.0f, 255.0f))
+                   : 0;
+               return slib::vec3(gray, gray, gray).toBgra();
+             });
+
+  int endX = startX + overlaySize - 1;
+  int endY = startY + overlaySize - 1;
+  drawBresenhamLine(startX, startY, endX, startY, pixels, WHITE_COLOR, screenW, screenH);
+  drawBresenhamLine(startX, endY, endX, endY, pixels, WHITE_COLOR, screenW, screenH);
+  drawBresenhamLine(startX, startY, startX, endY, pixels, WHITE_COLOR, screenW, screenH);
+  drawBresenhamLine(endX, startY, endX, endY, pixels, WHITE_COLOR, screenW, screenH);
+}
 
 inline ShadowMap *findShadowMapForOverlay(Scene &scene) {
   // Check selected entity first
@@ -45,14 +83,12 @@ inline void drawShadowMapOverlay(Scene &scene, int margin = 10) {
 
     for (int faceIdx = 0; faceIdx < 6; ++faceIdx) {
       int startX = margin + faceIdx * (faceOverlaySize + 2);
-      shadowMapPtr->drawFaceOverlay(faceIdx, scene.pixels.data(), scene.screen.width,
-                                    scene.screen.height, startX, startY,
-                                    faceOverlaySize);
-      uint32_t labelColor =
-          shadowMapPtr->faceDirty[faceIdx] ? RED_COLOR : WHITE_COLOR;
+      drawShadowFaceOverlay(*shadowMapPtr, faceIdx, scene.pixels.data(),
+                            scene.screen.width, scene.screen.height, startX,
+                            startY, faceOverlaySize);
       RendererFonts::drawText(scene.pixels.data(), scene.screen.width, scene.screen.height,
                               scene.screen.width, startX + 2, startY + 2,
-                              faceLabels[faceIdx], labelColor, BLACK_COLOR, true,
+                              faceLabels[faceIdx], WHITE_COLOR, BLACK_COLOR, true,
                               scene.font);
     }
   } else {
@@ -60,8 +96,8 @@ inline void drawShadowMapOverlay(Scene &scene, int margin = 10) {
     int overlaySize = SHADOW_MAP_OVERVIEW_SIZE;
     int startX = margin;
     int startY = scene.screen.height - overlaySize - margin;
-    shadowMapPtr->drawOverlay(scene.pixels.data(), scene.screen.width,
-                              scene.screen.height, startX, startY, overlaySize);
+    drawShadowFaceOverlay(*shadowMapPtr, 0, scene.pixels.data(), scene.screen.width,
+                          scene.screen.height, startX, startY, overlaySize);
   }
 }
 
