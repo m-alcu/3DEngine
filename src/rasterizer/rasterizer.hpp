@@ -21,8 +21,17 @@
 #include "../effects/geometry_shaders.hpp"
 
 
+struct IRasterizer {
+    virtual ~IRasterizer() = default;
+    virtual void drawRenderable(TransformComponent& transform,
+                                MeshComponent& mesh,
+                                MaterialComponent& material,
+                                Shading shadingMode,
+                                Scene* scn) = 0;
+};
+
 template<class Effect>
-class Rasterizer {
+class Rasterizer : public IRasterizer {
     public:
         using vertex = typename Effect::Vertex;
 
@@ -30,7 +39,7 @@ class Rasterizer {
                             MeshComponent& mesh,
                             MaterialComponent& material,
                             Shading shadingMode,
-                            Scene* scn) {
+                            Scene* scn) override {
             transformComponent = &transform;
             meshComponent = &mesh;
             materialComponent = &material;

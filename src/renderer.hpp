@@ -1,7 +1,10 @@
 #pragma once
 
+#include <array>
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <memory>
 #include "effects/flat_effect.hpp"
 #include "effects/gouraud_effect.hpp"
 #include "effects/phong_effect.hpp"
@@ -20,6 +23,17 @@
 class Renderer {
 
 public:
+  Renderer() {
+    rasterizers[static_cast<size_t>(Shading::Wireframe)]       = std::make_unique<Rasterizer<FlatEffect>>();
+    rasterizers[static_cast<size_t>(Shading::Flat)]            = std::make_unique<Rasterizer<FlatEffect>>();
+    rasterizers[static_cast<size_t>(Shading::Gouraud)]         = std::make_unique<Rasterizer<GouraudEffect>>();
+    rasterizers[static_cast<size_t>(Shading::Phong)]           = std::make_unique<Rasterizer<PhongEffect>>();
+    rasterizers[static_cast<size_t>(Shading::TexturedFlat)]    = std::make_unique<Rasterizer<TexturedFlatEffect>>();
+    rasterizers[static_cast<size_t>(Shading::TexturedGouraud)] = std::make_unique<Rasterizer<TexturedGouraudEffect>>();
+    rasterizers[static_cast<size_t>(Shading::TexturedPhong)]   = std::make_unique<Rasterizer<TexturedPhongEffect>>();
+    rasterizers[static_cast<size_t>(Shading::EnvironmentMap)]  = std::make_unique<Rasterizer<EnvironmentMapEffect>>();
+  }
+
   void drawScene(Scene &scene) {
 
     scene.zBuffer->Clear(); // Clear the zBuffer
@@ -56,32 +70,11 @@ public:
         continue;
       }
 
-      switch (render.shading) {
-      case Shading::Flat:
-      case Shading::Wireframe:
-        flatRasterizer.drawRenderable(*transform, *mesh, *material, render.shading, &scene);
-        break;
-      case Shading::TexturedFlat:
-        texturedFlatRasterizer.drawRenderable(*transform, *mesh, *material, render.shading, &scene);
-        break;
-      case Shading::Gouraud:
-        gouraudRasterizer.drawRenderable(*transform, *mesh, *material, render.shading, &scene);
-        break;
-      case Shading::TexturedGouraud:
-        texturedGouraudRasterizer.drawRenderable(*transform, *mesh, *material, render.shading, &scene);
-        break;
-      case Shading::Phong:
-        phongRasterizer.drawRenderable(*transform, *mesh, *material, render.shading, &scene);
-        break;
-      case Shading::TexturedPhong:
-        texturedPhongRasterizer.drawRenderable(*transform, *mesh, *material, render.shading, &scene);
-        break;
-      case Shading::EnvironmentMap:
-        environmentMapRasterizer.drawRenderable(*transform, *mesh, *material, render.shading, &scene);
-        break;
-      default:
-        flatRasterizer.drawRenderable(*transform, *mesh, *material, render.shading, &scene);
-      }
+      auto idx = static_cast<size_t>(render.shading);
+      IRasterizer* rasterizer = (idx < rasterizers.size() && rasterizers[idx])
+                                  ? rasterizers[idx].get()
+                                  : rasterizers[static_cast<size_t>(Shading::Flat)].get();
+      rasterizer->drawRenderable(*transform, *mesh, *material, render.shading, &scene);
     }
 
     if (scene.showShadowMapOverlay) {
@@ -112,12 +105,6 @@ public:
     }
   }
 
-  Rasterizer<FlatEffect> flatRasterizer;
-  Rasterizer<GouraudEffect> gouraudRasterizer;
-  Rasterizer<PhongEffect> phongRasterizer;
-  Rasterizer<TexturedFlatEffect> texturedFlatRasterizer;
-  Rasterizer<TexturedGouraudEffect> texturedGouraudRasterizer;
-  Rasterizer<TexturedPhongEffect> texturedPhongRasterizer;
-  Rasterizer<EnvironmentMapEffect> environmentMapRasterizer;
+  std::array<std::unique_ptr<IRasterizer>, 8> rasterizers;
   ShadowRasterizer<ShadowEffect> shadowRasterizer;
 };
