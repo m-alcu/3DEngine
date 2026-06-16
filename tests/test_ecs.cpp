@@ -1,19 +1,22 @@
 #include <gtest/gtest.h>
 #include <filesystem>
-#include "../src/ecs/entity.hpp"
-#include "../src/ecs/component_store.hpp"
-#include "../src/ecs/registry.hpp"
-#include "../src/ecs/transform_component.hpp"
-#include "../src/ecs/transform_system.hpp"
-#include "../src/ecs/light_component.hpp"
-#include "../src/ecs/light_system.hpp"
-#include "../src/ecs/shadow_system.hpp"
-#include "../src/ecs/render_component.hpp"
-#include "../src/ecs/prefab_factory.hpp"
+#include <render3d/ecs/entity.hpp>
+#include <render3d/ecs/component_store.hpp>
+#include <render3d/ecs/registry.hpp>
+#include <render3d/ecs/transform_component.hpp>
+#include <render3d/ecs/transform_system.hpp>
+#include <render3d/ecs/light_component.hpp>
+#include <render3d/ecs/light_system.hpp>
+#include <render3d/ecs/shadow_system.hpp>
+#include <render3d/ecs/render_component.hpp>
+#include "../src/assets/prefab_factory.hpp"
 
 // ============================================================================
 // Entity Tests
 // ============================================================================
+
+
+using namespace render3d;
 
 TEST(EntityTest, NullEntityIsZero) {
     EXPECT_EQ(NULL_ENTITY, 0u);

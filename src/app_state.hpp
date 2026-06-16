@@ -1,9 +1,12 @@
 #pragma once
 
-#include "scene.hpp"
+#include <render3d/scene.hpp>
 
 #include <map>
 #include <memory>
+
+
+using namespace render3d;
 
 struct AppState {
     std::unique_ptr<Scene> scene;

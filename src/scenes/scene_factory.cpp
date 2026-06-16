@@ -5,6 +5,9 @@
 #include <filesystem>
 
 // Static member definitions
+
+using namespace render3d;
+
 std::vector<std::string> SceneFactory::yamlPaths_;
 std::vector<std::string> SceneFactory::yamlNames_;
 std::vector<std::string> SceneFactory::combinedNames_;

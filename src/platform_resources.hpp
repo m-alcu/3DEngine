@@ -6,6 +6,9 @@
 
 #include <SDL3/SDL.h>
 
+
+using namespace render3d;
+
 class SdlContext {
 public:
   SdlContext() = default;

@@ -2,8 +2,11 @@
 
 #include <memory>
 #include <string>
-#include "../scene.hpp"
-#include "../ecs/transform_component.hpp"
+#include <render3d/scene.hpp>
+#include <render3d/ecs/transform_component.hpp>
+
+
+using namespace render3d;
 
 namespace YAML { class Node; }
 

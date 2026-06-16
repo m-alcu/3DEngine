@@ -10,6 +10,9 @@
 #include <cstdio>
 #include <memory>
 
+
+using namespace render3d;
+
 #ifdef __EMSCRIPTEN__
 #include "../libs/emscripten/emscripten_mainloop_stub.h"
 #endif

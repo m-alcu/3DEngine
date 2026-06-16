@@ -1,11 +1,14 @@
 #pragma once
 
 #include "app_state.hpp"
-#include "backgrounds/background_factory.hpp"
+#include "assets/background_factory.hpp"
 #include "scenes/scene_factory.hpp"
 #include "vendor/imgui/imgui.h"
 
 #include <vector>
+
+
+using namespace render3d;
 
 namespace SceneUI {
 
@@ -24,8 +27,8 @@ inline void drawSceneSelector(AppState& state, Screen screen) {
             state.scene = std::move(newScene);
             state.scene->setup();
             state.scene->backgroundType = static_cast<BackgroundType>(currentBackground);
-            state.scene->background = std::unique_ptr<Background>(
-                BackgroundFactory::createBackground(state.scene->backgroundType));
+            state.scene->setBackground(
+                BackgroundFactory::create(state.scene->backgroundType));
         }
     }
 }
@@ -146,8 +149,7 @@ inline void drawSceneControls(Scene& scene) {
     if (ImGui::Combo("Background", &currentBackground, backgroundNames,
                      IM_ARRAYSIZE(backgroundNames))) {
       scene.backgroundType = static_cast<BackgroundType>(currentBackground);
-      scene.background = std::unique_ptr<Background>(
-          BackgroundFactory::createBackground(scene.backgroundType));
+      scene.setBackground(BackgroundFactory::create(scene.backgroundType));
     }
 
     ImGui::Checkbox("Show Axis Helper", &scene.showAxes);

@@ -1,16 +1,18 @@
 #include "scene_loader.hpp"
+
+using namespace render3d;
+
 #define TINY_YAML_IMPLEMENTATION
 #include "../vendor/tiny_yaml/tiny_yaml.hpp"
 #include <filesystem>
 #include <stdexcept>
 #include <unordered_map>
 
-#include "../backgrounds/skybox.hpp"
-#include "../backgrounds/background_factory.hpp"
-#include "../ecs/material_system.hpp"
-#include "../ecs/mesh_system.hpp"
-#include "../ecs/prefab_factory.hpp"
-#include "../ecs/name_component.hpp"
+#include "../assets/background_factory.hpp"
+#include <render3d/ecs/material_system.hpp>
+#include <render3d/ecs/mesh_system.hpp>
+#include "../assets/prefab_factory.hpp"
+#include <render3d/ecs/name_component.hpp>
 
 // ---------------------------------------------------------------------------
 // Enum parsers
@@ -292,22 +294,20 @@ std::unique_ptr<Scene> SceneLoader::loadFromFile(const std::string& yamlPath,
             sceneNode["background"].as<std::string>());
         if (scene->backgroundType == BackgroundType::SKYBOX && sceneNode["skybox"]) {
             auto sb = sceneNode["skybox"];
-            scene->background = std::make_unique<Skybox>(
+            scene->setBackground(BackgroundFactory::createSkybox(
                 sb["px"].as<std::string>(),
                 sb["nx"].as<std::string>(),
                 sb["py"].as<std::string>(),
                 sb["ny"].as<std::string>(),
                 sb["pz"].as<std::string>(),
                 sb["nz"].as<std::string>()
-            );
+            ));
         } else if (scene->backgroundType == BackgroundType::HDR_PANORAMA && sceneNode["hdr_panorama"]) {
             auto hdr = sceneNode["hdr_panorama"];
-            scene->background = std::make_unique<HdrPanorama>(
-                hdr["path"].as<std::string>()
-            );
+            scene->setBackground(BackgroundFactory::createHdrPanorama(
+                hdr["path"].as<std::string>()));
         } else {
-            scene->background = std::unique_ptr<Background>(
-                BackgroundFactory::createBackground(scene->backgroundType));
+            scene->setBackground(BackgroundFactory::create(scene->backgroundType));
         }
     }
 

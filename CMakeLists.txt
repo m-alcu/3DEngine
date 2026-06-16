@@ -15,7 +15,20 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(SDL3)
 
-set(SRC_DIRS src src/vendor/imgui src/vendor/nothings src/vendor/tinyobjloader src/objects src/effects src/backgrounds src/scenes src/ecs)
+# render3d — the software rendering library (extracted from this project).
+# For local development the sibling checkout is used directly. To consume from a
+# remote instead, replace SOURCE_DIR with GIT_REPOSITORY/GIT_TAG, e.g.:
+#   FetchContent_Declare(render3d GIT_REPOSITORY <url> GIT_TAG main)
+# and optionally override locally with -DFETCHCONTENT_SOURCE_DIR_RENDER3D=<path>.
+FetchContent_Declare(
+    render3d
+    GIT_REPOSITORY https://github.com/m-alcu/render3d.git
+    GIT_TAG master
+)
+FetchContent_MakeAvailable(render3d)
+
+# Application-side sources only — the renderer now lives in the render3d library.
+set(SRC_DIRS src src/vendor/imgui src/vendor/nothings src/vendor/tinyobjloader src/scenes src/assets)
 
 set(SRC_FILES "")
 foreach(dir ${SRC_DIRS})
@@ -45,7 +58,7 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     $<TARGET_FILE_DIR:${PROJECT_NAME}>/resources
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3)
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3 render3d::render3d)
 
 target_compile_options(${PROJECT_NAME} PRIVATE
     $<$<CONFIG:Release>:-O3>
@@ -56,6 +69,8 @@ set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17 CXX_STANDARD_RE
 # ============================================================================
 # Testing with Google Test
 # ============================================================================
+# Core math/ECS/transform unit tests live in the render3d library. Here we test
+# the application-side asset code (PrefabFactory) against the render3d library.
 option(BUILD_TESTS "Build unit tests" ON)
 
 if(BUILD_TESTS)
@@ -70,41 +85,17 @@ if(BUILD_TESTS)
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(googletest)
 
-    # Math library test
-    add_executable(test_math
-        tests/test_math.cpp
-        src/slib.cpp
-        src/smath.cpp
-    )
-    target_include_directories(test_math PRIVATE ${CMAKE_SOURCE_DIR}/src)
-    target_link_libraries(test_math PRIVATE GTest::gtest_main)
-    set_target_properties(test_math PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED on)
-
-    # Transform component test
-    add_executable(test_transform
-        tests/test_transform.cpp
-        src/slib.cpp
-        src/smath.cpp
-    )
-    target_include_directories(test_transform PRIVATE ${CMAKE_SOURCE_DIR}/src)
-    target_link_libraries(test_transform PRIVATE GTest::gtest_main)
-    set_target_properties(test_transform PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED on)
-
-    # ECS (Entity, ComponentStore, Registry) test
     add_executable(test_ecs
         tests/test_ecs.cpp
-        src/slib.cpp
-        src/smath.cpp
-        src/ecs/prefab_factory.cpp
+        src/assets/prefab_factory.cpp
+        src/assets/texture_loader.cpp
         src/vendor/nothings/stb_image.cpp
         src/vendor/tinyobjloader/tiny_obj_loader.cpp
     )
     target_include_directories(test_ecs PRIVATE ${CMAKE_SOURCE_DIR}/src)
-    target_link_libraries(test_ecs PRIVATE GTest::gtest_main)
+    target_link_libraries(test_ecs PRIVATE render3d::render3d GTest::gtest_main)
     set_target_properties(test_ecs PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED on)
 
     include(GoogleTest)
-    gtest_discover_tests(test_math)
-    gtest_discover_tests(test_transform)
     gtest_discover_tests(test_ecs)
 endif()

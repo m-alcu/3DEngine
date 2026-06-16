@@ -7,19 +7,41 @@
 #include <regex>
 #include <tuple>
 #include <vector>
-#include "../constants.hpp"
-#include "../material.hpp"
-#include "../smath.hpp"
-#include "material_system.hpp"
-#include "mesh_system.hpp"
-#include "transform_system.hpp"
+#include <render3d/constants.hpp>
+#include <render3d/material.hpp>
+#include <render3d/smath.hpp>
+#include <render3d/ecs/material_system.hpp>
+#include <render3d/ecs/mesh_system.hpp>
+#include <render3d/ecs/transform_system.hpp>
+#include "texture_loader.hpp"
 #include "../vendor/tinyobjloader/tiny_obj_loader.h"
+
+
+using namespace render3d;
 
 namespace {
 
+    // Path-based convenience wrapper around the renderer's pure initDefaultMaterial:
+    // loads the diffuse texture (app-side IO) and forwards the result. Keeps the
+    // prefab builders below reading the same way they did before the IO split.
+    Material initMaterialWithTexture(const MaterialProperties& properties,
+                                     const slib::vec3& kaScale,
+                                     const slib::vec3& kdScale,
+                                     const slib::vec3& ksScale,
+                                     const std::string& texturePath = {},
+                                     TextureFilter filter = TextureFilter::NEIGHBOUR,
+                                     float shininessOverride = -1.0f) {
+        Texture diffuse;
+        if (!texturePath.empty()) {
+            diffuse = TextureLoader::load(texturePath, filter);
+        }
+        return MaterialSystem::initDefaultMaterial(properties, kaScale, kdScale, ksScale,
+                                                   std::move(diffuse), shininessOverride);
+    }
+
     void addCheckerMaterial(MaterialComponent& material, const std::string& key, slib::vec3 diffuse) {
         MaterialProperties props = MaterialSystem::getMaterialProperties(MaterialType::Metal);
-        material.materials.insert({key, MaterialSystem::initDefaultMaterial(
+        material.materials.insert({key, initMaterialWithTexture(
             props,
             slib::vec3{0x00, 0x00, 0x00},
             diffuse,
@@ -73,7 +95,7 @@ namespace PrefabFactory {
         std::string materialKey = "floorTexture";
         std::string mtlPath = "checker-map_tho.png";
 
-        Material mat = MaterialSystem::initDefaultMaterial(
+        Material mat = initMaterialWithTexture(
             properties,
             slib::vec3{0x00, 0x00, 0x00},
             slib::vec3{0xff, 0xff, 0xff},
@@ -110,7 +132,7 @@ namespace PrefabFactory {
         MaterialProperties properties = MaterialSystem::getMaterialProperties(MaterialType::Plastic);
         std::string materialKey = "planeMaterial";
 
-        Material mat = MaterialSystem::initDefaultMaterial(
+        Material mat = initMaterialWithTexture(
             properties,
             slib::vec3{0x40, 0x40, 0x40},
             slib::vec3{0xaa, 0xaa, 0xaa},
@@ -282,7 +304,7 @@ namespace PrefabFactory {
         MaterialProperties properties = MaterialSystem::getMaterialProperties(MaterialType::Metal);
         std::string mtlPath = "earth_texture.png";
 
-        Material mat = MaterialSystem::initDefaultMaterial(
+        Material mat = initMaterialWithTexture(
             properties,
             slib::vec3{0x00, 0x00, 0x00},
             slib::vec3{0xff, 0x00, 0x00},
@@ -292,7 +314,7 @@ namespace PrefabFactory {
         );
         material.materials.insert({"red", mat});
 
-        mat = MaterialSystem::initDefaultMaterial(
+        mat = initMaterialWithTexture(
             properties,
             slib::vec3{0x00, 0x00, 0x00},
             slib::vec3{0xff, 0xff, 0xff},
@@ -414,11 +436,11 @@ namespace PrefabFactory {
         {
             MaterialProperties props = MaterialSystem::getMaterialProperties(MaterialType::Metal);
             std::string path = std::string(RES_PATH) + "checker-map_tho.png";
-            Material mat = MaterialSystem::initDefaultMaterial(props,
+            Material mat = initMaterialWithTexture(props,
                 slib::vec3{0x00, 0x58, 0xfc}, slib::vec3{0x00, 0x58, 0xfc}, slib::vec3{0x00, 0x58, 0xfc},
                 path, TextureFilter::NEIGHBOUR);
             material.materials.insert({"blue", mat});
-            mat = MaterialSystem::initDefaultMaterial(props,
+            mat = initMaterialWithTexture(props,
                 slib::vec3{0xff, 0xff, 0xff}, slib::vec3{0xff, 0xff, 0xff}, slib::vec3{0xff, 0xff, 0xff},
                 path, TextureFilter::NEIGHBOUR);
             material.materials.insert({"white", mat});
@@ -487,7 +509,7 @@ namespace PrefabFactory {
         MaterialProperties props = MaterialSystem::getMaterialProperties(MaterialType::Light);
         std::string mtlPath = "checker-map_tho.png";
 
-        Material mat = MaterialSystem::initDefaultMaterial(
+        Material mat = initMaterialWithTexture(
             props,
             slib::vec3{0xff, 0xff, 0xff},
             slib::vec3{0xff, 0xff, 0xff},
@@ -541,7 +563,7 @@ namespace PrefabFactory {
 
         MaterialProperties properties = MaterialSystem::getMaterialProperties(MaterialType::Metal);
 
-        Material mat = MaterialSystem::initDefaultMaterial(
+        Material mat = initMaterialWithTexture(
             properties,
             slib::vec3{0x00, 0x58, 0xfc},
             slib::vec3{0x00, 0x58, 0xfc},
@@ -549,7 +571,7 @@ namespace PrefabFactory {
         );
         material.materials.insert({"blue", mat});
 
-        mat = MaterialSystem::initDefaultMaterial(
+        mat = initMaterialWithTexture(
             properties,
             slib::vec3{0xff, 0xff, 0xff},
             slib::vec3{0xff, 0xff, 0xff},
@@ -621,7 +643,7 @@ namespace PrefabFactory {
         MaterialProperties properties = MaterialSystem::getMaterialProperties(MaterialType::Metal);
         std::string defaultTexturePath = "checker-map_tho.png";
 
-        Material defaultMaterial = MaterialSystem::initDefaultMaterial(
+        Material defaultMaterial = initMaterialWithTexture(
             properties,
             slib::vec3{0.1f, 0.1f, 0.1f},
             slib::vec3{0.8f, 0.8f, 0.8f},
@@ -653,7 +675,7 @@ namespace PrefabFactory {
             if (!mat.diffuse_texname.empty()) {
                 std::filesystem::path texPath = resolveTexPath(mat.diffuse_texname);
                 if (std::filesystem::exists(texPath)) {
-                    m.map_Kd = Texture::loadFromFile(texPath.string());
+                    m.map_Kd = TextureLoader::load(texPath.string());
                 } else {
                     std::cerr << "Texture not found: " << texPath << "\n";
                 }
@@ -662,14 +684,14 @@ namespace PrefabFactory {
             if (!mat.specular_texname.empty()) {
                 std::filesystem::path texPath = resolveTexPath(mat.specular_texname);
                 if (std::filesystem::exists(texPath)) {
-                    m.map_Ks = Texture::loadFromFile(texPath.string());
+                    m.map_Ks = TextureLoader::load(texPath.string());
                 }
             }
 
             if (!mat.specular_highlight_texname.empty()) {
                 std::filesystem::path texPath = resolveTexPath(mat.specular_highlight_texname);
                 if (std::filesystem::exists(texPath)) {
-                    m.map_Ns = Texture::loadFromFile(texPath.string());
+                    m.map_Ns = TextureLoader::load(texPath.string());
                 }
             }
 
@@ -808,7 +830,7 @@ namespace PrefabFactory {
         MaterialProperties properties = MaterialSystem::getMaterialProperties(MaterialType::Metal);
         std::string mtlPath = "checker-map_tho.png";
 
-        Material mat = MaterialSystem::initDefaultMaterial(
+        Material mat = initMaterialWithTexture(
             properties,
             slib::vec3{0x00, 0x00, 0x00},
             slib::vec3{0x00, 0x58, 0xfc},
@@ -818,7 +840,7 @@ namespace PrefabFactory {
         );
         material.materials.insert({"blue", mat});
 
-        mat = MaterialSystem::initDefaultMaterial(
+        mat = initMaterialWithTexture(
             properties,
             slib::vec3{0x00, 0x00, 0x00},
             slib::vec3{0xff, 0xff, 0xff},

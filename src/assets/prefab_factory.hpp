@@ -1,8 +1,11 @@
 #pragma once
 #include <string>
-#include "mesh_component.hpp"
-#include "material_component.hpp"
-#include "transform_component.hpp"
+#include <render3d/ecs/mesh_component.hpp>
+#include <render3d/ecs/material_component.hpp>
+#include <render3d/ecs/transform_component.hpp>
+
+
+using namespace render3d;
 
 namespace PrefabFactory {
 

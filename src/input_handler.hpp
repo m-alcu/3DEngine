@@ -1,13 +1,16 @@
 #pragma once
 
-#include "projection.hpp"
-#include "scene.hpp"
+#include <render3d/projection.hpp>
+#include <render3d/scene.hpp>
 #include "vendor/imgui/imgui.h"
 #include "vendor/imgui/imgui_impl_sdl3.h"
 #include <SDL3/SDL.h>
 #include <map>
 #include <memory>
-#include "effects/vertex_shaders.hpp"
+#include <render3d/effects/vertex_shaders.hpp>
+
+
+using namespace render3d;
 
 class InputHandler {
 public:

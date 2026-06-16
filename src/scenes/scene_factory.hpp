@@ -3,7 +3,10 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "../scene.hpp"
+#include <render3d/scene.hpp>
+
+
+using namespace render3d;
 
 class SceneFactory {
 public:

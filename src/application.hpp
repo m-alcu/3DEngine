@@ -4,9 +4,12 @@
 #include "app_state.hpp"
 #include "input_handler.hpp"
 #include "platform_resources.hpp"
-#include "renderer.hpp"
+#include <render3d/renderer.hpp>
 
 #include <memory>
+
+
+using namespace render3d;
 
 class Application {
 public:

@@ -1,7 +1,10 @@
 #pragma once
 
-#include "constants.hpp"
-#include "scene.hpp"
+#include <render3d/constants.hpp>
+#include <render3d/scene.hpp>
+
+
+using namespace render3d;
 
 struct AppConfig {
     const char* windowTitle = "3D Engine";
